@@ -21,6 +21,9 @@ library(SnowballC) #stemmer
 library(tidytext)
 library(entropy)
 library(tidyboot)
+library(dplyr)
+library(tokenizers)
+library(tau)
 
 opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
                error = FALSE, cache = FALSE, tidy = FALSE)
@@ -131,6 +134,36 @@ ggplot(entropies_all, aes(x = word_order, y = empirical_entropy,
   geom_pointrange(position = position_dodge(.25)) +
   geom_smooth(se = F) +
   ggtitle("Child and Adult Positional Entropy vs. Word Position (Providence corpus)")
+
+
+new_utterances <- prov_utterances %>% filter(speaker_role=="Target_Child") %>% mutate(len = str_count(stem, " ") + 1)
+#toks <- new_utterances %>% 
+
+ggplot(new_utterances, aes(x=len)) +
+  geom_histogram(binwidth = 1)
+```
+
+
+```{r ngram_frequencies}
+m_prov <- prov_utterances %>%
+          filter(speaker_role == "Target_Child") %>%
+          mutate(length = str_count(stem, " ") + 1) %>% 
+          filter(length >= 2)
+
+
+b_prov <- m_prov %>% mutate(bigrams = paste(unlist(textcnt(stem, n = 2, split = " ", method = "string")), collapse = ",")) #get all the counts of bigrams from all of the dataframe
+counts <- b_prov$bigrams[1] %>% strsplit(split=',') %>% unlist() %>% as.numeric()
+fileConn <- file("counts.txt")
+writeLines(b_prov$bigrams[1], fileConn)
+close(fileConn)
+
+b_prov <- m_prov %>% mutate(bigrams = paste(unlist(names(textcnt(stem, n = 2, split = " ", method = "string"))), collapse = ",")) #get all of the bigrams from the entire dataframe
+bigrams <- b_prov$bigrams[1] %>% strsplit(split=',') %>% unlist()
+fileConn <- file("bigram_words.txt")
+writeLines(b_prov$bigrams[1], fileConn)
+close(fileConn)
+
+
 
 ```
 
