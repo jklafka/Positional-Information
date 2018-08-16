@@ -72,7 +72,7 @@ NA_utterances <- get_utterances(collection="Eng-NA")
 
 compute estimates
 ```{r calc_pos_entropy}
-get_entropies <- function(role, sen_length, utterances) {
+get_counts <- function(role, sen_length, utterances) {
   
   if(role == "Target_Child") {
     sub_utterances <- utterances %>%
@@ -89,14 +89,17 @@ get_entropies <- function(role, sen_length, utterances) {
   # ggplot(adult_utterances, aes(x = length)) +
   #   geom_histogram(fill = "white", color = "black")
   
-  tokens <- sub_utterances %>%
+  sub_utterances %>%
     filter(length == sen_length) %>%
     mutate(utterance_id = 1:n()) %>%
     unnest_tokens(word, stem) %>%
     group_by(utterance_id) %>%
     mutate(word_order = 1:n())
-   
-  tokens %>%
+}
+
+unigram_entropy <- function(counts) {
+     
+  counts %>%
     group_by(word_order, word) %>%
     summarise(n = n()) %>%
     tidyboot(summary_function = function(x) x %>% 
@@ -105,8 +108,56 @@ get_entropies <- function(role, sen_length, utterances) {
              summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
     mutate(role = role, length = sen_length)
 }
+   
 
-entropies <- map(2:10, ~get_entropies("not child", .x, prov_utterances)) %>%
+
+counts <- map(2:6, ~get_counts("not child", .x, prov_utterances))
+
+
+all_pairwise_mi <- function(df) {
+  max_len <- max(df$word_order)
+  
+  combs <- combn(1:max_len, 2, simplify = F) 
+  
+  map(combs, ~position_mi(df, .x[1], .x[2])) %>%
+    bind_rows()
+  
+}
+
+position_mi <- function(df, pos1, pos2) {
+  
+  mi <- df %>%
+    filter(word_order %in% c(pos1, pos2)) %>%
+    mutate(word_order = factor(word_order, labels = c("first", "second"))) %>%
+    spread(word_order, word) %>%
+    group_by(first, second) %>%
+    summarise(n = n()) %>%
+    spread(second, n, fill = 0) %>% 
+    ungroup() %>%
+    select(-first) %>%
+    mi.empirical(., unit = "log2")
+  
+  data_frame(length = max(df$word_order), pos1 = pos1, pos2 = pos2, mi = mi)
+}
+
+mi <- map(counts, all_pairwise_mi)
+
+
+ggplot(mi, aes(x = pos2, y = mi, color = as.factor(pos1))) + 
+  facet_wrap(~length) + 
+  geom_point() + 
+  geom_line()
+
+
+ggplot(mi, aes(x = pos1, y = mi, color = as.factor(pos2))) + 
+  facet_wrap(~length) + 
+  geom_point() + 
+  geom_line()
+
+
+entropies <- map(2, ~ get_counts("not child", .x, prov_utterances) %>%
+                   bind_rows %>%
+                   unigram_entropy) %>%
   bind_rows()
 
 ggplot(entropies, aes(x = word_order, y = empirical_entropy,
