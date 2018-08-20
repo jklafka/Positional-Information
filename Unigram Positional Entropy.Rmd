@@ -174,16 +174,18 @@ wagner_utterances <- get_utterances(corpus = "Wagner") #German corpus of childre
 
 okayama_utterances <- get_utterances(corpus = "Okayama") #mother-child conversations in the Osaka area
 
-get_noneng_entropies <- function(role, sen_length, utterances) {
+get_noneng_entropies <- function(role, sen_length, utterances, langue) {
   
   if(role == "Target_Child") {
     sub_utterances <- utterances %>%
       filter(speaker_role == "Target_Child") %>%
-      mutate(length = str_count(gloss, " ") + 1) 
+      mutate(stems = wordStem(gloss, language = langue)) %>% 
+      mutate(length = str_count(stems, " ") + 1) 
   } else {
      sub_utterances <- utterances %>%
       filter(speaker_role != "Target_Child") %>%
-      mutate(length = str_count(gloss, " ") + 1)
+      mutate(stems = wordStem(gloss, language = langue)) %>% 
+      mutate(length = str_count(stems, " ") + 1)
   }
   
   # 
@@ -194,7 +196,7 @@ get_noneng_entropies <- function(role, sen_length, utterances) {
   tokens <- sub_utterances %>%
     filter(length == sen_length) %>%
     mutate(utterance_id = 1:n()) %>%
-    unnest_tokens(word, gloss) %>%
+    unnest_tokens(word, stems) %>%
     group_by(utterance_id) %>%
     mutate(word_order = 1:n())
    
@@ -208,10 +210,8 @@ get_noneng_entropies <- function(role, sen_length, utterances) {
     mutate(role = role, length = sen_length)
 }
 
-
-
-entropies <- map(2:10, ~get_noneng_entropies("not child", .x, okayama_utterances)) %>%
-  bind_rows() %>% filter(word_order <= length)
+entropies <- map(2:10, ~get_noneng_entropies("not child", .x, wagner_utterances, "german")) %>%
+  bind_rows() %>% filter(word_order <= length) #some utterances have ""
 
 ggplot(entropies, aes(x = word_order, y = empirical_entropy,
                       ymin = ci_lower, ymax = ci_upper)) +
@@ -219,7 +219,7 @@ ggplot(entropies, aes(x = word_order, y = empirical_entropy,
   geom_pointrange() +
   geom_smooth(se = F)
 
-entropies_child <- map(2:10, ~ get_noneng_entropies("Target_Child", .x, okayama_utterances)) %>%
+entropies_child <- map(2:10, ~ get_noneng_entropies("Target_Child", .x, wagner_utterances, "german")) %>%
   bind_rows() %>% filter(word_order <= length)
 
 ggplot(entropies_child, aes(x = word_order, y = empirical_entropy,
@@ -235,5 +235,5 @@ ggplot(entropies_all, aes(x = word_order, y = empirical_entropy,
   facet_wrap(~ length) + 
   geom_pointrange(position = position_dodge(.25)) +
   geom_smooth(se = F) +
-  ggtitle("Child and Adult Positional Entropy vs. Word Position (Japanese Okayama corpus)")
+  ggtitle("Child and Adult Positional Entropy vs. Word Position (German Wagner corpus with stemming)")
 ```
