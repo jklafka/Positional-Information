@@ -33,46 +33,12 @@ opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
 theme_set(theme_classic(base_size = 16))
 ```
 
-
-```{r}
-##functions
-compile_child_utterances <- function(age_months) {
-	# Given an age in months (integer), returns the child utterances from the Eng-NA corpus
-	# for that age.
-	d = get_utterances(collection="Eng-NA", age=age_months, role="Target_Child")
-	return(d$gloss)
-}
-
-compile_adult_utterances <- function(age_months, adult_role) {
-	# Given an age in months (integer), returns the adult_role utterances from the Eng-NA corpus
-	# for that age (of the child to which the adult is speaking).
-	# Valid are "Mother", "Investigator", "Sister", "Nurse", "Doctor" and "Father". 
-	d = get_utterances(collection="Eng-NA", age=age_months, role=adult_role)
-	return(d$gloss)
-}
-
-
-#IF WE CAN'T USE AN AGE RANGE
-compile_ages <- function(age_range) {
-	rv <- c()
-	for (age in c(age_range[1]:age_range[2])) {
-		rv <- c(rv, compile_child_utterances(age))
-	}
-	return(rv)
-}
-#IF WE CAN'T USE AN AGE RANGE
-```
-
 Get utterances
 ```{r get_utterances}
 prov_utterances <- get_utterances(corpus = "Providence")
-
-brown_utterances <- get_utterances(corpus = "Brown")
-
-NA_utterances <- get_utterances(collection="Eng-NA")
 ```
 
-compute estimates
+Compute Providence Corpus Estimates
 ```{r calc_pos_entropy}
 get_entropies <- function(role, sen_length, utterances) {
   
@@ -145,7 +111,7 @@ ggplot(new_utterances, aes(x=len)) +
   geom_histogram(binwidth = 1)
 ```
 
-
+Compile all bigrams in corpus (save for another time) 
 ```{r ngram_frequencies}
 m_prov <- prov_utterances %>%
           filter(speaker_role == "Target_Child") %>%
@@ -166,25 +132,24 @@ writeLines(b_prov$bigrams[1], fileConn)
 close(fileConn)
 ```
 
+Non-English Unigram frequencies
 ```{r Spanish unigram frequencies}
 shiro_utterances <- get_utterances(language = "SPA", corpus="Shiro") 
 #Venezuelan children narrative (113 children; half 1st graders half 4th graders; half high SES half low SES)
 
-wagner_utterances <- get_utterances(corpus = "Wagner") #German corpus of children during daily routines (age range from 1,5 to 14,10)
-
 okayama_utterances <- get_utterances(corpus = "Okayama") #mother-child conversations in the Osaka area
 
-get_noneng_entropies <- function(role, sen_length, utterances, langue) {
+get_noneng_entropies <- function(role, sen_length, utterances, lang) {
   
   if(role == "Target_Child") {
     sub_utterances <- utterances %>%
       filter(speaker_role == "Target_Child") %>%
-      mutate(stems = wordStem(gloss, language = langue)) %>% 
+      mutate(stems = wordStem(gloss, language = lang)) %>% 
       mutate(length = str_count(stems, " ") + 1) 
   } else {
      sub_utterances <- utterances %>%
       filter(speaker_role != "Target_Child") %>%
-      mutate(stems = wordStem(gloss, language = langue)) %>% 
+      mutate(stems = wordStem(gloss, language = lang)) %>% 
       mutate(length = str_count(stems, " ") + 1)
   }
   
@@ -210,23 +175,26 @@ get_noneng_entropies <- function(role, sen_length, utterances, langue) {
     mutate(role = role, length = sen_length)
 }
 
-entropies <- map(2:10, ~get_noneng_entropies("not child", .x, wagner_utterances, "german")) %>%
+entropies <- map(2:10, ~get_noneng_entropies("not child", .x, shiro_utterances, "spanish")) %>%
   bind_rows() %>% filter(word_order <= length) #some utterances have ""
 
 ggplot(entropies, aes(x = word_order, y = empirical_entropy,
                       ymin = ci_lower, ymax = ci_upper)) +
   facet_wrap(~ length) + 
   geom_pointrange() +
-  geom_smooth(se = F)
+  geom_smooth(se = F) +
+  ggtitle("Adult Unigram Entropy vs. Word Position (Spanish Shiro Corpus with stemming)")
 
-entropies_child <- map(2:10, ~ get_noneng_entropies("Target_Child", .x, wagner_utterances, "german")) %>%
+
+entropies_child <- map(2:10, ~ get_noneng_entropies("Target_Child", .x, shiro_utterances, "spanish")) %>%
   bind_rows() %>% filter(word_order <= length)
 
 ggplot(entropies_child, aes(x = word_order, y = empirical_entropy,
                       ymin = ci_lower, ymax = ci_upper)) +
   facet_wrap(~ length) + 
   geom_pointrange() +
-  geom_smooth(se = F)
+  geom_smooth(se = F) +
+  ggtitle("Child Unigram Entropy vs. Word Position (Spanish Shiro Corpus with stemming)")
 
 entropies_all <- bind_rows(entropies, entropies_child)
 
@@ -235,5 +203,104 @@ ggplot(entropies_all, aes(x = word_order, y = empirical_entropy,
   facet_wrap(~ length) + 
   geom_pointrange(position = position_dodge(.25)) +
   geom_smooth(se = F) +
-  ggtitle("Child and Adult Positional Entropy vs. Word Position (German Wagner corpus with stemming)")
+  ggtitle("Adult and Child Unigram Entropy vs. Word Position (Spanish Shiro Corpus with stemming)")
+```
+
+```{r German Unigram Frequencies}
+wagner_utterances <- get_utterances(corpus = "Wagner") #German corpus of children during daily routines (age range from 1,5 to 14,10)
+
+entropies <- map(2:10, ~get_noneng_entropies("not child", .x, wagner_utterances, "german")) %>%
+  bind_rows() %>% filter(word_order <= length) #some utterances have ""
+
+ggplot(entropies, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F) +
+  ggtitle("Adult Unigram Entropy vs. Word Position (German Wagner Corpus with stemming)")
+
+
+entropies_child <- map(2:10, ~ get_noneng_entropies("Target_Child", .x, wagner_utterances, "german")) %>%
+  bind_rows() %>% filter(word_order <= length)
+
+ggplot(entropies_child, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F) +
+  ggtitle("Child Unigram Entropy vs. Word Position (German Wagner Corpus with stemming)")
+
+entropies_all <- bind_rows(entropies, entropies_child)
+
+ggplot(entropies_all, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper, color = role)) +
+  facet_wrap(~ length) + 
+  geom_pointrange(position = position_dodge(.25)) +
+  geom_smooth(se = F) +
+  ggtitle("Adult and Child Unigram Entropy vs. Word Position (German Wagner Corpus with stemming)")
+```
+
+```{r Japanese Unigram Entropy}
+get_japanese_entropies <- function(role, sen_length, utterances) {
+  
+  if(role == "Target_Child") {
+    sub_utterances <- utterances %>%
+      filter(speaker_role == "Target_Child") %>%
+      mutate(length = str_count(gloss, " ") + 1) 
+  } else {
+     sub_utterances <- utterances %>%
+      filter(speaker_role != "Target_Child") %>%
+      mutate(length = str_count(gloss, " ") + 1)
+  }
+  
+  # 
+  # 
+  # ggplot(adult_utterances, aes(x = length)) +
+  #   geom_histogram(fill = "white", color = "black")
+  
+  tokens <- sub_utterances %>%
+    filter(length == sen_length) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, gloss) %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n())
+   
+  tokens %>%
+    group_by(word_order, word) %>%
+    summarise(n = n()) %>%
+    tidyboot(summary_function = function(x) x %>% 
+               summarise(entropy = entropy.empirical(n, unit = "log2")),
+             statistics_functions = function(x) x %>%
+             summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
+    mutate(role = role, length = sen_length)
+}
+
+entropies <- map(2:10, ~get_japanese_entropies("not child", .x, okayama_utterances)) %>%
+  bind_rows() %>% filter(word_order <= length) #some utterances have "" counted for word_order
+
+ggplot(entropies, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F) +
+  ggtitle("Adult Unigram Entropy vs. Word Position (Japanese Okayama Corpus)")
+
+entropies_child <- map(2:10, ~ get_japanese_entropies("Target_Child", .x, okayama_utterances)) %>%
+  bind_rows() %>% filter(word_order <= length)
+
+ggplot(entropies_child, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F) +
+  ggtitle("Child Unigram Entropy vs. Word Position (Japanese Okayama Corpus)")
+
+entropies_all <- bind_rows(entropies, entropies_child)
+
+ggplot(entropies_all, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper, color = role)) +
+  facet_wrap(~ length) + 
+  geom_pointrange(position = position_dodge(.25)) +
+  geom_smooth(se = F) +
+  ggtitle("Adult and Child Unigram Entropy vs. Word Position (Japanese Okayama Corpus)")
 ```
