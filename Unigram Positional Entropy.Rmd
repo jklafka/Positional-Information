@@ -304,3 +304,72 @@ ggplot(entropies_all, aes(x = word_order, y = empirical_entropy,
   geom_smooth(se = F) +
   ggtitle("Adult and Child Unigram Entropy vs. Word Position (Japanese Okayama Corpus)")
 ```
+
+```{r Chinese Unigram Entropy}
+zhou_dinner <- get_utterances(corpus = "zhoudinner")
+
+get_chinese_entropies <- function(role, sen_length, utterances) {
+  
+  if(role == "Target_Child") {
+    sub_utterances <- utterances %>%
+      filter(speaker_role == "Target_Child") %>%
+      filter(gloss != "") %>% 
+      mutate(length = str_count(stem, " ") + 1) 
+  } else {
+     sub_utterances <- utterances %>%
+      filter(speaker_role != "Target_Child") %>%
+      filter(speaker_role != "") %>% 
+      mutate(length = str_count(stem, " ") + 1)
+  }
+  
+  # 
+  # 
+  # ggplot(adult_utterances, aes(x = length)) +
+  #   geom_histogram(fill = "white", color = "black")
+  
+  tokens <- sub_utterances %>%
+    filter(length == sen_length) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, stem) %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n())
+   
+  tokens %>%
+    group_by(word_order, word) %>%
+    summarise(n = n()) %>%
+    tidyboot(summary_function = function(x) x %>% 
+               summarise(entropy = entropy.empirical(n, unit = "log2")),
+             statistics_functions = function(x) x %>%
+             summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
+    mutate(role = role, length = sen_length)
+}
+
+entropies <- map(2:10, ~get_chinese_entropies("not child", .x, zhou_dinner)) %>%
+  bind_rows() %>% filter(word_order <= length) #some utterances have "" counted for word_order
+
+ggplot(entropies, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F) +
+  ggtitle("Adult Unigram Entropy vs. Word Position (Mandarin Zhou Dinner Corpus)")
+
+entropies_child <- map(2:10, ~ get_chinese_entropies("Target_Child", .x, zhou_dinner)) %>%
+  bind_rows() %>% filter(word_order <= length)
+
+ggplot(entropies_child, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F) +
+  ggtitle("Child Unigram Entropy vs. Word Position (Mandarin Zhou Dinner Corpus)")
+
+entropies_all <- bind_rows(entropies, entropies_child)
+
+ggplot(entropies_all, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper, color = role)) +
+  facet_wrap(~ length) + 
+  geom_pointrange(position = position_dodge(.25)) +
+  geom_smooth(se = F) +
+  ggtitle("Adult and Child Unigram Entropy vs. Word Position (Mandarin Zhou Dinner Corpus)")
+```
