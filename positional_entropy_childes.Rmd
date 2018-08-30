@@ -196,7 +196,7 @@ ggplot(new_utterances, aes(x=len)) +
 
 ```{r conditional_entropy}
 
-counts <- map(2:6, ~get_counts("not child", .x, prov_utterances))
+counts <- map(2:6, ~get_counts("not child", .x, brown_utterances))
 
 
 all_conditional_entropy <- function(df) {
@@ -238,7 +238,7 @@ ggplot(ce, aes(x = X, y = ce, color = as.factor(X))) +
   geom_line()
 
 
-ggplot(ce[[3]], aes(x = X, y = ce, color = as.factor(Y))) + 
+ggplot(ce, aes(x = X, y = ce, color = as.factor(Y))) + 
   facet_wrap(~ length) + 
   geom_point() + 
   geom_line() + 
