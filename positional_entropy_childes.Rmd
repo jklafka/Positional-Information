@@ -196,8 +196,7 @@ ggplot(new_utterances, aes(x=len)) +
 
 ```{r conditional_entropy}
 
-counts <- map(2:6, ~get_counts("not child", .x, brown_utterances))
-
+counts <- map(2:8, ~get_counts("not child", .x, prov_utterances))
 
 all_conditional_entropy <- function(df) {
   max_len <- max(df$word_order)
@@ -238,11 +237,11 @@ ggplot(ce, aes(x = X, y = ce, color = as.factor(X))) +
   geom_line()
 
 
-ggplot(ce, aes(x = X, y = ce, color = as.factor(Y))) + 
+ggplot(ce_br, aes(x = X, y = ce, color = as.factor(Y))) + 
   facet_wrap(~ length) + 
   geom_point() + 
   geom_line() + 
-  ggtitle("Conditional entropy vs. conditioned random variable (utterances of length 5)")
+  ggtitle("Conditional entropy vs. conditioned random variable")
 
 ```
 

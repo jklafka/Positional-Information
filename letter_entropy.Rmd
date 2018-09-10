@@ -1,5 +1,5 @@
 ---
-title: Letter entropy in childes
+title: By-letter entropy in childes
 author: Joe Klafka
 date: "`r Sys.Date()`"
 output: 
@@ -50,12 +50,7 @@ get_counts <- function(role, sen_length, utterances) {
       filter(speaker_role != "Target_Child") %>%
       mutate(length = str_count(stem, " ") + 1)
   }
-  
-  # 
-  # 
-  # ggplot(adult_utterances, aes(x = length)) +
-  #   geom_histogram(fill = "white", color = "black")
-  
+ 
   tokens <- sub_utterances %>%
               filter(length == sen_length) %>%
               mutate(utterance_id = 1:n()) %>%
@@ -76,7 +71,7 @@ get_letters <- function(tokens, word_choice) {
                     group_by(letter_order, letter) %>% 
                     summarize(n = n())
   
-  map(1:10, ~letter_entropy(letter_counts, .x)) 
+  map(1:10, ~letter_entropy(letter_counts, .x)) ##first 10 letters, after this entropy shrunk close to 0
 }
 
 letter_entropy <- function(letter_counts, position) {
@@ -89,6 +84,8 @@ get_letter_entropies <- function(role, sen_length, utterances) {
   tokens <- get_counts(role, sen_length, utterances)
   map(1:sen_length, ~get_letters(tokens,.x))
 }
+
+prov_child_letters <- map(2:10, ~get_letter_entropies("Target_Child", .x, prov_utterances)) #list of lists of lists
 
 #currently have list of lists, where the top list is for a word_order and each bottom list is for a letter_order
 ```

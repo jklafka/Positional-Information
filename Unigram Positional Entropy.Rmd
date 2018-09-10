@@ -24,7 +24,6 @@ library(tidyboot)
 library(dplyr)
 library(tokenizers)
 library(tau)
-library(reticulate)
 knitr::opts_chunk$set(echo = TRUE)
 
 opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 

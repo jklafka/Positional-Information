@@ -1,8 +1,14 @@
 ---
-title: "Untitled"
-author: "Joe Klafka"
-date: "8/28/2018"
-output: html_document
+title: Non-English Conditional Entropy and Mutual Information
+author: Joe Klafka
+date: "`r Sys.date()`"
+output: 
+  html_document:
+    toc: false
+    number_sections: false
+    theme: lumen
+    toc_float: false
+    code_folding: show 
 ---
 
 ```{r setup, include=FALSE}
