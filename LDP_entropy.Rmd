@@ -1,6 +1,6 @@
 ---
 title: Non-English Conditional Entropy and Mutual Information
-author: Joe Klafka
+author: Josef Klafka
 date: "`r Sys.date()`"
 output: 
   html_document:

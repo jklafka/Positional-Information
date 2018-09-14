@@ -1,0 +1,112 @@
+---
+title: Wikipedia Text Mining and Entropy Analysis
+author: Josef Klafka
+date:
+output: 
+  html_document:
+    toc: false
+    number_sections: false
+    theme: lumen
+    toc_float: false
+    code_folding: show 
+---
+
+```{r setup, include=FALSE}
+# load packages
+library(DBI)
+library(knitr)
+library(tidyverse)
+library(directlabels)
+library(dplyr)
+
+library(SnowballC) #stemmer
+library(tidytext)
+library(entropy)
+library(tidyboot)
+library(tokenizers)
+library(tau)
+library(gtools)
+library(reticulate)
+knitr::opts_chunk$set(echo = TRUE)
+
+opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
+               error = FALSE, cache = FALSE, tidy = FALSE)
+
+theme_set(theme_classic(base_size = 16))
+use_python("~/../../Library/Frameworks/Python.framework/Versions/3.7/bin/python3.7")
+```
+
+```{python}
+import regex as re 
+import numpy as np
+import pandas as pd 
+
+def extract_texts(upper_bound):
+	rs = ""
+	for i in range(upper_bound):
+		if i < 10:
+			number = "0" + str(i)
+		else:
+			number = str(i)
+		f = open("~/Documents/Labword/Joe/misc/text/AA/wiki_" + number, 'r')
+		text = f.read()
+		rs += text
+	return rs
+
+
+def get_sen_dict(text):
+	text = re.sub("<doc.+>|</doc>|http:\S+|[-%,;:–'&*#/—“»]|\d+|\(|\)|", "", text) 
+	text = re.sub('"', '', text)
+	#just the words from the articles
+	text = text.replace('\n', " ")
+	sens = re.split("[.!?]", text.lower())
+	sen_dict = {}
+	for sen in sens:
+		length = len(re.findall("\w+", sen))
+		if length > 0:
+			sen_dict[sen] = length
+	return sen_dict
+
+
+def get_sen_df(text):
+	sd = get_sen_dict(text)
+	s = pd.Series(sd, name = "length")
+	s.index.name = "sentence"
+	df = s.reset_index() #gives a dataframe with columns "sentence" and "length" containing the sentence 
+					 	  #and the setence length respectively
+	return df
+	
+text = extract_texts(99)
+ky_df = get_sen_df(text)
+```
+
+```{r analyze_entropies}
+get_entropies <- function(sen_length, df) {
+   
+  tokens <- df %>%
+    filter(length == sen_length) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, sentence) %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n()) %>%
+    group_by(word_order, word) %>%
+    filter(word_order <= length)
+   
+  tokens %>%
+    summarise(n = n()) %>%
+    tidyboot(summary_function = function(x) x %>% 
+               summarise(entropy = entropy(n, unit = "log2")),
+             statistics_functions = function(x) x %>%
+             summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
+    mutate(length = sen_length)
+}
+
+entropies <- map(6:12, ~get_entropies(.x, py$ky_df)) %>%
+  bind_rows()
+
+ggplot(entropies, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F)
+```
