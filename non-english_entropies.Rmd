@@ -1,6 +1,6 @@
 ---
-title: Unigram entropy in childes
-author: Joe Klafka
+title: Unigram positional entropy, conditional entropy and mutual information in non-English CHILDES corpora
+author: Josef Klafka
 date: "`r Sys.Date()`"
 output: 
   html_document:
@@ -35,36 +35,67 @@ theme_set(theme_classic(base_size = 16))
 Get utterances
 ```{r get_utterances}
 prov_utterances <- get_utterances(corpus = "Providence")
+
+brown_utterances <- get_utterances(corpus = "Brown")
 ```
 
-Compute Providence Corpus Estimates
-```{r calc_pos_entropy}
+Unigram Entropy word length correction
+```{r word_len_corrections}
+get_counts <- function(role, sen_length, utterances) {
+  
+  if(role == "Target_Child") {
+    sub_utterances <- utterances %>%
+      filter(speaker_role == "Target_Child") %>%
+      mutate(length = str_count(gloss, " ") + 1) # uses stems of words, not original words
+  } else {
+     sub_utterances <- utterances %>%
+      filter(speaker_role != "Target_Child") %>%
+      mutate(length = str_count(gloss, " ") + 1)
+  }
+
+  sub_utterances %>%
+    filter(length == sen_length) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, gloss) %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n()) %>%
+    filter(word_order <= length)
+}
+
+get_mean_lengths <- function(role, sen_length, utterances) {
+  
+  counts <- get_counts(role, sen_length, utterances)
+  
+  lens <- counts %>% 
+    group_by(word_order, word) %>% 
+    mutate(word_len = str_length(word)) 
+  
+  lens$word_len %>% 
+    aggregate(list(lens$word_order), mean)
+}
+
 get_entropies <- function(role, sen_length, utterances) {
   
   if(role == "Target_Child") {
     sub_utterances <- utterances %>%
       filter(speaker_role == "Target_Child") %>%
-      mutate(length = str_count(stem, " ") + 1) # uses stems of words, not original words
+      mutate(length = str_count(gloss, " ") + 1) # uses stems of words, not original words
   } else {
      sub_utterances <- utterances %>%
       filter(speaker_role != "Target_Child") %>%
-      mutate(length = str_count(stem, " ") + 1)
+      mutate(length = str_count(gloss, " ") + 1)
   }
-  
-  # 
-  # 
-  # ggplot(adult_utterances, aes(x = length)) +
-  #   geom_histogram(fill = "white", color = "black")
-  
+
   tokens <- sub_utterances %>%
     filter(length == sen_length) %>%
     mutate(utterance_id = 1:n()) %>%
-    unnest_tokens(word, stem) %>%
+    unnest_tokens(word, gloss) %>%
     group_by(utterance_id) %>%
-    mutate(word_order = 1:n())
+    mutate(word_order = 1:n()) %>%
+    group_by(word_order, word) %>%
+    filter(word_order <= length)
    
   tokens %>%
-    group_by(word_order, word) %>%
     summarise(n = n()) %>%
     tidyboot(summary_function = function(x) x %>% 
                summarise(entropy = entropy(n, unit = "log2")),
@@ -73,62 +104,33 @@ get_entropies <- function(role, sen_length, utterances) {
     mutate(role = role, length = sen_length)
 }
 
+get_cor_entropies <- function(role, utterances) {
+  
+  mean_lens <- map(2:10, ~get_mean_lengths(role, .x, utterances)) %>% 
+    bind_rows()
+  
+  entropies <- map(2:10, ~get_entropies(role, .x, utterances)) %>%
+    bind_rows()
+  
+  entropies %>% 
+    mutate(mean_len = mean_lens[, "x"]) %>% 
+    mutate(cor_entropy = empirical_entropy / mean_len)
+}
+
+##
+mean_lens <- map(2:10, ~get_mean_lengths("not child", .x, prov_utterances)) %>% bind_rows()
+
+cor_entropies <- entropies %>% mutate(mean_len = mean_lens[, "x"]) %>% mutate(cor_entropy = empirical_entropy / mean_len)
+
 entropies <- map(2:10, ~get_entropies("not child", .x, prov_utterances)) %>%
   bind_rows()
+##
 
-ggplot(entropies, aes(x = word_order, y = empirical_entropy,
-                      ymin = ci_lower, ymax = ci_upper)) +
-  facet_wrap(~ length) + 
-  geom_pointrange() +
-  geom_smooth(se = F)
+cor_entropies <- get_cor_entropies("not child", okayama_utterances)
 
-
-
-entropies_child <- map(2:10, ~ get_entropies("Target_Child", .x, prov_utterances)) %>%
-  bind_rows()
-
-ggplot(entropies_child, aes(x = word_order, y = empirical_entropy,
-                      ymin = ci_lower, ymax = ci_upper)) +
-  facet_wrap(~ length) + 
-  geom_pointrange() +
-  geom_smooth(se = F)
-
-entropies_all <- bind_rows(entropies, entropies_child)
-
-ggplot(entropies_all, aes(x = word_order, y = empirical_entropy,
-                      ymin = ci_lower, ymax = ci_upper, color = role)) +
-  facet_wrap(~ length) + 
-  geom_pointrange(position = position_dodge(.25)) +
-  geom_smooth(se = F) +
-  ggtitle("Child and Adult Positional Entropy vs. Word Position (Providence corpus)")
-
-
-new_utterances <- prov_utterances %>% filter(speaker_role=="Target_Child") %>% mutate(len = str_count(stem, " ") + 1)
-#toks <- new_utterances %>% 
-
-ggplot(new_utterances, aes(x=len)) +
-  geom_histogram(binwidth = 1)
-```
-
-Compile all bigrams in corpus (save for another time) 
-```{r ngram_frequencies}
-m_prov <- prov_utterances %>%
-          filter(speaker_role == "Target_Child") %>%
-          mutate(length = str_count(stem, " ") + 1) %>% 
-          filter(length >= 2)
-
-
-b_prov <- m_prov %>% mutate(bigrams = paste(unlist(textcnt(stem, n = 2, split = " ", method = "string")), collapse = ",")) #get all the counts of bigrams from all of the dataframe
-counts <- b_prov$bigrams[1] %>% strsplit(split=',') %>% unlist() %>% as.numeric()
-fileConn <- file("bigram_counts.txt")
-writeLines(b_prov$bigrams[1], fileConn)
-close(fileConn)
-
-b_prov <- m_prov %>% mutate(bigrams = paste(unlist(names(textcnt(stem, n = 2, split = " ", method = "string"))), collapse = ",")) #get all of the bigrams from the entire dataframe
-bigrams <- b_prov$bigrams[1] %>% strsplit(split=',') %>% unlist()
-fileConn <- file("bigram_words.txt")
-writeLines(b_prov$bigrams[1], fileConn)
-close(fileConn)
+ggplot(cor_entropies, aes(x = word_order, y = cor_entropy)) +
+     facet_wrap(~ length) + 
+     geom_smooth(se = F)
 ```
 
 Non-English Unigram frequencies
@@ -136,7 +138,6 @@ Non-English Unigram frequencies
 shiro_utterances <- get_utterances(language = "SPA", corpus="Shiro") 
 #Venezuelan children narrative (113 children; half 1st graders half 4th graders; half high SES half low SES)
 
-okayama_utterances <- get_utterances(corpus = "Okayama") #mother-child conversations in the Osaka area
 
 get_noneng_entropies <- function(role, sen_length, utterances, lang) {
   
@@ -151,12 +152,7 @@ get_noneng_entropies <- function(role, sen_length, utterances, lang) {
       mutate(stems = wordStem(gloss, language = lang)) %>% 
       mutate(length = str_count(stems, " ") + 1)
   }
-  
-  # 
-  # 
-  # ggplot(adult_utterances, aes(x = length)) +
-  #   geom_histogram(fill = "white", color = "black")
-  
+
   tokens <- sub_utterances %>%
     filter(length == sen_length) %>%
     mutate(utterance_id = 1:n()) %>%
@@ -205,6 +201,7 @@ ggplot(entropies_all, aes(x = word_order, y = empirical_entropy,
   ggtitle("Adult and Child Unigram Entropy vs. Word Position (Spanish Shiro Corpus with stemming)")
 ```
 
+
 ```{r German Unigram Frequencies}
 wagner_utterances <- get_utterances(corpus = "Wagner") #German corpus of children during daily routines (age range from 1,5 to 14,10)
 
@@ -239,7 +236,10 @@ ggplot(entropies_all, aes(x = word_order, y = empirical_entropy,
   ggtitle("Adult and Child Unigram Entropy vs. Word Position (German Wagner Corpus with stemming)")
 ```
 
+
 ```{r Japanese Unigram Entropy}
+okayama_utterances <- get_utterances(corpus = "Okayama") #mother-child conversations in the Osaka area
+
 get_japanese_entropies <- function(role, sen_length, utterances) {
   
   if(role == "Target_Child") {
@@ -251,12 +251,7 @@ get_japanese_entropies <- function(role, sen_length, utterances) {
       filter(speaker_role != "Target_Child") %>%
       mutate(length = str_count(gloss, " ") + 1)
   }
-  
-  # 
-  # 
-  # ggplot(adult_utterances, aes(x = length)) +
-  #   geom_histogram(fill = "white", color = "black")
-  
+ 
   tokens <- sub_utterances %>%
     filter(length == sen_length) %>%
     mutate(utterance_id = 1:n()) %>%
@@ -304,6 +299,7 @@ ggplot(entropies_all, aes(x = word_order, y = empirical_entropy,
   ggtitle("Adult and Child Unigram Entropy vs. Word Position (Japanese Okayama Corpus)")
 ```
 
+
 ```{r Chinese Unigram Entropy}
 zhou_dinner <- get_utterances(corpus = "zhoudinner")
 
@@ -320,12 +316,7 @@ get_chinese_entropies <- function(role, sen_length, utterances) {
       filter(speaker_role != "") %>% 
       mutate(length = str_count(stem, " ") + 1)
   }
-  
-  # 
-  # 
-  # ggplot(adult_utterances, aes(x = length)) +
-  #   geom_histogram(fill = "white", color = "black")
-  
+
   tokens <- sub_utterances %>%
     filter(length == sen_length) %>%
     mutate(utterance_id = 1:n()) %>%

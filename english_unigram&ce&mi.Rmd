@@ -1,6 +1,6 @@
 ---
-title: Positional entropy in childes
-author: Joe Klafka
+title: Positional entropy, conditional entropy and mutual information in English CHILDES corpora
+author: Josef Klafka and Dan Yurovsky 
 date: "`r Sys.Date()`"
 output: 
   html_document:
@@ -17,13 +17,11 @@ library(knitr)
 library(tidyverse)
 library(directlabels)
 library(childesr) #data
-library(SnowballC) #stemmer
 library(tidytext)
 library(entropy)
 library(tidyboot)
 library(dplyr)
 library(tokenizers)
-library(tau)
 library(gtools)
 
 opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
@@ -33,47 +31,16 @@ theme_set(theme_classic(base_size = 16))
 ```
 
 
-```{r}
-##functions
-compile_child_utterances <- function(age_months) {
-	# Given an age in months (integer), returns the child utterances from the Eng-NA corpus
-	# for that age.
-	d = get_utterances(collection="Eng-NA", age=age_months, role="Target_Child")
-	return(d$gloss)
-}
-
-compile_adult_utterances <- function(age_months, adult_role) {
-	# Given an age in months (integer), returns the adult_role utterances from the Eng-NA corpus
-	# for that age (of the child to which the adult is speaking).
-	# Valid are "Mother", "Investigator", "Sister", "Nurse", "Doctor" and "Father". 
-	d = get_utterances(collection="Eng-NA", age=age_months, role=adult_role)
-	return(d$gloss)
-}
-
-
-#IF WE CAN'T USE AN AGE RANGE
-compile_ages <- function(age_range) {
-	rv <- c()
-	for (age in c(age_range[1]:age_range[2])) {
-		rv <- c(rv, compile_child_utterances(age))
-	}
-	return(rv)
-}
-#IF WE CAN'T USE AN AGE RANGE
-```
-
 Get utterances
 ```{r get_utterances}
 prov_utterances <- get_utterances(corpus = "Providence")
 
 brown_utterances <- get_utterances(corpus = "Brown")
-
-NA_utterances <- get_utterances(collection="Eng-NA")
 ```
 
-compute estimates
+Compute Providence Corpus Estimates
 ```{r calc_pos_entropy}
-get_counts <- function(role, sen_length, utterances) {
+get_entropies <- function(role, sen_length, utterances) {
   
   if(role == "Target_Child") {
     sub_utterances <- utterances %>%
@@ -90,18 +57,15 @@ get_counts <- function(role, sen_length, utterances) {
   # ggplot(adult_utterances, aes(x = length)) +
   #   geom_histogram(fill = "white", color = "black")
   
-  sub_utterances %>%
+  tokens <- sub_utterances %>%
     filter(length == sen_length) %>%
     mutate(utterance_id = 1:n()) %>%
     unnest_tokens(word, stem) %>%
     group_by(utterance_id) %>%
-    mutate(word_order = 1:n())
-}
-
-unigram_entropy <- function(counts) {
-     
-  counts %>%
-    group_by(word_order, word) %>%
+    mutate(word_order = 1:n()) %>%
+    group_by(word_order, word)
+   
+  tokens %>%
     summarise(n = n()) %>%
     tidyboot(summary_function = function(x) x %>% 
                summarise(entropy = entropy(n, unit = "log2")),
@@ -109,55 +73,8 @@ unigram_entropy <- function(counts) {
              summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
     mutate(role = role, length = sen_length)
 }
-   
 
-
-counts <- map(2:6, ~get_counts("not child", .x, prov_utterances))
-
-
-all_pairwise_mi <- function(df) {
-  max_len <- max(df$word_order)
-  
-  combs <- combn(1:max_len, 2, simplify = F) 
-  
-  map(combs, ~position_mi(df, .x[1], .x[2])) %>%
-    bind_rows()
-  
-}
-
-position_mi <- function(df, pos1, pos2) {
-  
-  mi <- df %>%
-    filter(word_order %in% c(pos1, pos2)) %>%
-    mutate(word_order = factor(word_order, labels = c("first", "second"))) %>%
-    spread(word_order, word) %>%
-    group_by(first, second) %>%
-    summarise(n = n()) %>%
-    spread(second, n, fill = 0) %>% 
-    ungroup() %>%
-    select(-first) %>%
-    mi.empirical(., unit = "log2")
-  
-  data_frame(length = max(df$word_order), pos1 = pos1, pos2 = pos2, mi = mi)
-}
-
-mi <- map(counts, all_pairwise_mi)
-
-ggplot(mi, aes(x = pos2, y = mi, color = as.factor(pos1))) + 
-  facet_wrap(~length) + 
-  geom_point() + 
-  geom_line()
-
-
-ggplot(mi[[4]], aes(x = pos1, y = mi, color = as.factor(pos2))) + 
-  facet_wrap(~length) + 
-  geom_point() + 
-  geom_line()
-
-
-entropies <- map(2, ~ get_counts("not child", .x, prov_utterances) %>%
-                   bind_rows %>%
-                   unigram_entropy) %>%
+entropies <- map(2:10, ~get_entropies("not child", .x, brown_utterances)) %>%
   bind_rows()
 
 ggplot(entropies, aes(x = word_order, y = empirical_entropy,
@@ -194,10 +111,128 @@ ggplot(new_utterances, aes(x=len)) +
   geom_histogram(binwidth = 1)
 ```
 
+compute estimates
+```{r calc_pos_entropy}
+#get counts of each word in each position of utterances of length sen_length
+#from the collection of CHILDES utterances in utterances with speaker_role in role
+get_counts <- function(role, sen_length, utterances) { 
+  
+  if(role == "Target_Child") {
+    sub_utterances <- utterances %>%
+      filter(speaker_role == "Target_Child") %>%
+      mutate(length = str_count(stem, " ") + 1) # uses stems of words, not original words
+  } else {
+     sub_utterances <- utterances %>%
+      filter(speaker_role != "Target_Child") %>%
+      mutate(length = str_count(stem, " ") + 1)
+  }
+ 
+  sub_utterances %>%
+    filter(length == sen_length) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, stem) %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n())
+} 
+
+#compute the unigram entropy measure from the counts of each word in each position
+unigram_entropy <- function(counts) {
+     
+  counts %>%
+    group_by(word_order, word) %>%
+    summarise(n = n()) %>%
+    tidyboot(summary_function = function(x) x %>% 
+               summarise(entropy = entropy(n, unit = "log2")),
+             statistics_functions = function(x) x %>%
+             summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
+    mutate(role = role, length = sen_length)
+}
+
+#compute the pairwise Mutual Information measure between all pairs of word positions
+all_pairwise_mi <- function(df) {
+  max_len <- max(df$word_order)
+  
+  combs <- combn(1:max_len, 2, simplify = F) 
+  
+  map(combs, ~position_mi(df, .x[1], .x[2])) %>%
+    bind_rows()
+  
+}
+
+#perform the actual Mutual Information computation
+position_mi <- function(df, pos1, pos2) {
+  
+  mi <- df %>%
+    filter(word_order %in% c(pos1, pos2)) %>%
+    mutate(word_order = factor(word_order, labels = c("first", "second"))) %>%
+    spread(word_order, word) %>%
+    group_by(first, second) %>%
+    summarise(n = n()) %>%
+    spread(second, n, fill = 0) %>% 
+    ungroup() %>%
+    select(-first) %>%
+    mi.empirical(., unit = "log2")
+  
+  data_frame(length = max(df$word_order), pos1 = pos1, pos2 = pos2, mi = mi)
+}
+
+counts <- map(2:6, ~get_counts("not child", .x, prov_utterances))
+
+mi <- map(counts, all_pairwise_mi)
+
+ggplot(mi, aes(x = pos2, y = mi, color = as.factor(pos1))) + 
+  facet_wrap(~length) + 
+  geom_point() + 
+  geom_line()
+
+
+ggplot(mi[[4]], aes(x = pos1, y = mi, color = as.factor(pos2))) + 
+  facet_wrap(~length) + 
+  geom_point() + 
+  geom_line()
+
+
+entropies <- map(2, ~ get_counts("not child", .x, prov_utterances) %>%
+                   bind_rows %>%
+                   unigram_entropy) %>%
+  bind_rows()
+
+ggplot(entropies, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F)
+
+
+entropies_child <- map(2:10, ~ get_entropies("Target_Child", .x, prov_utterances)) %>%
+  bind_rows()
+
+ggplot(entropies_child, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F)
+
+entropies_all <- bind_rows(entropies, entropies_child)
+
+ggplot(entropies_all, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper, color = role)) +
+  facet_wrap(~ length) + 
+  geom_pointrange(position = position_dodge(.25)) +
+  geom_smooth(se = F) +
+  ggtitle("Child and Adult Positional Entropy vs. Word Position (Providence corpus)")
+
+
+new_utterances <- prov_utterances %>% filter(speaker_role=="Target_Child") %>% mutate(len = str_count(stem, " ") + 1)
+#toks <- new_utterances %>% 
+
+ggplot(new_utterances, aes(x=len)) +
+  geom_histogram(binwidth = 1)
+```
+
+English Conditional Entropy
 ```{r conditional_entropy}
-
-counts <- map(2:8, ~get_counts("not child", .x, prov_utterances))
-
+#compute all Conditional Entropy from all one-way pairs of word positions
 all_conditional_entropy <- function(df) {
   max_len <- max(df$word_order)
   #combs <- combn(1:max_len, 2, simplify = F)
@@ -209,6 +244,7 @@ all_conditional_entropy <- function(df) {
   
 }
 
+#perform the actual Conditional Entropy calculation
 conditional_entropy <- function(df, X, Y) { #Y is conditioning variable
   
   d <- df %>%
@@ -229,6 +265,8 @@ conditional_entropy <- function(df, X, Y) { #Y is conditioning variable
   data_frame(length = max(df$word_order), X = X, Y = Y, mi = mi, ent = ent, ce = ent - mi)
 }
 
+counts <- map(2:8, ~get_counts("not child", .x, prov_utterances))
+
 ce <- map(counts, all_conditional_entropy)
 
 ggplot(ce, aes(x = X, y = ce, color = as.factor(X))) + 
@@ -246,6 +284,7 @@ ggplot(ce_br, aes(x = X, y = ce, color = as.factor(Y))) +
 ```
 
 
+N-Gram frequencies (saved for later)
 ```{r ngram_frequencies}
 m_prov <- prov_utterances %>%
           filter(speaker_role == "Target_Child") %>%
