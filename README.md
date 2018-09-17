@@ -1,7 +1,7 @@
 # Positional-Information
 ## A Project on the Distribution of Information across Sentences in Speech and Text (crosslinguistic)
 
-
+$$H(X) = -\sum\limits_i p_i \log(p_i)$$
 
 <strong>english_unigram&ce&mi.Rmd</strong> - produces unigram entropy, conditional information and mutual information estimates for English-language CHILDES corpora, in particular the Brown and Providence corpora. 
 
