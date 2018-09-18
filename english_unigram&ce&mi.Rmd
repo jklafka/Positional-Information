@@ -38,6 +38,69 @@ prov_utterances <- get_utterances(corpus = "Providence")
 brown_utterances <- get_utterances(corpus = "Brown")
 ```
 
+bootstrap entropy slopes
+```{r }
+lengths <- brown_utterances %>%
+  filter(speaker_role  != "Target_Child") %>%
+  mutate(length = str_count(stem, " ") + 1) %>%
+
+tokens <- lengths %>% 
+  filter(length >= 3) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, stem) %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n()) %>%
+    group_by(length, word_order, word) %>%
+    summarise(n = n()) 
+ 
+
+start_slope <- function(df) {
+ 
+ df %>%
+    filter(word_order %in% c(1,2)) %>%
+    sample_frac(1, replace = T) %>%
+    group_by(length, word_order) %>%
+    summarise(entropy = entropy(n, unit = "log2")) %>%
+    spread(word_order, entropy) %>%
+    ungroup() %>%
+    mutate(diff = `2` - `1`) %>%
+    summarise(diff = mean(diff)) %>%
+    pull(diff)
+
+}
+
+end_slope <- function(df) {
+ 
+ df %>%
+    ungroup() %>%
+    mutate(word_order = if_else(word_order == length, 2,
+                                if_else(word_order == length -1 , 1,
+                                        0))) %>%
+    filter(word_order > 0) %>%
+    group_by(length, word_order) %>%
+    sample_frac(1, replace = T) %>%
+    group_by(length, word_order) %>%
+    summarise(entropy = entropy(n, unit = "log2")) %>%
+    spread(word_order, entropy) %>%
+    ungroup() %>%
+    mutate(diff = `2` - `1`) %>%
+    summarise(diff = mean(diff)) %>%
+    pull(diff)
+
+}
+
+
+start_time <- Sys.time()
+samples <- replicate(1000, end_slope(tokens))  %>%
+  as_data_frame()
+end_time <- Sys.time()
+
+samples %>%
+  summarise(mean = mean(value), ci_upper = quantile(value, .975), 
+            ci_lower = quantile(value, .025))
+
+
+```
 Compute Providence Corpus Estimates
 ```{r calc_pos_entropy}
 get_entropies <- function(role, sen_length, utterances) {
