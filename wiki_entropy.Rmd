@@ -36,7 +36,7 @@ theme_set(theme_classic(base_size = 16))
 use_python("~/../../Library/Frameworks/Python.framework/Versions/3.7/bin/python3.7")
 ```
 
-```{python}
+```{python, include=FALSE}
 import regex as re 
 import numpy as np
 import pandas as pd 
@@ -48,7 +48,7 @@ def extract_texts(upper_bound):
 			number = "0" + str(i)
 		else:
 			number = str(i)
-		f = open("~/Documents/Labword/Joe/misc/text/AA/wiki_" + number, 'r')
+		f = open("../misc/text/AA/wiki_" + number, 'r')
 		text = f.read()
 		rs += text
 	return rs
@@ -76,8 +76,8 @@ def get_sen_df(text):
 					 	  #and the setence length respectively
 	return df
 	
-text = extract_texts(99)
-ky_df = get_sen_df(text)
+text = extract_texts(50)
+ro_df = get_sen_df(text)
 ```
 
 ```{r analyze_entropies}
@@ -101,7 +101,7 @@ get_entropies <- function(sen_length, df) {
     mutate(length = sen_length)
 }
 
-entropies <- map(6:12, ~get_entropies(.x, py$ky_df)) %>%
+entropies <- map(6:12, ~get_entropies(.x, py$ro_df)) %>%
   bind_rows()
 
 ggplot(entropies, aes(x = word_order, y = empirical_entropy,
