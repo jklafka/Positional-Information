@@ -39,19 +39,42 @@ brown_utterances <- get_utterances(corpus = "Brown")
 ```
 
 bootstrap entropy slopes
-```{r }
+```{r slope bootstrapping}
 lengths <- brown_utterances %>%
   filter(speaker_role  != "Target_Child") %>%
-  mutate(length = str_count(stem, " ") + 1) %>%
+  mutate(length = str_count(stem, " ") + 1)
 
 tokens <- lengths %>% 
-  filter(length >= 3) %>%
+  filter(length >= 6) %>%
     mutate(utterance_id = 1:n()) %>%
     unnest_tokens(word, stem) %>%
     group_by(utterance_id) %>%
     mutate(word_order = 1:n()) %>%
     group_by(length, word_order, word) %>%
     summarise(n = n()) 
+
+#extract tokens to be used for slope bootstrapping
+extract_tokens <- function(role, min_length, utterances) {
+if (role == "child") {
+lengths <- utterances %>%
+  filter(speaker_role == "Target_Child") %>%
+  mutate(length = str_count(stem, " ") + 1)
+
+} else {
+  lengths <- utterances %>%
+  filter(speaker_role != "Target_Child") %>%
+  mutate(length = str_count(stem, " ") + 1)
+}
+  
+  tokens <- lengths %>% 
+    filter(length >= min_length) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, stem) %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n()) %>%
+    group_by(length, word_order, word) %>%
+    summarise(n = n()) 
+}
  
 
 start_slope <- function(df) {
@@ -68,6 +91,66 @@ start_slope <- function(df) {
     pull(diff)
 
 }
+
+second_slope <- function(df) {
+ 
+ df %>%
+    ungroup() %>%
+    mutate(word_order %in% c(2, 3)) %>%
+    filter(word_order > 0) %>%
+    group_by(length, word_order) %>%
+    sample_frac(1, replace = T) %>%
+    group_by(length, word_order) %>%
+    summarise(entropy = entropy(n, unit = "log2")) %>%
+    spread(word_order, entropy) %>%
+    ungroup() %>%
+    mutate(diff = `3` - `2`) %>%
+    summarise(diff = mean(diff)) %>%
+    pull(diff)
+
+}
+
+mid_slope <- function(df) {
+ 
+ df %>%
+    ungroup() %>%
+    mutate(word_order = if_else(word_order == length-2, 2,
+                                if_else(word_order == 3, 1,
+                                        0))) %>%
+    filter(word_order > 0) %>%
+    group_by(length, word_order) %>%
+    sample_frac(1, replace = T) %>%
+    group_by(length, word_order) %>%
+    summarise(entropy = entropy(n, unit = "log2")) %>%
+    spread(word_order, entropy) %>%
+    ungroup() %>%
+    mutate(diff = `2` - `1`) %>%
+    summarise(diff = mean(diff)) %>%
+    pull(diff)
+
+}
+
+penult_slope <- function(df) {
+ 
+ df %>%
+    ungroup() %>%
+    mutate(word_order = if_else(word_order == length-1, 2,
+                                if_else(word_order == length -2, 1,
+                                        0))) %>%
+    filter(word_order > 0) %>%
+    group_by(length, word_order) %>%
+    sample_frac(1, replace = T) %>%
+    group_by(length, word_order) %>%
+    summarise(entropy = entropy(n, unit = "log2")) %>%
+    spread(word_order, entropy) %>%
+    ungroup() %>%
+    mutate(diff = `2` - `1`) %>%
+    summarise(diff = mean(diff)) %>%
+    pull(diff)
+
+}
+
+
 
 end_slope <- function(df) {
  
@@ -91,9 +174,11 @@ end_slope <- function(df) {
 
 
 start_time <- Sys.time()
-samples <- replicate(1000, end_slope(tokens))  %>%
+samples <- replicate(1000, mid_slope(tokens))  %>%
   as_data_frame()
 end_time <- Sys.time()
+
+end_time - start_time
 
 samples %>%
   summarise(mean = mean(value), ci_upper = quantile(value, .975), 
