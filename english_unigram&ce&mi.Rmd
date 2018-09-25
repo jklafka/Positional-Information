@@ -33,37 +33,34 @@ theme_set(theme_classic(base_size = 16))
 
 Get utterances
 ```{r get_utterances}
-prov_utterances <- get_utterances(corpus = "Providence")
+prov_utterances <- get_utterances(corpus = "Providence") #stem or gloss
 
-brown_utterances <- get_utterances(corpus = "Brown")
+brown_utterances <- get_utterances(corpus = "Brown") #stem or gloss
+
+shiro_utterances <- get_utterances(corpus = "Shiro") #use gloss
+
+wagner_utterances <- get_utterances(corpus = "Wagner") #use gloss
+
+okayama_utterances <- get_utterances(corpus = "Okayama") #use gloss
+
+zhou_utterances <- get_utterances(corpus = "ZhouDinner") #use stem, NOT gloss
 ```
 
 bootstrap entropy slopes
 ```{r slope bootstrapping}
-lengths <- brown_utterances %>%
-  filter(speaker_role  != "Target_Child") %>%
-  mutate(length = str_count(stem, " ") + 1)
-
-tokens <- lengths %>% 
-  filter(length >= 6) %>%
-    mutate(utterance_id = 1:n()) %>%
-    unnest_tokens(word, stem) %>%
-    group_by(utterance_id) %>%
-    mutate(word_order = 1:n()) %>%
-    group_by(length, word_order, word) %>%
-    summarise(n = n()) 
 
 #extract tokens to be used for slope bootstrapping
-extract_tokens <- function(role, min_length, utterances) {
-if (role == "child") {
-lengths <- utterances %>%
-  filter(speaker_role == "Target_Child") %>%
-  mutate(length = str_count(stem, " ") + 1)
+extract_stem_tokens <- function(role, min_length, utterances) {
+  
+  if (role == "child") {
+    lengths <- utterances %>%
+      filter(speaker_role == "Target_Child") %>%
+      mutate(length = str_count(stem, " ") + 1)
 
 } else {
-  lengths <- utterances %>%
-  filter(speaker_role != "Target_Child") %>%
-  mutate(length = str_count(stem, " ") + 1)
+    lengths <- utterances %>%
+      filter(speaker_role != "Target_Child") %>%
+      mutate(length = str_count(stem, " ") + 1)
 }
   
   tokens <- lengths %>% 
@@ -73,6 +70,30 @@ lengths <- utterances %>%
     group_by(utterance_id) %>%
     mutate(word_order = 1:n()) %>%
     group_by(length, word_order, word) %>%
+    summarise(n = n()) 
+}
+
+extract_gloss_tokens <- function(role, min_length, utterances) {
+  
+  if (role == "child") {
+    lengths <- utterances %>%
+      filter(speaker_role == "Target_Child") %>%
+      mutate(length = str_count(gloss, " ") + 1)
+
+} else {
+    lengths <- utterances %>%
+      filter(speaker_role != "Target_Child") %>%
+      mutate(length = str_count(gloss, " ") + 1)
+}
+  
+  tokens <- lengths %>% 
+    filter(length >= min_length) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, gloss) %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n()) %>%
+    group_by(length, word_order, word) %>%
+    filter(word_order <= length) %>% 
     summarise(n = n()) 
 }
  
@@ -110,6 +131,7 @@ second_slope <- function(df) {
 
 }
 
+#note this measurement only makes sense if utterance length is at least 6
 mid_slope <- function(df) {
  
  df %>%
@@ -173,14 +195,55 @@ end_slope <- function(df) {
 }
 
 
+get_slopes <- function(role, min_length, utterances, stemgloss) {
+  
+  if (stemgloss == "stem") {
+    tokens <- extract_stem_tokens(role, min_length, utterances)  
+  } else {
+    tokens <- extract_gloss_tokens(role, min_length, utterances)
+  }
+  
+  start_slopes <- replicate(1000, start_slope(tokens)) %>% 
+    as_data_frame() %>%
+    summarise(mean = mean(value), ci_upper = quantile(value, .975), 
+              ci_lower = quantile(value, .025))
+  
+  second_slopes <- replicate(1000, second_slope(tokens)) %>% 
+    as_data_frame() %>%
+    summarise(mean = mean(value), ci_upper = quantile(value, .975), 
+              ci_lower = quantile(value, .025))
+    
+  mid_slopes <- replicate(1000, mid_slope(tokens)) %>% 
+    as_data_frame() %>%
+    summarise(mean = mean(value), ci_upper = quantile(value, .975), 
+              ci_lower = quantile(value, .025))
+    
+  penult_slopes <- replicate(1000, penult_slope(tokens)) %>% 
+    as_data_frame() %>%
+    summarise(mean = mean(value), ci_upper = quantile(value, .975), 
+              ci_lower = quantile(value, .025))
+    
+  end_slopes <- replicate(1000, end_slope(tokens)) %>% 
+    as_data_frame() %>%
+    summarise(mean = mean(value), ci_upper = quantile(value, .975), 
+              ci_lower = quantile(value, .025))
+  
+  rbind(start_slopes, second_slopes, mid_slopes, penult_slopes, end_slopes)
+}
+
+shiro_slopes <- get_slopes("child", 6, shiro_utterances, "gloss") #what we would expect
+shiro_slopes <- get_slopes("not child", 6, shiro_utterances, "gloss")
+wagner_slopes <- get_slopes("child", 6, wagner_utterances, "gloss")
+
+
 start_time <- Sys.time()
-samples <- replicate(1000, mid_slope(tokens))  %>%
+samples <- replicate(1000, start_slope(tokens))  %>%
   as_data_frame()
 end_time <- Sys.time()
 
 end_time - start_time
 
-samples %>%
+start_slopes <- samples %>%
   summarise(mean = mean(value), ci_upper = quantile(value, .975), 
             ci_lower = quantile(value, .025))
 
