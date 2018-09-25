@@ -76,8 +76,8 @@ def get_sen_df(text):
 					 	  #and the setence length respectively
 	return df
 	
-text = extract_texts(50)
-ro_df = get_sen_df(text)
+text = extract_texts(20)
+xmf_df = get_sen_df(text)
 ```
 
 ```{r analyze_entropies}
@@ -101,7 +101,7 @@ get_entropies <- function(sen_length, df) {
     mutate(length = sen_length)
 }
 
-entropies <- map(6:12, ~get_entropies(.x, py$ro_df)) %>%
+entropies <- map(6:12, ~get_entropies(.x, py$xmf_df)) %>%
   bind_rows()
 
 ggplot(entropies, aes(x = word_order, y = empirical_entropy,
