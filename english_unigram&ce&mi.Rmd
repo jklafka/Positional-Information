@@ -50,7 +50,7 @@ bootstrap entropy slopes
 ```{r slope bootstrapping}
 
 #extract tokens to be used for slope bootstrapping
-extract_stem_tokens <- function(role, min_length, utterances) {
+extract_stem_tokens <- function(role, target_length, utterances) {
   
   if (role == "child") {
     lengths <- utterances %>%
@@ -64,7 +64,7 @@ extract_stem_tokens <- function(role, min_length, utterances) {
 }
   
   tokens <- lengths %>% 
-    filter(length >= min_length) %>%
+    filter(length == target_length) %>%
     mutate(utterance_id = 1:n()) %>%
     unnest_tokens(word, stem) %>%
     group_by(utterance_id) %>%
@@ -73,7 +73,7 @@ extract_stem_tokens <- function(role, min_length, utterances) {
     summarise(n = n()) 
 }
 
-extract_gloss_tokens <- function(role, min_length, utterances) {
+extract_gloss_tokens <- function(role, target_length, utterances) {
   
   if (role == "child") {
     lengths <- utterances %>%
@@ -87,7 +87,7 @@ extract_gloss_tokens <- function(role, min_length, utterances) {
 }
   
   tokens <- lengths %>% 
-    filter(length >= min_length) %>%
+    filter(length == target_length) %>%
     mutate(utterance_id = 1:n()) %>%
     unnest_tokens(word, gloss) %>%
     group_by(utterance_id) %>%
@@ -195,12 +195,12 @@ end_slope <- function(df) {
 }
 
 
-get_slopes <- function(role, min_length, utterances, stemgloss) {
+get_slopes <- function(role, target_length, utterances, stemgloss) {
   
   if (stemgloss == "stem") {
-    tokens <- extract_stem_tokens(role, min_length, utterances)  
+    tokens <- extract_stem_tokens(role, target_length, utterances)  
   } else {
-    tokens <- extract_gloss_tokens(role, min_length, utterances)
+    tokens <- extract_tokens(role, target_length, target_length, utterances)
   }
   
   start_slopes <- replicate(1000, start_slope(tokens)) %>% 
@@ -231,9 +231,57 @@ get_slopes <- function(role, min_length, utterances, stemgloss) {
   rbind(start_slopes, second_slopes, mid_slopes, penult_slopes, end_slopes)
 }
 
+
+```
+
+```{r log_lengths}
+tokens <- extract_tokens("not child", 6, 30, prov_utterances)
+
+
+tokens %>%
+    filter(word_order %in% c(1,2)) %>%
+    dplyr::group_by(length, word_order) %>%
+    dplyr::summarise(entropy = entropy(n, unit = "log2"), n = n()) %>%
+    spread(word_order, entropy) %>%
+    group_by(length) %>%
+    mutate(diff = `2` - `1`) %>%
+  ggplot(aes(x = length, y = diff)) +
+  geom_point(aes(size = n)) +
+  geom_smooth(se = F) +
+  scale_x_log10() #log length stats
+
+extract_tokens <- function(role, min_length, max_length, utterances) {
+  
+  if (role == "child") {
+    lengths <- utterances %>%
+      filter(speaker_role == "Target_Child") %>%
+      mutate(length = str_count(stem, " +") +1) 
+    
+} else {
+    lengths <- utterances %>%
+      filter(speaker_role != "Target_Child") %>%
+     mutate(length = str_count(stem, " +") +1)
+}
+  
+  tokens <- lengths %>% 
+    filter(length >= min_length) %>%
+    filter(length <= max_length) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, stem, token = stringr::str_split, pattern = " +") %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n()) %>%
+    group_by(length, word_order, word) %>%
+    filter(word_order <= length) %>% 
+    summarise(n = n()) 
+}
+  
+shiro_slopes <- map(6:10, ~get_slopes("child", .x, shiro_utterances, "gloss")) 
+
 shiro_slopes <- get_slopes("child", 6, shiro_utterances, "gloss") #what we would expect
 shiro_slopes <- get_slopes("not child", 6, shiro_utterances, "gloss")
 wagner_slopes <- get_slopes("child", 6, wagner_utterances, "gloss")
+okayama_slopes <- get_slopes("child", 6, okayama_utterances, "gloss")
+zhou_slopes <- get_slopes("child", 6, zhou_utterances, "stem")
 
 
 start_time <- Sys.time()
@@ -247,8 +295,66 @@ start_slopes <- samples %>%
   summarise(mean = mean(value), ci_upper = quantile(value, .975), 
             ci_lower = quantile(value, .025))
 
+```
+
+```{r slope_analysis}
+
+new_get_tokens <- function(role, min_length, max_length, utterances) {
+  
+  if (role == "child") {
+        lengths <- utterances %>%
+            filter(speaker_role != "Target_Child") %>%
+            mutate(length = str_count(gloss, " ") + 1)
+    
+  } else {
+    
+        lengths <- utterances %>%
+            filter(speaker_role != "Target_Child") %>%
+            mutate(length = str_count(gloss, " ") + 1)
+  }
+
+  sub_tokens <- lengths %>% 
+     mutate(gloss = str_trim(gloss)) %>%
+     mutate(length = str_count(gloss, " +") +1) %>%
+     filter(length >= min_length) %>%
+     filter(length <= max_length) %>%
+     mutate(utterance_id = 1:n()) %>%
+     unnest_tokens(word, gloss, token = stringr::str_split, pattern = " +") %>%
+     group_by(utterance_id) %>%
+     mutate(word_order = 1:n()) %>%
+     group_by(length, word_order, word) %>%
+     filter(word_order <= length) %>% 
+     summarise(n = n()) 
+}
+
+min_length <- 6
+max_length <- 20
+
+lengths <- prov_utterances %>%
+       filter(speaker_role != "Target_Child") %>%
+       mutate(length = str_count(gloss, " ") + 1)
+
+sub_tokens <- lengths %>% 
+     mutate(gloss = str_trim(gloss)) %>%
+     mutate(length = str_count(gloss, " +") +1) %>%
+     filter(length >= min_length) %>%
+     filter(length <= max_length) %>%
+     mutate(utterance_id = 1:n())
+
+
+sub_tokens %>%
+     unnest_tokens(word, gloss, token = stringr::str_split, pattern = " +") %>%
+     group_by(utterance_id) %>%
+     mutate(word_order = 1:n()) %>%
+     group_by(utterance_id) %>%
+     summarise(n = n()) %>%
+     # filter(n != 6) %>%
+     left_join(sub_tokens) %>%
+     select(gloss, n, length) %>%
+     View()
 
 ```
+
 Compute Providence Corpus Estimates
 ```{r calc_pos_entropy}
 get_entropies <- function(role, sen_length, utterances) {
