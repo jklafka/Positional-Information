@@ -141,6 +141,7 @@ $(document).ready(function () {
 </div>
 
 
+<<<<<<< HEAD
 <pre class="r"><code>xmf_df &lt;- read_csv(&quot;xmf_df.csv&quot;)
 
 
@@ -166,6 +167,15 @@ start_slopes &lt;- replicate(1000, start_slope(gtx)) %&gt;%
               ci_lower = quantile(value, .025))
 
 print(start_slopes)</code></pre>
+=======
+<pre class="r"><code>#get_slopes(&quot;not child&quot;, 6, py$xmf_df, &quot;gloss&quot;)
+gtx &lt;- extract_gloss_tokens(&quot;not child&quot;, 6, py$xmf_df)
+gtx %&gt;% filter(word ==&quot;&quot;)</code></pre>
+<pre><code>## # A tibble: 0 x 4
+## # Groups:   length, word_order [0]
+## # ... with 4 variables: length &lt;dbl&gt;, word_order &lt;int&gt;, word &lt;chr&gt;,
+## #   n &lt;int&gt;</code></pre>
+>>>>>>> ff9c46721b567b45eeaa7fe7e80bdb7e59ae5467
 
 
 
