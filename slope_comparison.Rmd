@@ -1,0 +1,134 @@
+---
+title: "Untitled"
+author: "Joe Klafka"
+date: "10/5/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(tidyverse)
+library(directlabels)
+library(childesr) #data
+library(tidytext)
+library(entropy)
+library(tidyboot)
+library(dplyr)
+library(tokenizers)
+library(gtools)
+
+opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
+               error = FALSE, cache = FALSE, tidy = FALSE)
+
+theme_set(theme_classic(base_size = 16))
+```
+
+
+```{r data}
+prov_utterances <- get_utterances(corpus = "Providence") #stem or gloss
+
+xmf_df <- read_csv("xmf_df.csv")
+
+```
+
+```{r slope_analysis}
+
+extract_childes_tokens <- function(role, min_length, max_length, utterances) {
+  
+  if (role == "child") {
+        lengths <- utterances %>%
+            filter(speaker_role != "Target_Child") %>%
+            mutate(length = str_count(gloss, " ") + 1)
+  } else {
+        lengths <- utterances %>%
+            filter(speaker_role != "Target_Child") %>%
+            mutate(length = str_count(gloss, " ") + 1)
+  }
+
+  sub_tokens <- lengths %>% 
+     mutate(gloss = str_trim(gloss)) %>%
+     mutate(length = str_count(gloss, " +") +1) %>%
+     filter(length >= min_length) %>%
+     filter(length <= max_length) %>%
+     mutate(utterance_id = 1:n()) %>%
+     unnest_tokens(word, gloss, token = stringr::str_split, pattern = " +") %>%
+     group_by(utterance_id) %>%
+     mutate(word_order = 1:n()) %>%
+     group_by(length, word_order, word) %>%
+     filter(word_order <= length) %>% 
+     summarise(n = n()) 
+}
+
+extract_wiki_tokens <- function(min_length, max_length, utterances) {
+  
+  tokens <- utterances %>% 
+    mutate(gloss = str_trim(gloss)) %>%
+    mutate(length = str_count(gloss, pattern = " +") + 1) %>% 
+    filter(length >= min_length) %>%
+    filter(length <= max_length) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, gloss, token = stringr::str_split, pattern = " +") %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n()) %>%
+    # group_by(utterance_id) %>%
+    group_by(length, word_order, word) %>%
+    # filter(word_order <= length) %>% 
+    summarise(n = n()) # %>%
+    # left_join(utterances) %>%
+    # select(gloss, n, length) %>%
+    # View()
+}
+
+length_comparison <- function(min_length, max_length, utterances) {
+  
+  sub_tokens <- utterances %>% 
+     mutate(gloss = str_trim(gloss)) %>%
+     mutate(length = str_count(gloss, " +") +1) %>%
+     filter(length >= min_length) %>%
+     filter(length <= max_length) %>%
+     mutate(utterance_id = 1:n())
+  
+sub_tokens %>%
+     unnest_tokens(word, gloss, token = stringr::str_split, pattern = " +") %>%
+     group_by(utterance_id) %>%
+     mutate(word_order = 1:n()) %>%
+     group_by(utterance_id) %>%
+     summarise(n = n()) %>%
+     # filter(n != 6) %>%
+     left_join(sub_tokens) %>%
+     select(gloss, n, length) %>%
+     View()
+}
+
+n_comparison <- function(tokens) {
+  
+  tokens %>%
+    filter(word_order %in% c(1,2)) %>%
+    dplyr::group_by(length, word_order) %>%
+    dplyr::summarise(entropy = entropy(n, unit = "log2"), n = n()) 
+}
+
+```
+
+```{r slope_work}
+prov_tokens <- extract_childes_tokens("not child", 6, 30, prov_utterances)
+
+xmf_tokens <- extract_wiki_tokens(6, 25, xmf_df) %>% filter(word != " ") %>% filter(word != "")
+
+
+```
+
+```{r leftover code}
+tokens %>%
+    filter(word_order %in% c(1,2)) %>%
+    dplyr::group_by(length, word_order) %>%
+    dplyr::summarise(entropy = entropy(n, unit = "log2"), n = n()) %>%
+    spread(word_order, entropy) %>%
+    group_by(length) %>%
+    mutate(diff = `2` - `1`) %>%
+  ggplot(aes(x = length, y = diff)) +
+  geom_point(aes(size = n)) +
+  geom_smooth(se = F) +
+  scale_x_log10() #log length stats
+
+```
