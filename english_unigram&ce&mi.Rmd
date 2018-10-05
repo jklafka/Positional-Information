@@ -327,6 +327,20 @@ new_get_tokens <- function(role, min_length, max_length, utterances) {
      summarise(n = n()) 
 }
 
+tkns <- extract_tokens("child", 6, 20, prov_utterances)
+
+new_tkns <- tkns %>% 
+    filter(word_order %in% c(1,2)) %>%
+    group_by(length, word_order) %>%
+    summarise(entropy = entropy(n, unit = "log2"), n = n()) %>%
+    spread(word_order, entropy) %>%
+    group_by(length) %>%
+    mutate(diff = `2` - `1`) %>%
+  ggplot(aes(x = length, y = diff)) +
+  geom_point(aes(size = n)) +
+  geom_smooth(se = F) +
+  scale_x_log10() 
+
 min_length <- 6
 max_length <- 20
 
