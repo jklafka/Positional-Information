@@ -363,12 +363,13 @@ xmf_df <- read_csv("xmf_df.csv")
 
 
 #get_slopes("not child", 6, py$xmf_df, "gloss")
-gtx <- extract_wiki_tokens(6, 25, xmf_df) %>% filter(word != " ") %>% filter(word != "")
 
-tokens %>%
+gtx <- extract_wiki_tokens(6, 1000, xmf_df)
+
+gtx %>%
     filter(word_order %in% c(1,2)) %>%
     group_by(length, word_order) %>%
-    summarise(entropy = entropy(n, unit = "log2"), n = n()) %>%
+    summarise(entropy = entropy(n, unit = "log2"), n = sum(n)) %>%
     spread(word_order, entropy) %>%
     group_by(length) %>%
     mutate(diff = `2` - `1`) %>%
