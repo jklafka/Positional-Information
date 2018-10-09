@@ -327,7 +327,7 @@ new_get_tokens <- function(role, min_length, max_length, utterances) {
      summarise(n = n()) 
 }
 
-tkns <- extract_tokens("child", 6, 20, prov_utterances)
+tkns <- new_get_tokens("child", 6, 20, prov_utterances)
 
 new_tkns <- tkns %>% 
     filter(word_order %in% c(1,2)) %>%
