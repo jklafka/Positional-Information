@@ -71,7 +71,9 @@ wiki_tokens %>%
   geom_smooth(se = F) +
   scale_x_log10() #log length stats
 
-als_slopes <- get_wiki_slopes(min_length = 6, max_length = 50, utterances=df, 100)
+REPS <- 100
+
+als_slopes <- get_wiki_slopes(min_length = 6, max_length = 50, utterances=df, REPS)
 ```
 
 ```{r slope_code, include = F, eval=F}
