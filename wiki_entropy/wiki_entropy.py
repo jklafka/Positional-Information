@@ -7,12 +7,18 @@ import json
 import subprocess
 import urllib.request
 
+
 with open("language_dict.json", 'r') as f:
 	file = f.read()
-LANG_DICT = json.loads(file)
+LANG_DICT = json.loads(file) #maps languages to their wikipedia url prefixes
 
 
 def extract_texts(upper_bound):
+	'''
+	Given an upper_bound on file numbers, extracts the raw text from the files
+	in the text/AA folder. That folder is given as output by the cirrus_extract
+	program. 
+	'''
 	rs = ""
 	for i in range(upper_bound):
 		if i < 10:
@@ -26,7 +32,12 @@ def extract_texts(upper_bound):
 
 
 def get_sen_dict(text):
-	text = re.sub("<doc.+>|</doc>|http:\S+|[-%,;:–'&*#/—“»]|\d+|\(|\)|\[|\]", "", text) 
+	'''
+	Given the output of extract_texts as a string, constructs a 
+	dictionary mapping each sentence in the string to its length in words.
+	'''
+	text = re.sub("<doc.+>|</doc>|http:\S+|[-%,;:–'&*#/—“»]|\d+|\(|\)|\[|\]", \
+		"", text) 
 	text = re.sub('"', '', text)
 	#just the words from the articles
 	text = text.replace('\n', " ")
@@ -40,6 +51,10 @@ def get_sen_dict(text):
 
 
 def get_sen_df(text):
+	'''
+	Given the output of extract_texts as a string, returns a Pandas dataframe
+	of the output of get_sen_dict. 
+	'''
 	sd = get_sen_dict(text)
 	s = pd.Series(sd, name = "length")
 	del sd
@@ -50,20 +65,21 @@ def get_sen_df(text):
 	
 
 def main(lang_name):
-	lang_prefix = LANG_DICT[lang_name]
+	lang_prefix = LANG_DICT[lang_name] #gets the wikipedia url prefix for lang_name
 	url = "https://dumps.wikimedia.org/other/cirrussearch/current/" \
 		+ lang_prefix + "wiki-20181001-cirrussearch-content.json.gz"	
-	urllib.request.urlretrieve(url, "datafile")
+	urllib.request.urlretrieve(url, "datafile") #downloads the dump for that language
 	
 	subprocess.call(["wikiextractor/cirrus_extract.py", "datafile"])
 
 	directory = subprocess.check_output(["ls", "text/AA"]).decode("utf-8")
 	highest_filenum = int(max(re.findall("\d\d", directory)))
 	upper_bound = min(highest_filenum, 50)
-	# name=$(ls | sort -V | tail -n 1) echo ${name: -2}
+
 	text = extract_texts(upper_bound)
 	df = get_sen_df(text)
 	df.to_csv(lang_prefix + "_df.csv")
+
 	del df
 	subprocess.call(["rm", "-r", "text"])
 	subprocess.call(["rm", "datafile"])
@@ -71,3 +87,4 @@ def main(lang_name):
 
 if __name__ == "__main__":
 	main(sys.argv[1])
+	
