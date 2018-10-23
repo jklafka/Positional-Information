@@ -60,25 +60,25 @@ def get_sen_df(text):
 	del sd
 	s.index.name = "gloss"
 	df = s.reset_index() #gives a dataframe with columns "sentence" and "length" containing the sentence 
-					 	  #and the setence length respectively
+					 	  #and the sentence length respectively
 	return df
 	
 
 def main(lang_name):
 	lang_prefix = LANG_DICT[lang_name] #gets the wikipedia url prefix for lang_name
 	url = "https://dumps.wikimedia.org/other/cirrussearch/current/" \
-		+ lang_prefix + "wiki-20181008-cirrussearch-content.json.gz"	
+		+ lang_prefix + "wiki-20181015-cirrussearch-content.json.gz"	
 	urllib.request.urlretrieve(url, "datafile") #downloads the dump for that language
 	
-	subprocess.call(["wikiextractor/cirrus_extract.py", "datafile"])
+	subprocess.call(["wiki_extract/cirrus_extract.py", "datafile"])
 
 	directory = subprocess.check_output(["ls", "text/AA"]).decode("utf-8")
-	highest_filenum = int(max(re.findall("\d\d", directory)))
+	highest_filenum = max(int(max(re.findall("\d\d", directory))), 1)
 	upper_bound = min(highest_filenum, 50)
 
 	text = extract_texts(upper_bound)
 	df = get_sen_df(text)
-	df.to_csv(lang_prefix + "_df.csv")
+	df.to_csv(lang_prefix + "_df.csv", index = False)
 
 	del df
 	subprocess.call(["rm", "-r", "text"])
