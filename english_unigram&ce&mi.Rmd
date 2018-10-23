@@ -509,7 +509,7 @@ position_mi <- function(df, pos1, pos2) {
 
 counts <- map(2:6, ~get_counts("not child", .x, prov_utterances))
 
-mi <- map(counts, all_pairwise_mi)
+mi <- map(counts, all_pairwise_mi) %>% bind_rows()
 
 ggplot(mi, aes(x = pos2, y = mi, color = as.factor(pos1))) + 
   facet_wrap(~length) + 
@@ -517,7 +517,7 @@ ggplot(mi, aes(x = pos2, y = mi, color = as.factor(pos1))) +
   geom_line()
 
 
-ggplot(mi[[4]], aes(x = pos1, y = mi, color = as.factor(pos2))) + 
+ggplot(mi, aes(x = pos1, y = mi, color = as.factor(pos2))) + 
   facet_wrap(~length) + 
   geom_point() + 
   geom_line()

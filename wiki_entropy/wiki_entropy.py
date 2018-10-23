@@ -67,7 +67,7 @@ def get_sen_df(text):
 def main(lang_name):
 	lang_prefix = LANG_DICT[lang_name] #gets the wikipedia url prefix for lang_name
 	url = "https://dumps.wikimedia.org/other/cirrussearch/current/" \
-		+ lang_prefix + "wiki-20181001-cirrussearch-content.json.gz"	
+		+ lang_prefix + "wiki-20181008-cirrussearch-content.json.gz"	
 	urllib.request.urlretrieve(url, "datafile") #downloads the dump for that language
 	
 	subprocess.call(["wikiextractor/cirrus_extract.py", "datafile"])
