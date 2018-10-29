@@ -1,7 +1,7 @@
 ---
 title: Wikipedia Text Mining and Entropy Analysis
 author: Josef Klafka and Dan Yurovsky
-date:
+date: "`r Sys.Date()`"
 output: 
   html_document:
     toc: false
@@ -36,14 +36,15 @@ theme_set(theme_classic(base_size = 16))
 
 LANGUAGE <- "Dutch" # This is the language you want to examine
 
-system(paste("python3 wiki_entropy.py", LANGUAGE, sep = " "))
+system(paste("python3 get_wiki_df.py", LANGUAGE, sep = " "))
 ```
 
 ```{r slope_analysis, include=FALSE, eval = F}
-df <- read_csv("~/Documents/Labwork/Joe/Positional-Information/wiki_entropy/ru_df.csv")
+df <- read_csv("wiki_df.csv")
 
 wiki_tokens <- extract_wiki_tokens(6, 50, df)
 
+# plot the entropy slope for sentences of length min_length to max_length
 wiki_tokens %>%
     filter(word_order %in% c(1, 2)) %>%
     group_by(length, word_order) %>%
@@ -208,14 +209,17 @@ get_wiki_slopes <- function(min_length, max_length, utterances, REPS) {
 ```{r analyze_entropies, include=FALSE, eval = F}
 get_entropies <- function(sen_length, df) {
    
-  tokens <- df %>%
-    filter(length == sen_length) %>%
+  tokens <- utterances %>% 
+    mutate(gloss = str_trim(gloss)) %>%
+    mutate(length = str_count(gloss, pattern = " +") + 1) %>% 
+    filter(length >= min_length) %>%
+    filter(length <= max_length) %>%
     mutate(utterance_id = 1:n()) %>%
-    unnest_tokens(word, sentence) %>%
+    unnest_tokens(word, gloss, token = stringr::str_split, pattern = " +") %>%
     group_by(utterance_id) %>%
     mutate(word_order = 1:n()) %>%
-    group_by(word_order, word) %>%
-    filter(word_order <= length)
+    group_by(length, word_order, word) %>%
+    summarise(n = n()) 
    
   tokens %>%
     summarise(n = n()) %>%
@@ -225,135 +229,4 @@ get_entropies <- function(sen_length, df) {
              summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
     mutate(length = sen_length)
 }
-```
-
-
-```{r slope_stuff, include = F, eval = F}
-
-xmf_df <- read_csv("xmf_df.csv")
-
-
-#get_slopes("not child", 6, py$xmf_df, "gloss")
-
-gtx <- extract_wiki_tokens(6, 1000, xmf_df)
-
-gtx %>%
-    filter(word_order %in% c(1,2)) %>%
-    group_by(length, word_order) %>%
-    summarise(entropy = entropy(n, unit = "log2"), n = sum(n)) %>%
-    spread(word_order, entropy) %>%
-    group_by(length) %>%
-    mutate(diff = `2` - `1`) %>%
-  ggplot(aes(x = length, y = diff)) +
-  geom_point(aes(size = n)) +
-  geom_smooth(se = F) +
-  scale_x_log10() #log length stats
-
-get_wiki_slopes(min_length = 6, max_length = 50, utterances=xmf_df)
-
-
-```
-
-```{r garbage}
-# extract_stem_tokens <- function(role, min_length, utterances) {
-#   
-#   REPS <- 100
-#   
-#   if (role == "child") {
-#     lengths <- utterances %>%
-#       filter(speaker_role == "Target_Child") %>%
-#       mutate(length = str_count(stem, " ") + 1)
-# 
-#   } else {
-#     lengths <- utterances %>%
-#       filter(speaker_role != "Target_Child") %>%
-#       mutate(length = str_count(stem, " ") + 1)
-#   }
-#   
-#   tokens <- lengths %>% 
-#     filter(length >= min_length) %>%
-#     mutate(utterance_id = 1:n()) %>%
-#     unnest_tokens(word, stem) %>%
-#     group_by(utterance_id) %>%
-#     mutate(word_order = 1:n()) %>%
-#     group_by(length, word_order, word) %>%
-#     summarise(n = n()) 
-# }
-#get_slopes("not child", 6, py$xmf_df, "gloss")
-
-# sub_tokens <- xmf_df %>% 
-#      mutate(gloss = str_trim(gloss)) %>%
-#      mutate(length = str_count(gloss, " +") +1) %>%
-#      filter(length >= min_length) %>%
-#      filter(length <= max_length) %>%
-#      mutate(utterance_id = 1:n())
-# 
-# 
-# sub_tokens %>%
-#      unnest_tokens(word, gloss, token = stringr::str_split, pattern = " +") %>%
-#      group_by(utterance_id) %>%
-#      mutate(word_order = 1:n()) %>%
-#      group_by(utterance_id) %>%
-#      summarise(n = n()) %>%
-#      filter(n != 6) %>%
-#      left_join(sub_tokens) %>%
-#      select(gloss, n, length) %>%
-#      View()
-
-
-#entropies <- map(6:12, ~get_entropies(.x, py$xmf_df)) %>%
-#  bind_rows()
-
-#ggplot(entropies, aes(x = word_order, y = empirical_entropy,
-#                      ymin = ci_lower, ymax = ci_upper)) +
-#  facet_wrap(~ length) + 
-#  geom_pointrange() +
-#  geom_smooth(se = F)
-
-# extract_stem_tokens <- function(role, min_length, utterances) {
-#   
-#   if (role == "child") {
-#     lengths <- utterances %>%
-#       filter(speaker_role == "Target_Child") %>%
-#       mutate(length = str_count(stem, " ") + 1)
-# 
-# } else {
-#     lengths <- utterances %>%
-#       filter(speaker_role != "Target_Child") %>%
-#       mutate(length = str_count(stem, " ") + 1)
-# }
-#   
-#   tokens <- lengths %>% 
-#     filter(length >= min_length) %>%
-#     mutate(utterance_id = 1:n()) %>%
-#     unnest_tokens(word, stem) %>%
-#     group_by(utterance_id) %>%
-#     mutate(word_order = 1:n()) %>%
-#     group_by(length, word_order, word) %>%
-#     summarise(n = n()) 
-# }
-# 
-# extract_gloss_tokens <- function(role, min_length, utterances) {
-#   
-#   if (role == "child") {
-#     lengths <- utterances %>%
-#       filter(speaker_role == "Target_Child") %>%
-#       mutate(length = str_count(gloss, " ") + 1)
-# 
-# } else {
-#     lengths <- utterances %>%
-#       filter(speaker_role != "Target_Child") %>%
-#       mutate(length = str_count(gloss, " ") + 1)
-# }
-#   
-#   tokens <- lengths %>% 
-#     filter(length >= min_length) %>%
-#     mutate(utterance_id = 1:n()) %>%
-#     unnest_tokens(word, gloss) %>%
-#     group_by(utterance_id) %>%
-#     mutate(word_order = 1:n()) %>%
-#     group_by(length, word_order, word) %>%
-#     filter(word_order <= length) %>% 
-#     summarise(n = n()) 
-# }
 ```

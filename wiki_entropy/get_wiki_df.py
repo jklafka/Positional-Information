@@ -16,8 +16,8 @@ LANG_DICT = json.loads(file) #maps languages to their wikipedia url prefixes
 def extract_texts(upper_bound):
 	'''
 	Given an upper_bound on file numbers, extracts the raw text from the files
-	in the text/AA folder. That folder is given as output by the cirrus_extract
-	program. 
+	in the text/AA folder. That folder is given as output by the 
+	cirrus_extract program. 
 	'''
 	rs = ""
 	for i in range(upper_bound):
@@ -65,26 +65,33 @@ def get_sen_df(text):
 	
 
 def main(lang_name):
-	lang_prefix = LANG_DICT[lang_name] #gets the wikipedia url prefix for lang_name
-	url = "https://dumps.wikimedia.org/other/cirrussearch/current/" \
-		+ lang_prefix + "wiki-20181015-cirrussearch-content.json.gz"	
-	urllib.request.urlretrieve(url, "datafile") #downloads the dump for that language
-	
+	'''
+	Given the English name of a language, constructs a dataframe with the 
+	sentences of a random subset of articles in that language from Wikipedia, 
+	and stores the dataframe in a csv in the working directory. 
+	'''
+	lang_prefix = LANG_DICT[lang_name] 
+	url = "https://dumps.wikimedia.org/other/cirrussearch/20181022/" \
+		+ lang_prefix + "wiki-20181022-cirrussearch-content.json.gz"	
+	urllib.request.urlretrieve(url, "datafile") 
 	subprocess.call(["wiki_extract/cirrus_extract.py", "datafile"])
 
+	# find the number of article files we want to combine
 	directory = subprocess.check_output(["ls", "text/AA"]).decode("utf-8")
 	highest_filenum = max(int(max(re.findall("\d\d", directory))), 1)
 	upper_bound = min(highest_filenum, 50)
 
+	# construct the df
 	text = extract_texts(upper_bound)
 	df = get_sen_df(text)
-	df.to_csv(lang_prefix + "_df.csv", index = False)
+	df.to_csv("wiki_df.csv", index = False)
 
-	del df
-	subprocess.call(["rm", "-r", "text"])
-	subprocess.call(["rm", "datafile"])
+	# delete the text files and datafile 
+	# may be several gigabytes large
+	subprocess.call(["rm", "-r", "text"]) 
+	subprocess.call(["rm", "datafile"]) 
 
 
 if __name__ == "__main__":
-	main(sys.argv[1])
+	main(sys.argv[1]) # takes the English name of a language as sole argument
 	
