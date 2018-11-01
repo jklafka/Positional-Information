@@ -34,35 +34,14 @@ theme_set(theme_classic(base_size = 16))
 ```{r python_background}
 # Here's where to find the languages of Wikipedia and their prefixes: https://en.wikipedia.org/wiki/List_of_Wikipedias#Detailed_list
 
-LANGUAGE <- "Dutch" # This is the language you want to examine
+LANGUAGE <- "Alemannic" # This is the language you want to examine
 
-system(paste("python3 get_wiki_df.py", LANGUAGE, sep = " "))
+system(paste("python get_wiki_df.py", LANGUAGE, sep = " "))
 ```
 
-```{r slope_analysis, include=FALSE, eval = F}
-df <- read_csv("wiki_df.csv")
 
-wiki_tokens <- extract_wiki_tokens(6, 50, df)
-
-# plot the entropy slope for sentences of length min_length to max_length
-wiki_tokens %>%
-    filter(word_order %in% c(1, 2)) %>%
-    group_by(length, word_order) %>%
-    summarise(entropy = entropy(n, unit = "log2"), n = sum(n)) %>%
-    spread(word_order, entropy) %>%
-    group_by(length) %>%
-    mutate(diff = `2` - `1`) %>%
-  ggplot(aes(x = length, y = diff)) +
-  geom_point(aes(size = n)) +
-  geom_smooth(se = F) +
-  scale_x_log10() #log length stats
-
-REPS <- 100
-
-ru_slopes <- get_wiki_slopes(min_length = 6, max_length = 50, utterances=df, REPS)
-```
-
-```{r slope_code, include = F, eval=F}
+Extract tokens
+```{r extract_tokens}
 extract_wiki_tokens <- function(min_length, max_length, utterances) {
   
   tokens <- utterances %>% 
@@ -77,7 +56,10 @@ extract_wiki_tokens <- function(min_length, max_length, utterances) {
     group_by(length, word_order, word) %>%
     summarise(n = n()) 
 }
+```
 
+Slope helpers
+```{r slope_helpers, include = F, eval=F}
 start_slope <- function(df) {
  
  df %>%
@@ -90,6 +72,25 @@ start_slope <- function(df) {
     mutate(diff = `2` - `1`) %>%
     summarise(diff = mean(diff)) %>%
     pull(diff)
+
+}
+
+estimate_slope_normal <- function(df, first_pos, second_pos) {
+  
+   mutate(word_order = if_else(word_order == length-1, 2,
+                                if_else(word_order == length -2, 1,
+                                        0))) %>%   
+  
+  
+  df %>%
+    ungroup() %>%
+    filter(word_order >= first_pos, word_order <= second_pos) %>%
+    mutate(word_order = word_order - max(word_order)) %>%
+    group_by(length, word_order) %>%
+    summarise(entropy = entropy(n, unit = "log2")) %>%
+    lm(entropy ~ length + I(length^2) + word_order, data  = .) %>%
+    tidy() %>%
+    filter(term == "word_order")
 
 }
 
@@ -170,8 +171,9 @@ end_slope <- function(df) {
     pull(diff)
 
 }
+```
 
-
+```{r get_slopes}
 get_wiki_slopes <- function(min_length, max_length, utterances, REPS) {
   
   tokens <- extract_wiki_tokens(min_length, max_length, utterances)  
@@ -205,6 +207,30 @@ get_wiki_slopes <- function(min_length, max_length, utterances, REPS) {
 }
 
 ```
+
+```{r slope_analysis, include=FALSE, eval = F}
+df <- read_csv("wiki_df.csv")
+
+wiki_tokens <- extract_wiki_tokens(6, 50, df)
+
+# plot the entropy slope for sentences of length min_length to max_length
+wiki_tokens %>%
+    filter(word_order %in% c(1, 2)) %>%
+    group_by(length, word_order) %>%
+    summarise(entropy = entropy(n, unit = "log2"), n = sum(n)) %>%
+    spread(word_order, entropy) %>%
+    group_by(length) %>%
+    mutate(diff = `2` - `1`) %>%
+  ggplot(aes(x = length, y = diff)) +
+  geom_point(aes(size = n)) +
+  geom_smooth(se = F) +
+  scale_x_log10() #log length stats
+
+REPS <- 100
+
+ru_slopes <- get_wiki_slopes(min_length = 6, max_length = 50, utterances=df, REPS)
+```
+
 
 ```{r analyze_entropies, include=FALSE, eval = F}
 get_entropies <- function(sen_length, df) {
