@@ -1,11 +1,12 @@
-import regex as re 
 import numpy as np
+import subprocess
+import regex as re 
 import pandas as pd 
 import csv
 import sys
 import json
-import subprocess
 import urllib.request
+import os
 
 
 with open("language_dict.json", 'r') as f:
@@ -36,7 +37,7 @@ def get_sen_dict(text):
 	Given the output of extract_texts as a string, constructs a 
 	dictionary mapping each sentence in the string to its length in words.
 	'''
-	text = re.sub("<doc.+>|</doc>|http:\S+|[-%,;:–'&*#/—“»]|\d+|\(|\)|\[|\]", \
+	text = re.sub("<doc.+>|</doc>|http:\S+|[-%,;:&]|\d+|\(|\)|\[|\]", \
 		"", text) 
 	text = re.sub('"', '', text)
 	#just the words from the articles
@@ -71,14 +72,15 @@ def main(lang_name):
 	and stores the dataframe in a csv in the working directory. 
 	'''
 	lang_prefix = LANG_DICT[lang_name] 
-	url = "https://dumps.wikimedia.org/other/cirrussearch/20181022/" \
-		+ lang_prefix + "wiki-20181022-cirrussearch-content.json.gz"	
+	url = "https://dumps.wikimedia.org/other/cirrussearch/20181112/" \
+		+ lang_prefix + "wiki-20181112-cirrussearch-content.json.gz"	
 	urllib.request.urlretrieve(url, "datafile") 
-	subprocess.call(["wiki_extract/cirrus_extract.py", "datafile"])
+	subprocess.call(["python", "wiki_extract/cirrus_extract.py", "datafile"])
 
 	# find the number of article files we want to combine
-	directory = subprocess.check_output(["ls", "text/AA"]).decode("utf-8")
-	highest_filenum = max(int(max(re.findall("\d\d", directory))), 1)
+	print(os.listdir("text/AA"))
+	highest_filenum = int(sorted(os.listdir("text/AA"))[-1][-2:])
+	#highest_filenum = max(int(max(re.findall("\d\d", directory))), 1)
 	upper_bound = min(highest_filenum, 50)
 
 	# construct the df

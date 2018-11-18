@@ -50,22 +50,33 @@ get_table <- function(connection, name) {
 }
 
 utterances <- get_table(connection, "utterances") %>% collect() #to get the "utterances" table as a dataframe named utterances
+home_visits <- get_table(connection, "home_visits")  %>% collect() #information about SES, work, education and other demographic stuff
 DBI::dbListTables(connection) #to list the tables in the collection
 ```
 
+```{r filter_utterances}
+get_ses_utterances <- function(status, utterances, home_visits) {
+  income <- home_visits %>% filter(income_category %in% status) 
+  
+  ids <- unique(income$id) %>% unlist()
+  
+  utterances %>% filter(subject %in% ids)
+}
+
+ses_utts <- get_ses_utterances(c(6), utterances, home_visits)
+```
+
 ```{r ldp_analysis}
-get_unigram_entropies <- function(role, person, sen_length, utterances) {
+get_unigram_entropies <- function(role, sen_length, utterances) {
   
   if(role == "child") {
     sub_utterances <- utterances %>%
-      filter(subject == person) %>% 
       filter(c_utts_orig != "") %>%
       mutate(length = str_count(c_utts_orig, " |\\+|_") + 1) 
     
       colnames(sub_utterances)[colnames(sub_utterances)=="c_utts_orig"] <- "gloss"
   } else {
      sub_utterances <- utterances %>%
-      filter(subject == person) %>% 
       filter(p_utts_orig != "") %>%
       mutate(length = str_count(p_utts_orig, " |\\+|_") + 1) 
      
@@ -91,7 +102,7 @@ get_unigram_entropies <- function(role, person, sen_length, utterances) {
     mutate(role = role, length = sen_length)
 }
 
-entropies <- map(2:10, ~get_unigram_entropies("child", , .x, utterances)) %>%
+entropies <- map(2:10, ~get_unigram_entropies("child", .x, ses_utts)) %>%
   bind_rows()
 
 ggplot(entropies, aes(x = word_order, y = empirical_entropy,

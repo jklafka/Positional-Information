@@ -179,7 +179,7 @@ def process_dump(input_file, out_file, file_size, file_compress):
             url = urlbase + 'wiki?curid=' + id
             header = '<doc id="%s" url="%s" title="%s">\n' % (id, url, title)
             page = header + title + '\n\n' + text + '\n</doc>\n'
-            output.write(page)
+            output.write(page.encode('utf-8'))
 
 # ----------------------------------------------------------------------
 
