@@ -126,7 +126,7 @@ relative_slopes <- function(df, pos_list) {
       inner_join(selected_pos, by = c("length", "word_order")) %>% 
       group_by(length, word_order) %>%
       summarise(entropy = entropy(n, unit = "log2")) %>%
-      lm(entropy ~ length + I(length^2) ++ word_order, data  = .) %>%
+      lm(entropy ~ length + I(length^2) + word_order, data  = .) %>%
       tidy() %>%
       filter(term == "word_order")
   }
