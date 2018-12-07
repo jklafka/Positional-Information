@@ -1,0 +1,39 @@
+---
+title: Wikipedia Text Mining and Entropy Analysis
+author: Josef Klafka and Dan Yurovsky
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: false
+    number_sections: false
+    theme: lumen
+    toc_float: false
+    code_folding: show 
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(googlesheets)
+
+knitr::opts_chunk$set(echo = TRUE)
+
+opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
+               error = FALSE, cache = FALSE, tidy = FALSE)
+
+theme_set(theme_classic(base_size = 16))
+```
+
+```{r clustering}
+##read in googlesheet
+wiki_gs <- gs_title("Wikipedia_absolute")
+wkpd <- gs_read(wiki_gs) %>%
+  as.data.frame() %>%
+  column_to_rownames(var = "language")
+
+##do clustering
+wk_clust <- wkpd %>% 
+              dist() %>%
+              hclust("ward.D2") %>%
+              plot(hang = -1)
+
+```
