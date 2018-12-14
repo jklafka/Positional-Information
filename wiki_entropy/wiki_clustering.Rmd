@@ -14,6 +14,9 @@ output:
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(googlesheets)
+library(lingtypology)
+library(knitr)
+library(klaR)
 
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -25,15 +28,37 @@ theme_set(theme_classic(base_size = 16))
 
 ```{r clustering}
 ##read in googlesheet
-wiki_gs <- gs_title("Wikipedia_absolute")
-wkpd <- gs_read(wiki_gs) %>%
+wiki_gs <- gs_title("Wikipedia_relative10")
+wkpd <- gs_read(wiki_gs) 
+LANGUAGES <- wkpd$Language
+
+wkpd <- wkpd %>% 
   as.data.frame() %>%
   column_to_rownames(var = "language")
 
 ##do clustering
 wk_clust <- wkpd %>% 
               dist() %>%
-              hclust("ward.D2") %>%
-              plot(hang = -1)
+              hclust("ward.D2")
+
+wk_clust %>% plot(hang = -1)
+```
+
+```{r WALS_features}
+FEATURES <- c(1:144)
+for (i in c(1:144)) {
+  FEATURES[i] <- paste(FEATURES[i], "A", sep = "")
+} #get all WALS features in correct syntax
+
+NUM_CLUSTERS <- 4
+
+wf <- wals.feature(FEATURES)
+wf %>% View()
+wf <- wf[, -(1:3)]
+wf <- wf[, -(ncol(wf) - 1)]
+wf <- wf %>% 
+  filter(language %in% LANGUAGES)
+wf <- wf[, complete.cases(wf)] #this significantly trims down the dataset but is necessary for k-modes
+rv <- kmodes(wf[, -(ncol(wf))], NUM_CLUSTERS, iter.max=10, weighted = FALSE)
 
 ```

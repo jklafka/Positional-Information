@@ -1,23 +1,20 @@
 ---
-title: "How to Make a Camera-Ready Proceedings Contribution"
+title: "A Language's Unigram Entropy Distribution Predicts Self-Paced Reading Times"
 bibliography: library.bib
 csl: apa6.csl
 document-params: "10pt, letterpaper"
 
 author-information: > 
-    \author{{\large \bf Author 1} \\ \texttt{author1@university.edu} \\ Department of Psychology \\ Some University
-    \And {\large \bf Author 2} \\ \texttt{author1@university.edu} \\ Department of Psychology \\ Some University}
+    \author{{\large \bf Josef Klafka} \\ \texttt{jklafka@uchicago.edu} \\ Department of Psychology \\ University of Chicago
+    \And {\large \bf Daniel Yurovsky} \\ \texttt{yurovsky@uchicago.edu} \\ Department of Psychology \\ University of Chicago}
 
 abstract: 
-    "The abstract should be one paragraph, indented 1/8 inch on both sides,
-in 9 point font with single spacing. The heading Abstract should
-be 10 point, bold, centered, with one line space below it. This
-one-paragraph abstract section is required only for standard spoken
-papers and standard posters (i.e., those presentations that will be
-represented by six page papers in the Proceedings)."
+    "We aim to provide evidence against the popular Uniform Information Density 
+    (Jaeger, 2010) and wrap-up effect (Kuperman et al., 2010) hypotheses using cross-linguistic 
+    evidence from speech, text and eye-tracking corpora."
     
 keywords:
-    "Add your choice of indexing terms or keywords; kindly use a semi-colon; between each term."
+    "Entropy; self-paced reading; information theory; language processing"
     
 output: cogsci2016::cogsci_paper
 ---
@@ -34,54 +31,30 @@ library(ggplot2)
 library(xtable)
 ```
 
-# General Formatting Instructions 
+# Uniform Information Density
 
-For general information about authoring in markdown, see **[here](http://rmarkdown.rstudio.com/authoring_basics.html).**
+The average distribution of information in English sentences-what is it? Genzel & Charniak (2002) looked at the log-probability of words occurring in sentences as you proceed through a paragraph or article and found that less common/less likely words occurred more frequently as you moved through the text. The relationship they found was roughly an affine linear function, leading them to propose the *constant entropy rate* (CER) principle: the entropy of words in a sentence, i.e. the uncertainty about what words will appear in a sentence, will increase at a constant, linear rate through a paragraph. This idea was used by Aylett & Turk (2004), Levy & Jaeger (2007) and Frank & Jaeger (2008) among others. The CER principle was adapted by Jaeger (2010) into the *uniform information density* (UID) principle: uniformation is evenly spread throughout a sentence. From a theoretical standpoint, this makes sense as the optimal distribution for information throughout a sentence: if you miss any word I’ve said, the rest of the information in the sentence is intact, and you lose no more than if you miss any other word I’d have said. 
 
-For standard spoken papers and standard posters, the entire 
-contribution (including figures, references, everything) can be 
-no longer than six pages. For abstract posters, the entire contribution 
-can be no longer than one page. For symposia, the entire contribution 
-can be no longer than two pages.
+The UID hypothesis 
 
-The text of the paper should be formatted in two columns with an
-overall width of 7 inches (17.8 cm) and length of 9.25 inches (23.5
-cm), with 0.25 inches between the columns. Leave two line spaces
-between the last author listed and the text of the paper. The left
-margin should be 0.75 inches and the top margin should be 1 inch.
-\textbf{The right and bottom margins will depend on whether you use
-U.S. letter or A4 paper, so you must be sure to measure the width of
-the printed text.} Use 10 point Times Roman with 12 point vertical
-spacing, unless otherwise specified.
+## UID challenges
 
-The title should be in 14 point, bold, and centered. The title should
-be formatted with initial caps (the first letter of content words
-capitalized and the rest lower case). Each author's name should appear
-on a separate line, 11 point bold, and centered, with the author's
-email address in parentheses. Under each author's name list the
-author's affiliation and postal address in ordinary 10 point  type.
+More recent work has stood out in contrast to the traditional UID perspective. Zhan and Levy (2018) study Mandarin Chinese classifier use, and find that the use of specific classifier, versus general classifiers, appears more often in cases where the production of the corresponding noun is more difficult than when the production is easier, as would be predicted by UID. The UID perspective is challenged in Yu et al. (2016), by performing an analysis of entropy by position in the text portion of the British National Corpus. They use the following formula for each word position X of sentences of fixed length k from the corpus, where each i is a word occurring in position X and pi is the number of times word i occurs in position X divided by the number of total words that occur in position X i.e. the number of sentences of length k. 
 
-Indent the first line of each paragraph by 1/8~inch (except for the
-first paragraph of a new section). Do not add extra vertical space
-between paragraphs.
+$$H(X) = \sum\limits_w p(w)\log\big(p(w)\big)$$
+Yu et al. (2016) refer to their distribution for English as a ‘three-step distribution’: relatively low entropy at the beginning of a sentence, then a jump, then flat entropy in the middle, a dip before the final position and a jump with the final word. View the figure below for a visual demonstration. 
 
-# First-Level Headings
+```{r yunigram, fig.env = "figure*", fig.pos = "h", fig.width=6, fig.height=4, fig.align = "center", set.cap.width=T, num.cols.cap=2, fig.cap = "English entropy distribution for three sentence lengths from BNC"}
+img <- png::readPNG("figs/yunigram.png")
+grid::grid.raster(img)
+```
 
-First level headings should be in 12 point , initial caps, bold and
-centered. Leave one line space above the heading and 1/4~line space
-below the heading.
+This diverges from the UID account, which would predict a simple affine function. 
+Our replication with CHILDES. Conditional entropy and mutual information. Link with Thiessen & Onnis (to appear). Mention Ferrer-i-Cancho (2017), which provides a theoretical basis for the end of the sentence being the center of information. 
+Cross-linguistic variation. Our Wikipedia analysis
+Link with Kuperman et al. (2010). Talk about challenges to the wrap-up account. Consequences for eye-tracking. Talk about Zhan and Levy (2018) and how current work in eye-tracking and language processing disputes the UID account. 
 
-## Second-Level Headings
 
-Second level headings should be 11 point , initial caps, bold, and
-flush left. Leave one line space above the heading and 1/4~ line
-space below the heading.
-
-### Third-Level Headings
-
-Third-level headings should be 10 point , initial caps, bold, and flush
-left. Leave one line space above the heading, but no space after the
-heading.
 
 # Formalities, Footnotes, and Floats
 
