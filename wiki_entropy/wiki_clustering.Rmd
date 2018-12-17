@@ -28,13 +28,13 @@ theme_set(theme_classic(base_size = 16))
 
 ```{r clustering}
 ##read in googlesheet
-wiki_gs <- gs_title("Wikipedia_relative10")
+wiki_gs <- gs_title("Wikipedia_absolute")
 wkpd <- gs_read(wiki_gs) 
 LANGUAGES <- wkpd$Language
 
 wkpd <- wkpd %>% 
   as.data.frame() %>%
-  column_to_rownames(var = "language")
+  column_to_rownames(var = "Language")
 
 ##do clustering
 wk_clust <- wkpd %>% 
@@ -44,7 +44,44 @@ wk_clust <- wkpd %>%
 wk_clust %>% plot(hang = -1)
 ```
 
-```{r WALS_features}
+```{r WALS_imputation}
+#taken from https://www.tutorialspoint.com/r/r_mean_median_mode.htm
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+## imputation based on Gelman & Hill Chapter 25
+# http://www.stat.columbia.edu/~gelman/arm/missing.pdf
+random.imp <- function(a) {
+  missed <- is.na(a)
+  num_missed <- sum(missed)
+  a.obs <- a[!missed]
+  imputed <- a
+  imputed[missed] <- base::sample(a.obs, num_missed, replace=TRUE)
+  return(imputed)
+}
+
+impute <- function(a, a.impute) {
+  ifelse(is.na(a), a.impute, a)
+}
+
+wf.sub <- wals.feature(c("1A", "2A", "3A", "4A"))
+
+a1.mode <- getmode(wf.sub$`1A`[!is.na(wf.sub$`1A`)]) #gets the most common non-na value of column 1A
+
+n.sims <- 10
+for (s in 1:n.sims) {
+  a1 <- wf.sub$`1A`
+  a1[is.na(a1)] <- getmode(a1[!is.na(a1)])
+  lm.1 <- glm(a1 ~ unlist(a2.imp, use.names = FALSE) + unlist(a2.imp, use.names = TRUE) + unlist(a2.imp, use.names = TRUE), family = binomial)
+  pred.1 <- rnorm(n, predict(lm.1), sigma.hat(lm.1))
+  a1.imp <- impute(wf.sub[c("1A")], pred.1)
+}
+
+```
+
+```{r WALS_clustering}
 FEATURES <- c(1:144)
 for (i in c(1:144)) {
   FEATURES[i] <- paste(FEATURES[i], "A", sep = "")
