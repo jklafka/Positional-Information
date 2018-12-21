@@ -9,9 +9,8 @@ author-information: >
     \And {\large \bf Daniel Yurovsky} \\ \texttt{yurovsky@uchicago.edu} \\ Department of Psychology \\ University of Chicago}
 
 abstract: 
-    "We aim to provide evidence against the popular Uniform Information Density 
-    (Jaeger, 2010) and wrap-up effect (Kuperman et al., 2010) hypotheses using cross-linguistic 
-    evidence from speech, text and eye-tracking corpora."
+    "We provide evidence against the Uniform Information Density (Jaeger, 2010) 
+    and wrap-up effect hypotheses."
     
 keywords:
     "Entropy; self-paced reading; information theory; language processing"
@@ -33,7 +32,11 @@ library(xtable)
 
 # Uniform Information Density
 
-The average distribution of information in English sentences-what is it? Genzel & Charniak (2002) looked at the log-probability of words occurring in sentences as you proceed through a paragraph or article and found that less common/less likely words occurred more frequently as you moved through the text. The relationship they found was roughly an affine linear function, leading them to propose the *constant entropy rate* (CER) principle: the entropy of words in a sentence, i.e. the uncertainty about what words will appear in a sentence, will increase at a constant, linear rate through a paragraph. This idea was used by Aylett & Turk (2004), Levy & Jaeger (2007) and Frank & Jaeger (2008) among others. The CER principle was adapted by Jaeger (2010) into the *uniform information density* (UID) principle: uniformation is evenly spread throughout a sentence. From a theoretical standpoint, this makes sense as the optimal distribution for information throughout a sentence: if you miss any word I’ve said, the rest of the information in the sentence is intact, and you lose no more than if you miss any other word I’d have said. 
+A major line of research in the current century has asked how speakers and writers distribute information in the linguistic material they produce. This begins with Claude Shannon in the years after World War II. Shannon (1948) defined "information" as a "reduction in uncertainty". Shannon followed by quantifying uncertainty in his measure of *entropy*: the amount of uncertainty on the outcome of a random variable. Shannon proposed that the most efficient method of sending information through a noisy channel is at a constant rate. Genzel & Charniak (2002) apply this principle to human communication: if people communicate information through speech and text optimally, then we should transmit information to one another at a constant rate. Genzel & Charniak created a distribution of estimates for sentence-level entropy, each sentence taken without context, for newspaper articles from the Penn Treebank corpus. Obtaining a roughly monotonically increasing linear distribution, Genzel & Charniak proposed the *Constant Entropy Rate* (CER) principle: the entropy rate in speech and text with context should be constant as sentence number increases. Aylett & Turk (2004) proposed a similar principle for the phonological level. 
+
+Jaeger (2010) extends the CER principle to all levels of human communication: the *Uniform Information Density* (UID) hypothesis. Jaeger argues that speakers will try to distribute information more evenly over the course of an utterance, to be as close to channel capacity (in a Shannon sense) as possible. In particular, Jaeger singles out the production of "that" at the beginning of relative clauses in English and the use of contractions such as "he's" and "you're" versus "he is" and "you are" as instances where higher information density in the clause elicits the production of more material by speakers. 
+
+The *wrap-up effect* is a popular hypothesis within the eye-tracking community. The hypothesis states that, in written text, sentence-final words are processed more slowly on average then sentence-medial or sentence-initial words, due to readers integrating information from the entire sentence in order to form a final, coherent thought expressed by the sentence, among other reasons. With these two ideas, information production distribution in spoken and written communication, and information integration in reading written texts, we move on to discuss cross-linguistic differences in the distribution of information across sentences. 
 
 The UID hypothesis 
 
@@ -44,17 +47,23 @@ More recent work has stood out in contrast to the traditional UID perspective. Z
 $$H(X) = \sum\limits_w p(w)\log\big(p(w)\big)$$
 Yu et al. (2016) refer to their distribution for English as a ‘three-step distribution’: relatively low entropy at the beginning of a sentence, then a jump, then flat entropy in the middle, a dip before the final position and a jump with the final word. View the figure below for a visual demonstration. 
 
-```{r yunigram, fig.env = "figure*", fig.pos = "h", fig.width=6, fig.height=4, fig.align = "center", set.cap.width=T, num.cols.cap=2, fig.cap = "English entropy distribution for three sentence lengths from BNC"}
-img <- png::readPNG("figs/yunigram.png")
+# Our Methods
+
+We used the CHILDES TalkBank (Brown 1973; MacWhinney 2000) corpora database of spoken adult-child conversations. We first used the Brown and Providence English corpora from CHILDES. The Brown corpus contains conversations between three young children (over 1.5 years old and under 6 years old) and their families in the home. The Providence corpus contains transcriptions of audio/video files which recorded interactions between children between 1 and 3 years old and their parents in the home. We divided each corpus by speaker (child and non-child) and each sentence length within those divisions and computed the unigram entropy measure for each position within those sentence lengths. Plots for the entropy distributions are below. The adult and child unigram entropy distributions track one another extremely well, with the child distribution for each sentence length having relatively lower entropy. 
+
+```{r brown_PE, fig.env = "figure*", fig.pos = "h", fig.width=6, fig.height=4, fig.align = "center", set.cap.width=T, num.cols.cap=2, fig.cap = "Brown corpus entropy"}
+img <- png::readPNG("figs/positional_entropy_brown.png")
 grid::grid.raster(img)
 ```
 
-This diverges from the UID account, which would predict a simple affine function. 
-Our replication with CHILDES. Conditional entropy and mutual information. Link with Thiessen & Onnis (to appear). Mention Ferrer-i-Cancho (2017), which provides a theoretical basis for the end of the sentence being the center of information. 
-Cross-linguistic variation. Our Wikipedia analysis
-Link with Kuperman et al. (2010). Talk about challenges to the wrap-up account. Consequences for eye-tracking. Talk about Zhan and Levy (2018) and how current work in eye-tracking and language processing disputes the UID account. 
+```{r providence_PE, fig.env = "figure*", fig.pos = "h", fig.width=6, fig.height=4, fig.align = "center", set.cap.width=T, num.cols.cap=2, fig.cap = "Providence corpus unigram entropy"}
+img <- png::readPNG("figs/Prov_corpus_result.png")
+grid::grid.raster(img)
+```
 
+Unlike a UID account 
 
+We found a similar distribution for Spanish and German corpora from CHILDES. The Spanish corpus we used was the XXX and the German corpus we used was the XXX. 
 
 # Formalities, Footnotes, and Floats
 

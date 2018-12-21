@@ -60,12 +60,8 @@ Times}
 \maketitle
 
 \begin{abstract}
-The abstract should be one paragraph, indented 1/8 inch on both sides,
-in 9 point font with single spacing. The heading Abstract should be 10
-point, bold, centered, with one line space below it. This one-paragraph
-abstract section is required only for standard spoken papers and
-standard posters (i.e., those presentations that will be represented by
-six page papers in the Proceedings).
+We provide evidence against the Uniform Information Density (Jaeger,
+2010) and wrap-up effect hypotheses.
 
 \textbf{Keywords:}
 Entropy; self-paced reading; information theory; language processing
@@ -73,34 +69,64 @@ Entropy; self-paced reading; information theory; language processing
 
 \section{Uniform Information Density}\label{uniform-information-density}
 
-The average distribution of information in English sentences-what is it?
-Genzel \& Charniak (2002) looked at the log-probability of words
-occurring in sentences as you proceed through a paragraph or article and
-found that less common/less likely words occurred more frequently as you
-moved through the text. The relationship they found was roughly an
-affine linear function, leading them to propose the \emph{constant
-entropy rate} (CER) principle: the entropy of words in a sentence,
-i.e.~the uncertainty about what words will appear in a sentence, will
-increase at a constant, linear rate through a paragraph. This idea was
-used by Aylett \& Turk (2004), Levy \& Jaeger (2007) and Frank \& Jaeger
-(2008) among others. The CER principle was adapted by Jaeger (2008) into
-the \emph{uniform information density} (UID) principle: uniformation is
-evenly spread throughout a sentence. From a theoretical standpoint, this
-makes sense as the optimal distribution for information throughout a
-sentence: if you miss any word I've said, the rest of the information in
-the sentence is intact, and you lose no more than if you miss any other
-word I'd have said. Description of the UID perspective and what it
-predicts for entropy distributions and what that means.
+A major line of research in the current century has asked how speakers
+and writers distribute information in the linguistic material they
+produce. This begins with Claude Shannon in the years after World War
+II. Shannon (1948) defined ``information'' as a ``reduction in
+uncertainty''. Shannon followed by quantifying uncertainty in his
+measure of \emph{entropy}: the amount of uncertainty on the outcome of a
+random variable. Shannon proposed that the most efficient method of
+sending information through a noisy channel is at a constant rate.
+Genzel \& Charniak (2002) apply this principle to human communication:
+if people communicate information through speech and text optimally,
+then we should transmit information to one another at a constant rate.
+Genzel \& Charniak created a distribution of estimates for
+sentence-level entropy, each sentence taken without context, for
+newspaper articles from the Penn Treebank corpus. Obtaining a roughly
+monotonically increasing linear distribution, Genzel \& Charniak
+proposed the \emph{Constant Entropy Rate} (CER) principle: the entropy
+rate in speech and text with context should be constant as sentence
+number increases. Aylett \& Turk (2004) proposed a similar principle for
+the phonological level.
 
-\subsection{Yu challenge}\label{yu-challenge}
+Jaeger (2010) extends the CER principle to all levels of human
+communication: the \emph{Uniform Information Density} (UID) hypothesis.
+Jaeger argues that speakers will try to distribute information more
+evenly over the course of an utterance, to be as close to channel
+capacity (in a Shannon sense) as possible. In particular, Jaeger singles
+out the production of ``that'' at the beginning of relative clauses in
+English and the use of contractions such as ``he's'' and ``you're''
+versus ``he is'' and ``you are'' as instances where higher information
+density in the clause elicits the production of more material by
+speakers.
 
-The UID perspective is challenged in Yu et al. (2016), by performing an
-analysis of entropy by position in the text portion of the British
-National Corpus. They use the following formula for each word position X
-of sentences of fixed length k from the corpus, where each i is a word
-occurring in position X and pi is the number of times word i occurs in
-position X divided by the number of total words that occur in position X
-i.e.~the number of sentences of length k.
+The \emph{wrap-up effect} is a popular hypothesis within the
+eye-tracking community. The hypothesis states that, in written text,
+sentence-final words are processed more slowly on average then
+sentence-medial or sentence-initial words, due to readers integrating
+information from the entire sentence in order to form a final, coherent
+thought expressed by the sentence, among other reasons. With these two
+ideas, information production distribution in spoken and written
+communication, and information integration in reading written texts, we
+move on to discuss cross-linguistic differences in the distribution of
+information across sentences.
+
+The UID hypothesis
+
+\subsection{UID challenges}\label{uid-challenges}
+
+More recent work has stood out in contrast to the traditional UID
+perspective. Zhan and Levy (2018) study Mandarin Chinese classifier use,
+and find that the use of specific classifier, versus general
+classifiers, appears more often in cases where the production of the
+corresponding noun is more difficult than when the production is easier,
+as would be predicted by UID. The UID perspective is challenged in Yu et
+al. (2016), by performing an analysis of entropy by position in the text
+portion of the British National Corpus. They use the following formula
+for each word position X of sentences of fixed length k from the corpus,
+where each i is a word occurring in position X and pi is the number of
+times word i occurs in position X divided by the number of total words
+that occur in position X i.e.~the number of sentences of length k.
 
 \[H(X) = \sum\limits_w p(w)\log\big(p(w)\big)\] Yu et al. (2016) refer
 to their distribution for English as a `three-step distribution':
@@ -119,15 +145,42 @@ with the final word. View the figure below for a visual demonstration.
 \end{figure*}
 \end{CodeChunk}
 
-This diverges from the UID account, which would predict a simple affine
-function. Our replication with CHILDES. Conditional entropy and mutual
-information. Link with Thiessen \& Onnis (to appear). Mention
-Ferrer-i-Cancho (2017), which provides a theoretical basis for the end
-of the sentence being the center of information. Cross-linguistic
-variation. Our Wikipedia analysis Link with Kuperman et al. (2010).
-Consequences for eye-tracking. Talk about Zhan and Levy (2018) and how
-current work in eye-tracking and language processing disputes the UID
-account. Our eye-tracking experiment.
+\section{Our Methods}\label{our-methods}
+
+We used the CHILDES TalkBank (Brown 1973; MacWhinney 2000) corpora
+database of spoken adult-child conversations. We first used the Brown
+and Providence English corpora from CHILDES. The Brown corpus contains
+conversations between three young children (over 1.5 years old and under
+6 years old) and their families in the home. The Providence corpus
+contains transcriptions of audio/video files which recorded interactions
+between children between 1 and 3 years old and their parents in the
+home.
+
+\begin{CodeChunk}
+\begin{figure*}[h]
+
+{\centering \includegraphics{figs/brown_PE-1} 
+
+}
+
+\caption[Brown corpus entropy]{Brown corpus entropy}\label{fig:brown_PE}
+\end{figure*}
+\end{CodeChunk}
+
+\begin{CodeChunk}
+\begin{figure*}[h]
+
+{\centering \includegraphics{figs/providence_PE-1} 
+
+}
+
+\caption[Providence corpus unigram entropy]{Providence corpus unigram entropy}\label{fig:providence_PE}
+\end{figure*}
+\end{CodeChunk}
+
+We found a similar distribution for Spanish and German corpora from
+CHILDES. The Spanish corpus we used was the XXX and the German corpus we
+used was the XXX.
 
 \section{Formalities, Footnotes, and
 Floats}\label{formalities-footnotes-and-floats}
@@ -239,8 +292,8 @@ You can use the xtable function in the xtable package.
   \hline
  & Estimate & Std. Error & t value & Pr($>$$|$t$|$) \\ 
   \hline
-(Intercept) & -0.02 & 0.10 & -0.2 & 0.82 \\ 
-  x & 1.95 & 0.10 & 19.2 & 0.00 \\ 
+(Intercept) & -0.10 & 0.11 & -0.9 & 0.37 \\ 
+  x & 1.97 & 0.12 & 16.6 & 0.00 \\ 
    \hline
 \end{tabular}
 \caption{This table prints across one column.} 
