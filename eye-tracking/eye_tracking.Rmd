@@ -98,15 +98,35 @@ b2       <- b2[b2$nw < 16,]
 b2       <- b2[,-1]
 # ------------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------
+# Hindi-Allahabad 
+# ------------------------------------------------------------------------------
 
+load("HU_tracking_all_stats_em.RData")
 
+etm %>% 
+  group_by(item, roi) %>%
+  mutate(TOTAL_WORDS = max(dplyr::filter(etm, etm$item == item)$roi)) %>%
+  View()
+b3       <- rep(0,nrow(etm))
+b3       <- data.frame(b3)
+b3$cnd   <- etm$TOTAL_WORDS
+b3$nw    <- etm$TOTAL_WORDS
+b3$wn    <- etm$roi
+b3$relwn <- etm$roi/etm$TOTAL_WORDS
+b3$dur   <- exp(etm$SFD)
+b3$sub   <- etm$subj
+b2$id    <- etm$word_lex
+b2$exp   <- "DMORPH"
+b3       <- b3[b3$nw < 16,]
+b3       <- b3[,-1]
 
 # ------------------------------------------------------------------------------
 # Plot data
 # ------------------------------------------------------------------------------
 
 # --- Merge Data ---
-b.all = rbind(b, b1, b2)
+b.all = rbind(b, b1, b2, b3)
 
   # --- Position locked to sentence-final word ---
   maxnw <- max(b.all$nw)
@@ -136,7 +156,7 @@ dat.m <- melt(b.all, id.var = c("sub", "id", "cnd", "nw", "wn", "exp", "relwn", 
 linecol = rgb(.25,.25,.25)
 # --- Relative Word Position ---
 dataR <- dcast(dat.m, formula = relwn+exp~variable, mean)
-dataR$exp <- factor(dataR$exp, levels=c("PSC", "DEMONIC", "DMORPH"))
+dataR$exp <- factor(dataR$exp, levels=c("PSC", "DEMONIC", "DMORPH", "PAETC"))
 
 
 prel <- qplot(relwn, dur,  data=dataR, geom=c("smooth"), facets = exp~.,
