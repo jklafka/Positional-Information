@@ -105,8 +105,8 @@ b2       <- b2[,-1]
 load("HU_tracking_all_stats_em.RData")
 
 etm %>% 
-  group_by(item, roi) %>%
-  mutate(TOTAL_WORDS = max(dplyr::filter(etm, etm$item == item)$roi)) %>%
+  group_by(subj, item, trial) %>%
+  mutate(TOTAL_WORDS = n()) %>%
   View()
 b3       <- rep(0,nrow(etm))
 b3       <- data.frame(b3)
