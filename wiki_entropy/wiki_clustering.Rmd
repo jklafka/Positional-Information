@@ -18,6 +18,8 @@ library(lingtypology)
 library(knitr)
 library(klaR)
 
+library(missMDA)
+
 knitr::opts_chunk$set(echo = TRUE)
 
 opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
@@ -42,6 +44,34 @@ wk_clust <- wkpd %>%
               hclust("ward.D2")
 
 wk_clust %>% plot(hang = -1)
+```
+
+```{r MCA_imputation}
+wiki_gs <- gs_title("Wikipedia_absolute")
+wkpd <- gs_read(wiki_gs) 
+LANGUAGES <- wkpd$Language
+
+FEATURES <- c(1:144)
+for (i in c(1:144)) {
+  FEATURES[i] <- paste(FEATURES[i], "A", sep = "")
+} #get all WALS features in correct syntax
+
+wf <- wals.feature(FEATURES)
+wf.sub <- wf[c("1A", "2A", "3A", "4A", "language")]
+wf.sub <- wf.sub %>% 
+  filter(language %in% LANGUAGES) %>%
+  unique()
+
+for (i in 1:4) {
+  wf.sub[, i] <- factor(wf.sub[, i])
+}
+
+wf.sub <- wf.sub[rowSums(is.na(wf.sub)) != 4, ]
+rownames(wf.sub) <- wf.sub$language
+wf.sub$language <- NULL
+rv <- MIMCA(wf.sub, ncp = 4)
+
+imputed_wf <- as.data.frame(rv[[1]][[99]])
 ```
 
 ```{r Gelman}
