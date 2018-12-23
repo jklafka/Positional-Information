@@ -23,64 +23,43 @@ opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
 theme_set(theme_classic(base_size = 16))
 ```
 
-```{r Kuperman_2010_analysis}
-
-## All credit to M. Dambacher
-#creates a pdf output with the relative position plots from the paper
-
-# ------------------------------------------------------------------------------
-# PSC
-# ------------------------------------------------------------------------------
-# --- Load data ---
+```{r load_data}
 load("psc.data.rda")
+load("demonic.rda") 
+load("dmorph.rda")
+load("HU_tracking_all_stats_em.RData")
+```
 
-b <- dx %>%
+```{r process_data}
+psc <- dx %>%
   select(id, nw, wn, dur, wrd) %>%
   as_data_frame() %>%
   mutate(cnd = nw, relwn = wn/nw, dur = exp(dur), exp = "PSC") %>%
-  rename(sub = id, id = wrd)
-
-# ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
-# DEMONIC
-# ------------------------------------------------------------------------------
-load("demonic.rda") 
+  rename(sub = id, id = wrd) %>%
+  mutate(sub = as.numeric(as.factor(sub)))
 
 #DEMONIC SFD, data set after trimming (sentences with fewer than 16 words, extra short and long fixations removed, etc)
-b1 <- single %>%
+demonic <- single %>%
   rename(cnd = TotalWordsinSentence, wn = NumWordInSentence, sub = Subject, 
          id = Word) %>%
   mutate(nw = cnd, relwn = wn/nw, dur = exp(GazeDur), exp = "DEMONIC") %>%
   select(sub, nw, wn, dur, id, cnd, relwn, exp) %>%
   filter(nw < 16) %>%
-  as_data_frame()
-# ------------------------------------------------------------------------------
+  as_data_frame() %>%
+  mutate(sub = as.numeric(as.factor(sub)))
 
-
-# ------------------------------------------------------------------------------
-# DMORPH
-# ------------------------------------------------------------------------------
-load("dmorph.rda")
-	#DMORPH SFD, dataset after trimming.
-
-b2 <- affpos1 %>%
+#DMORPH SFD, dataset after trimming.
+dmorph <- affpos1 %>%
    rename(cnd = TotalWordsinSentence, wn = NumWordInSentence, sub = Subject, 
          id = Word) %>%
   mutate(nw = cnd, relwn = wn/nw, dur = exp(FixDur), exp = "DMORPH") %>%
   select(sub, nw, wn, dur, id, cnd, relwn, exp) %>%
   filter(nw < 16) %>%
-  as_data_frame()
-# ------------------------------------------------------------------------------
+  as_data_frame() %>%
+  mutate(sub = as.numeric(as.factor(sub)))
 
-# ------------------------------------------------------------------------------
 # Hindi-Allahabad 
-# ------------------------------------------------------------------------------
-
-load("HU_tracking_all_stats_em.RData")
-
-b3 <- etm %>%
+hindi <- etm %>%
   group_by(subj, expt, session, item, trial) %>%
   mutate(nw = max(roi)) %>%
   ungroup() %>%
@@ -88,61 +67,28 @@ b3 <- etm %>%
   mutate(cnd = nw, relwn = wn/nw, sub = as.character(sub),
          exp = "HINDI") %>%
   filter(nw < 16) %>%
-  select(sub, nw, wn, dur, id, cnd, relwn, exp)
+  select(sub, nw, wn, dur, id, cnd, relwn, exp) %>%
+  mutate(sub = as.numeric(as.factor(sub)))
+```
 
+```{r combine_data}
+b_all <- bind_rows(psc, demonic, dmorph, hindi) %>%
+  mutate(finpos = wn - nw,
+         finposlab = as.character(finpos),
+         finposnum = max(nw) + finpos)
 
-# ------------------------------------------------------------------------------
-# Plot data
-# ------------------------------------------------------------------------------
+```
 
-# --- Merge Data ---
-b_all <- bind_rows(b, b1, b2, b3) 
+```{r plot_data}
+data <- b_all %>%
+  group_by(exp, relwn) %>%
+  summarise(dur = mean(dur)) %>%
+  ungroup() %>%
+  mutate(exp = factor(exp, levels = c("PSC", "DEMONIC", "DMORPH", "HINDI")))
 
-# Still need to rewrite this code below
+ggplot(data, aes(x = relwn, y = dur)) + 
+  facet_wrap(~exp, scales = "free_y") + 
+  geom_point() + 
+  geom_smooth()
 
-# --- Position locked to sentence-final word ---
-maxnw <- max(b_all$nw)
-b_all$finposnum <- NA
-b_all$finposlab <- NA
-labelvec <- NA
-
-for (i in 0:maxnw-1) {
-  id <- which(b_all$wn==(b_all$nw-i))
-  label = paste("-", as.character(i), sep="")
-  b_all$finposnum[id] <- maxnw-i
-  b_all$finposlab[id] <- label
-  labelvec[i] <- label
-}
-
-b_all$finpos <- b_all$finposnum -maxnw
-label <- intersect(labelvec,(unique(b_all$finposlab)))
-label <- label[length(label):1]
-#head(b.all)
-
-
-
-
-  # ----------------------------------------------
-
-dat.m <- melt(b_all, id.var = c("sub", "id", "cnd", "nw", "wn", "exp", "relwn", "finpos"), measure.var = "dur", variable_name = "dur")
-# -----
-
-linecol = rgb(.25,.25,.25)
-# --- Relative Word Position ---
-dataR <- dcast(dat.m, formula = relwn+exp~variable, mean)
-dataR$exp <- factor(dataR$exp, levels=c("PSC", "DEMONIC", "DMORPH", "HINDI"))
-
-
-prel <- qplot(relwn, dur,  data=dataR, geom=c("smooth"), facets = exp~.,
-      #   ylim=c(180,275),
-         xlab="Relative Word Position",
-         ylab="Single Fixation Duration [ms]") +
-         geom_smooth(col=linecol, size=.8, stat="smooth") +
-         geom_point(data=dataR, size=1, stat="identity")
-
-
-pdf("relwn.pdf", he = 9, wi= 3)
-  print(prel)
-dev.off()
-# -----
 ```
