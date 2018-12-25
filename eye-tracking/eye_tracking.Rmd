@@ -16,6 +16,7 @@ output:
 library(tidyverse)
 library(knitr)
 library(lme4)
+library(reshape2)
 
 opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
                error = FALSE, cache = FALSE, tidy = FALSE)
@@ -25,7 +26,7 @@ theme_set(theme_classic(base_size = 16))
 
 ```{r Kuperman_2010_analysis}
 
-## All credit to M. Dambacher
+## Original code from M. Dambacher
 #creates a pdf output with the relative position plots from the paper
 
 # ------------------------------------------------------------------------------
@@ -41,7 +42,8 @@ b <- dx %>%
   rename(sub = id, id = wrd)
 
 # ------------------------------------------------------------------------------
-
+cmplt_dx <- dx %>% 
+  complete(wn = 1:nw, nesting(id, sn), fill = list(dur = 0)) 
 
 # ------------------------------------------------------------------------------
 # DEMONIC
@@ -132,7 +134,6 @@ linecol = rgb(.25,.25,.25)
 dataR <- dcast(dat.m, formula = relwn+exp~variable, mean)
 dataR$exp <- factor(dataR$exp, levels=c("PSC", "DEMONIC", "DMORPH", "HINDI"))
 
-
 prel <- qplot(relwn, dur,  data=dataR, geom=c("smooth"), facets = exp~.,
       #   ylim=c(180,275),
          xlab="Relative Word Position",
@@ -141,7 +142,7 @@ prel <- qplot(relwn, dur,  data=dataR, geom=c("smooth"), facets = exp~.,
          geom_point(data=dataR, size=1, stat="identity")
 
 
-pdf("relwn.pdf", he = 9, wi= 3)
+pdf("relwn.pdf", he = 12, wi= 3)
   print(prel)
 dev.off()
 # -----
