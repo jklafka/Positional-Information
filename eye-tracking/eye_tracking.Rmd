@@ -31,13 +31,22 @@ load("HU_tracking_all_stats_em.RData")
 ```
 
 ```{r process_data}
+# ------------------------------------------------------------------------------
+# PSC
+# ------------------------------------------------------------------------------
 psc <- dx %>%
   select(id, nw, wn, dur, wrd) %>%
   as_data_frame() %>%
   mutate(cnd = nw, relwn = wn/nw, dur = exp(dur), exp = "PSC") %>%
-  rename(sub = id, id = wrd) %>%
-  mutate(sub = as.numeric(as.factor(sub)))
+  rename(sub = id, id = wrd)
 
+# ------------------------------------------------------------------------------
+cmplt_dx <- dx %>% 
+  complete(wn = 1:nw, nesting(id, sn), fill = list(dur = 0)) 
+
+# ------------------------------------------------------------------------------
+# DEMONIC
+# ------------------------------------------------------------------------------
 #DEMONIC SFD, data set after trimming (sentences with fewer than 16 words, extra short and long fixations removed, etc)
 demonic <- single %>%
   rename(cnd = TotalWordsinSentence, wn = NumWordInSentence, sub = Subject, 
@@ -76,7 +85,6 @@ b_all <- bind_rows(psc, demonic, dmorph, hindi) %>%
   mutate(finpos = wn - nw,
          finposlab = as.character(finpos),
          finposnum = max(nw) + finpos)
-
 ```
 
 ```{r plot_data}
