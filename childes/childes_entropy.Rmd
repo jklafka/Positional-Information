@@ -251,6 +251,69 @@ Compute Providence Corpus Estimates
 tokens <- extract_stem_tokens("not child", 6, 30, prov_utterances)
 
 
+get_counts <- function(role, sen_length, utterances) {
+  
+  if(role == "Target_Child") {
+    sub_utterances <- utterances %>%
+      filter(speaker_role == "Target_Child") %>%
+      mutate(length = str_count(gloss, " ") + 1) # uses stems of words, not original words
+  } else {
+     sub_utterances <- utterances %>%
+      filter(speaker_role != "Target_Child") %>%
+      mutate(length = str_count(gloss, " ") + 1)
+  }
+
+  sub_utterances %>%
+    filter(length == sen_length) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, gloss) %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n()) %>%
+    filter(word_order <= length)
+}
+
+get_mean_lengths <- function(role, sen_length, utterances) {
+  
+  counts <- get_counts(role, sen_length, utterances)
+  
+  lens <- counts %>% 
+    group_by(word_order, word) %>% 
+    mutate(word_len = str_length(word)) 
+  
+  lens$word_len %>% 
+    aggregate(list(lens$word_order), mean)
+}
+
+get_entropies <- function(role, sen_length, utterances) {
+  
+  if(role == "Target_Child") {
+    sub_utterances <- utterances %>%
+      filter(speaker_role == "Target_Child") %>%
+      mutate(length = str_count(gloss, " ") + 1) # uses stems of words, not original words
+  } else {
+     sub_utterances <- utterances %>%
+      filter(speaker_role != "Target_Child") %>%
+      mutate(length = str_count(gloss, " ") + 1)
+  }
+
+  tokens <- sub_utterances %>%
+    filter(length == sen_length) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, gloss) %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n()) %>%
+    group_by(word_order, word) %>%
+    filter(word_order <= length)
+   
+  tokens %>%
+    summarise(n = n()) %>%
+    tidyboot(summary_function = function(x) x %>% 
+               summarise(entropy = entropy(n, unit = "log2")),
+             statistics_functions = function(x) x %>%
+             summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
+    mutate(role = role, length = sen_length)
+}
+
 tokens %>%
     filter(word_order %in% c(1,2)) %>%
     dplyr::group_by(length, word_order) %>%

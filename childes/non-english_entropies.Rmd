@@ -322,7 +322,8 @@ get_chinese_entropies <- function(role, sen_length, utterances) {
     mutate(utterance_id = 1:n()) %>%
     unnest_tokens(word, stem) %>%
     group_by(utterance_id) %>%
-    mutate(word_order = 1:n())
+    mutate(word_order = 1:n()) %>%
+    filter(word_order <= sen_length)
    
   tokens %>%
     group_by(word_order, word) %>%

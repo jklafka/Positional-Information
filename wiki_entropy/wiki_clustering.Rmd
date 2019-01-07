@@ -17,8 +17,10 @@ library(googlesheets)
 library(lingtypology)
 library(knitr)
 library(klaR)
-
 library(missMDA)
+library(clusteval)
+library(factoextra)
+library(cluster)
 
 knitr::opts_chunk$set(echo = TRUE)
 

@@ -136,7 +136,7 @@ hindi <- etm %>%
 ```
 
 ```{r combine_data}
-b_all <- bind_rows(complete_psc, complete_demonic, complete_dmorph, hindi) %>%
+b_all <- bind_rows(psc, demonic, dmorph, hindi) %>%
   mutate(finpos = wn - nw,
          finposlab = as.character(finpos),
          finposnum = max(nw) + finpos)
