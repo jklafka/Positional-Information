@@ -37,9 +37,10 @@ load("HU_tracking_all_stats_em.RData")
 psc <- dx %>%
   select(id, nw, wn, dur, wrd, sn) %>%
   as_data_frame() %>%
-  mutate(dur = exp(dur), id = as.numeric(id), sn = as.numeric(sn)) %>%
-  rename(cnd = sn, sub = id, id = wrd)
-
+  mutate(dur = exp(dur)) %>%
+  rename(cnd = sn, sub = id, id = wrd) %>%
+  mutate(sub = as.numeric(as.factor(sub))) %>%
+  mutate(cnd = as.numeric(as.factor(cnd)))
 # ------------------------------------------------------------------------------
 
 all_words_psc <- psc %>%
@@ -75,7 +76,26 @@ demonic <- single %>%
   select(sub, nw, wn, dur, id, cnd, relwn, exp) %>%
   filter(nw < 16) %>%
   as_data_frame() %>%
-  mutate(sub = as.numeric(as.factor(sub)))
+  mutate(sub = as.numeric(as.factor(sub))) %>%
+  mutate(cnd = as.numeric(as.factor(cnd)))
+
+all_words_demonic <- demonic %>%
+  distinct(nw, cnd) %>%
+  group_by(cnd) %>%
+  nest() %>%
+  mutate(sens = map(data, ~data_frame(wn = 1:.x$nw, nw = .x$nw, dur = 0))) %>%
+  select(-data) %>%
+  unnest() %>%
+  left_join(psc %>% distinct(sub, cnd), by = "cnd") %>%
+  anti_join(psc, c("cnd", "wn", "nw", "sub")) %>%
+  mutate(type = "absent")
+
+complete_demonic <- demonic %>%
+  select(sub, nw, wn, dur, cnd) %>%
+  mutate(type = "present") %>%
+  bind_rows(all_words_psc) %>%
+  mutate(relwn = wn/nw, exp = "DEMONIC") %>%
+  arrange(sub, cnd, wn)
 
 #DMORPH SFD, dataset after trimming.
 dmorph <- affpos1 %>%
@@ -86,6 +106,24 @@ dmorph <- affpos1 %>%
   filter(nw < 16) %>%
   as_data_frame() %>%
   mutate(sub = as.numeric(as.factor(sub)))
+
+all_words_dmorph <- dmorph %>%
+  distinct(nw, cnd) %>%
+  group_by(cnd) %>%
+  nest() %>%
+  mutate(sens = map(data, ~data_frame(wn = 1:.x$nw, nw = .x$nw, dur = 0))) %>%
+  select(-data) %>%
+  unnest() %>%
+  left_join(psc %>% distinct(sub, cnd), by = "cnd") %>%
+  anti_join(psc, c("cnd", "wn", "nw", "sub")) %>%
+  mutate(type = "absent")
+
+complete_dmorph <- dmorph %>%
+  select(sub, nw, wn, dur, cnd) %>%
+  mutate(type = "present") %>%
+  bind_rows(all_words_psc) %>%
+  mutate(relwn = wn/nw, exp = "DMORPH") %>%
+  arrange(sub, cnd, wn)
 
 # Hindi-Allahabad 
 hindi <- etm %>%
