@@ -31,6 +31,8 @@ theme_set(theme_classic(base_size = 16))
 ```
 
 ```{r clustering}
+K <- 10 ## number of clusters
+
 ##read in googlesheet
 wiki_gs <- gs_title("Wikipedia_absolute")
 wkpd <- gs_read(wiki_gs) 
