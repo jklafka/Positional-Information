@@ -37,7 +37,7 @@ load("HU_tracking_all_stats_em.RData")
 psc <- dx %>%
   select(id, nw, wn, dur, wrd, sn) %>%
   as_data_frame() %>%
-  mutate(dur = exp(dur)) %>%
+  mutate(dur = exp(dur), id = as.numeric(id), sn = as.numeric(sn)) %>%
   rename(cnd = sn, sub = id, id = wrd)
 
 # ------------------------------------------------------------------------------
@@ -59,6 +59,10 @@ complete_psc <- psc %>%
   bind_rows(all_words_psc) %>%
   mutate(relwn = wn/nw, exp = "PSC") %>%
   arrange(sub, cnd, wn)
+
+psc <- complete_psc %>%
+  filter(type == "present") %>%
+  select(-type)
 
 # ------------------------------------------------------------------------------
 # DEMONIC
@@ -91,7 +95,7 @@ hindi <- etm %>%
   rename(wn = roi, sub = subj, id = word_lex, dur = SFD) %>%
   mutate(cnd = nw, relwn = wn/nw, sub = as.character(sub),
          exp = "HINDI") %>%
-  filter(nw < 16) %>%
+  filter(nw < 16, dur > 0) %>%
   select(sub, nw, wn, dur, id, cnd, relwn, exp) %>%
   mutate(sub = as.numeric(as.factor(sub)))
 ```
