@@ -31,7 +31,7 @@ theme_set(theme_classic(base_size = 16))
 ```
 
 ```{r clustering}
-K <- 10 ## number of clusters
+NUM_CLUSTERS <- 10
 
 ##read in googlesheet
 wiki_gs <- gs_title("Wikipedia_absolute")
@@ -43,11 +43,13 @@ wkpd <- wkpd %>%
   column_to_rownames(var = "Language")
 
 ##do clustering
-wk_clust <- wkpd %>% 
+wk_clust_tree <- wkpd %>% 
               dist() %>%
-              hclust("ward.D2")
+              hclust("ward.D2") 
 
-wk_clust %>% plot(hang = -1)
+wk_clust_tree %>% plot(hang = -1)
+wk_clusters <- wk_clust_tree %>%
+              cutree(k = NUM_CLUSTERS)
 ```
 
 ```{r MCA_imputation}
@@ -76,6 +78,12 @@ wf.sub$language <- NULL
 rv <- MIMCA(wf.sub, ncp = 4)
 
 imputed_wf <- as.data.frame(rv[[1]][[99]])
+
+wals_clust_full <- kmodes(imputed_wf, NUM_CLUSTERS, iter.max=10, weighted = FALSE)
+```
+
+```{r evaluate_clusters}
+wals_clusters <- wals_clust["cluster"] %>% unlist(use.names= FALSE)
 ```
 
 ```{r Gelman}
@@ -186,7 +194,6 @@ for (i in c(1:144)) {
   FEATURES[i] <- paste(FEATURES[i], "A", sep = "")
 } #get all WALS features in correct syntax
 
-NUM_CLUSTERS <- 4
 
 wf <- wals.feature(FEATURES)
 wf %>% View()
