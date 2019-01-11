@@ -33,7 +33,10 @@
 \newenvironment{CodeChunk}{}{}
 
 % cite package, to clean up citations in the main text. Do not remove.
-\usepackage{cite}
+\usepackage{apacite}
+
+% KM added 1/4/18 to allow control of blind submission
+
 
 \usepackage{color}
 
@@ -69,6 +72,11 @@ Entropy; self-paced reading; information theory; language processing
 
 \section{Uniform Information Density}\label{uniform-information-density}
 
+How do people convey information in speech and text? Is there a regular
+distribution to how information is conveyed across speech and text? Does
+speech, with its phonological properties, different from writing, with
+its semiotic properties, in how information is conveyed?
+
 A major line of research in the current century has asked how speakers
 and writers distribute information in the linguistic material they
 produce. This begins with Claude Shannon in the years after World War
@@ -100,17 +108,6 @@ versus ``he is'' and ``you are'' as instances where higher information
 density in the clause elicits the production of more material by
 speakers.
 
-The \emph{wrap-up effect} is a popular hypothesis within the
-eye-tracking community. The hypothesis states that, in written text,
-sentence-final words are processed more slowly on average then
-sentence-medial or sentence-initial words, due to readers integrating
-information from the entire sentence in order to form a final, coherent
-thought expressed by the sentence, among other reasons. With these two
-ideas, information production distribution in spoken and written
-communication, and information integration in reading written texts, we
-move on to discuss cross-linguistic differences in the distribution of
-information across sentences.
-
 The UID hypothesis
 
 \subsection{UID challenges}\label{uid-challenges}
@@ -134,18 +131,7 @@ relatively low entropy at the beginning of a sentence, then a jump, then
 flat entropy in the middle, a dip before the final position and a jump
 with the final word. View the figure below for a visual demonstration.
 
-\begin{CodeChunk}
-\begin{figure*}[h]
-
-{\centering \includegraphics{figs/yunigram-1} 
-
-}
-
-\caption[English entropy distribution for three sentence lengths from BNC]{English entropy distribution for three sentence lengths from BNC}\label{fig:yunigram}
-\end{figure*}
-\end{CodeChunk}
-
-\section{Our Methods}\label{our-methods}
+\section{Methods}\label{methods}
 
 We used the CHILDES TalkBank (Brown 1973; MacWhinney 2000) corpora
 database of spoken adult-child conversations. We first used the Brown
@@ -154,7 +140,20 @@ conversations between three young children (over 1.5 years old and under
 6 years old) and their families in the home. The Providence corpus
 contains transcriptions of audio/video files which recorded interactions
 between children between 1 and 3 years old and their parents in the
-home.
+home. We divided each corpus by speaker into child and non-child
+categories. We further divided the corpora by utterance length, so that
+all sentences of length \(k\) (e.g. \(6\)) were grouped together.
+Finally, within each utterance length, we computed the unigram entropy
+measure for each position.
+
+The unigram entropy measure works as
+
+Figure for the method?
+
+Plots for the entropy distributions are below. The adult and child
+unigram entropy distributions track one another extremely well, with the
+child distribution for each sentence length having relatively lower
+entropy.
 
 \begin{CodeChunk}
 \begin{figure*}[h]
@@ -178,126 +177,55 @@ home.
 \end{figure*}
 \end{CodeChunk}
 
-We found a similar distribution for Spanish and German corpora from
-CHILDES. The Spanish corpus we used was the XXX and the German corpus we
-used was the XXX.
+We also ran this analysis on Spanish, German, Mandarin and Japanese
+corpora from CHILDES. The Spanish corpus we used was the XXX and the
+German corpus we used was the XXX. The Mandarin corpus we used was the
+XXX and the Japanese corpus we used was the XXX. For Mandarin, we used
+pinyin transliterations of the utterances in the corpus with demarcated
+word boundaries, and for Japanese we used romanji transliterations of
+words in the corpus. Japanese Hiragana, Katakana and Kanji writing
+systems, and the Chinese characters used for writing Mandarin do not
+normally demarcate word boundaries by spacing words apart, and for
+normal Japanese and Chinese writing including spaces between word
+boundaries can have a negative effect on reading times (Sainio et al,
+2007; Bai et al, 2008).
 
-\section{Formalities, Footnotes, and
-Floats}\label{formalities-footnotes-and-floats}
+\section{Results}\label{results}
 
-Use standard APA citation format. Citations within the text should
-include the author's last name and year. If the authors' names are
-included in the sentence, place only the year in parentheses, as in
-(1972), but otherwise place the entire reference in parentheses with the
-authors and year separated by a comma (Newell \& Simon, 1972). List
-multiple references alphabetically and separate them by semicolons
-(Chalnick \& Billman, 1988; Newell \& Simon, 1972). Use the et. al.
-construction only after listing all the authors to a publication in an
-earlier reference and for citations with four or more authors.
+We found a distinct three-step distribution for English, Spanish and
+German CHILDES corpora, with a slight dip in the penultimate position of
+each sentence. The Mandarin and Japanese data, by comparison,
 
-For more information on citations in RMarkdown, see
-\textbf{\href{http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html\#citations}{here}.}
+\section{Analysis}\label{analysis}
 
-\subsection{Footnotes}\label{footnotes}
+\section{Wikipedia Data}\label{wikipedia-data}
 
-Indicate footnotes with a number\footnote{Sample of the first
-footnote.} in the text. Place the footnotes in 9 point type at the
-bottom of the page on which they appear. Precede the footnote with a
-horizontal rule.\footnote{Sample of the second footnote.} You can also
-use markdown formatting to include footnotes using this
-syntax.\footnote{Sample of a markdown footnote.}
+We also wanted to apply this analysis to large-scale text data, to
+compare with the parent-child speech data results from using CHILDES.
+Using Giuseppe Attardi's Wikiextractor tool
+\footnote{https://github.com/attardi/wikiextractor}, we extracted the
+text corpora for \(165\) languages from Wikipedia by downloading the
+data dump of Wikipedia. Each language corpus was cleaned and limited to
+sentences between \(6\) and \(50\) words. Similar to the data from
+CHILDES, we divided each corpus by sentence length, and then computed
+the unigram entropy measure on each word position within each sentence
+length. HOW DID WE JOIN TOGETHER SENTENCE LENGTHS
 
-\subsection{Figures}\label{figures}
+\subsection{Clustering}\label{clustering}
 
-All artwork must be very dark for purposes of reproduction and should
-not be hand drawn. Number figures sequentially, placing the figure
-number and caption, in 10 point, after the figure with one line space
-above the caption and one line space below it. If necessary, leave extra
-white space at the bottom of the page to avoid splitting the figure and
-figure caption. You may float figures to the top or bottom of a column,
-or set wide figures across both columns.
+\section{Conclustions and future
+research}\label{conclustions-and-future-research}
 
-\subsection{Two-column images}\label{two-column-images}
-
-You can read local images using png package for example and plot it like
-a regular plot using grid.raster from the grid package. With this method
-you have full control of the size of your image. \textbf{Note: Image
-must be in .png file format for the readPNG function to work.}
-
-You might want to display a wide figure across both columns. To do this,
-you change the \texttt{fig.env} chunk option to \texttt{figure*}. To
-align the image in the center of the page, set \texttt{fig.align} option
-to \texttt{center}. To format the width of your caption text, you set
-the \texttt{num.cols.cap} option to \texttt{2}.
-
-\begin{CodeChunk}
-\begin{figure*}[h]
-
-{\centering \includegraphics{figs/2-col-image-1} 
-
-}
-
-\caption[This image spans both columns]{This image spans both columns. And the caption text is limited to 0.8 of the width of the document.}\label{fig:2-col-image}
-\end{figure*}
-\end{CodeChunk}
-
-\subsection{One-column images}\label{one-column-images}
-
-Single column is the default option, but if you want set it explicitly,
-set \texttt{fig.env} to \texttt{figure}. Notice that the
-\texttt{num.cols} option for the caption width is set to \texttt{1}.
-
-\begin{CodeChunk}
-\begin{figure}[H]
-
-{\centering \includegraphics{figs/image-1} 
-
-}
-
-\caption[One column image]{One column image.}\label{fig:image}
-\end{figure}
-\end{CodeChunk}
-
-\subsection{R Plots}\label{r-plots}
-
-You can use R chunks directly to plot graphs. And you can use latex
-floats in the fig.pos chunk option to have more control over the
-location of your plot on the page. For more information on latex
-placement specifiers see
-\textbf{\href{https://en.wikibooks.org/wiki/LaTeX/Floats,_Figures_and_Captions}{here}}
-
-\begin{CodeChunk}
-\begin{figure}[H]
-
-{\centering \includegraphics{figs/plot-1} 
-
-}
-
-\caption[R plot]{R plot}\label{fig:plot}
-\end{figure}
-\end{CodeChunk}
-
-\subsection{Tables}\label{tables}
-
-Number tables consecutively; place the table number and title (in 10
-point) above the table with one line space above the caption and one
-line space below it, as in Table 1. You may float tables to the top or
-bottom of a column, set wide tables across both columns.
-
-You can use the xtable function in the xtable package.
-
-\begin{table}[H]
-\centering
-\begin{tabular}{rrrrr}
-  \hline
- & Estimate & Std. Error & t value & Pr($>$$|$t$|$) \\ 
-  \hline
-(Intercept) & -0.10 & 0.11 & -0.9 & 0.37 \\ 
-  x & 1.97 & 0.12 & 16.6 & 0.00 \\ 
-   \hline
-\end{tabular}
-\caption{This table prints across one column.} 
-\end{table}
+The \emph{wrap-up effect} is a popular hypothesis within the
+eye-tracking community. The hypothesis states that, in written text,
+sentence-final words are processed more slowly on average then
+sentence-medial or sentence-initial words, due to readers integrating
+information from the entire sentence in order to form a final, coherent
+thought expressed by the sentence, among other reasons. With these two
+ideas, information production distribution in spoken and written
+communication, and information integration in reading written texts, we
+move on to discuss cross-linguistic differences in the distribution of
+information across sentences.
 
 \section{Acknowledgements}\label{acknowledgements}
 
@@ -308,15 +236,7 @@ the end of the paper.
 
 \setlength{\parindent}{-0.1in} \setlength{\leftskip}{0.125in} \noindent
 
-\hypertarget{refs}{}
-\hypertarget{ref-ChalnickBillman1988a}{}
-Chalnick, A., \& Billman, D. (1988). Unsupervised learning of
-correlational structure. In \emph{Proceedings of the tenth annual
-conference of the cognitive science society} (pp. 510--516). Hillsdale,
-NJ: Lawrence Erlbaum Associates.
+\bibliographystyle{apacite}
 
-\hypertarget{ref-NewellSimon1972a}{}
-Newell, A., \& Simon, H. A. (1972). \emph{Human problem solving}.
-Englewood Cliffs, NJ: Prentice-Hall.
 
 \end{document}

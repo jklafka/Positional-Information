@@ -38,8 +38,6 @@ A major line of research in the current century has asked how speakers and write
 
 Jaeger (2010) extends the CER principle to all levels of human communication: the *Uniform Information Density* (UID) hypothesis. Jaeger argues that speakers will try to distribute information more evenly over the course of an utterance, to be as close to channel capacity (in a Shannon sense) as possible. In particular, Jaeger singles out the production of "that" at the beginning of relative clauses in English and the use of contractions such as "he's" and "you're" versus "he is" and "you are" as instances where higher information density in the clause elicits the production of more material by speakers. 
 
-The *wrap-up effect* is a popular hypothesis within the eye-tracking community. The hypothesis states that, in written text, sentence-final words are processed more slowly on average then sentence-medial or sentence-initial words, due to readers integrating information from the entire sentence in order to form a final, coherent thought expressed by the sentence, among other reasons. With these two ideas, information production distribution in spoken and written communication, and information integration in reading written texts, we move on to discuss cross-linguistic differences in the distribution of information across sentences. 
-
 The UID hypothesis 
 
 ## UID challenges
@@ -53,9 +51,9 @@ Yu et al. (2016) refer to their distribution for English as a ‘three-step dist
 
 We used the CHILDES TalkBank (Brown 1973; MacWhinney 2000) corpora database of spoken adult-child conversations. We first used the Brown and Providence English corpora from CHILDES. The Brown corpus contains conversations between three young children (over 1.5 years old and under 6 years old) and their families in the home. The Providence corpus contains transcriptions of audio/video files which recorded interactions between children between 1 and 3 years old and their parents in the home. We divided each corpus by speaker into child and non-child categories. We further divided the corpora by utterance length, so that all sentences of length $k$ (e.g. $6$) were grouped together. Finally, within each utterance length, we computed the unigram entropy measure for each position. 
 
-The unigram entropy measure does not directly take into account the context of the utterance. 
+The unigram entropy measure works as 
 
-Figure for the method. 
+Figure for the method? 
 
 Plots for the entropy distributions are below. The adult and child unigram entropy distributions track one another extremely well, with the child distribution for each sentence length having relatively lower entropy. 
 
@@ -69,7 +67,7 @@ img <- png::readPNG("figs/Prov_corpus_result.png")
 grid::grid.raster(img)
 ```
 
-We also ran this analysis on Spanish, German, Mandarin and Japanese corpora from CHILDES. The Spanish corpus we used was the XXX and the German corpus we used was the XXX. The Mandarin corpus we used was the XXX and the Japanese corpus we used was the XXX. For Mandarin, we used pinyin transliterations of the utterances in the corpus with demarcated word boundaries, and for Japanese we used romanji transliterations of words in the corpus. Japanese Hiragana, Katakana and Kanji writing systems, and the Chinese characters used for writing Mandarin do not normally demarcate word boundaries. JUSTIFICATION FOR WHY THE TRANSLITERATIONS ARE OKAY. 
+We also ran this analysis on Spanish, German, Mandarin and Japanese corpora from CHILDES. The Spanish corpus we used was the XXX and the German corpus we used was the XXX. The Mandarin corpus we used was the XXX and the Japanese corpus we used was the XXX. For Mandarin, we used pinyin transliterations of the utterances in the corpus with demarcated word boundaries, and for Japanese we used romanji transliterations of words in the corpus. Japanese Hiragana, Katakana and Kanji writing systems, and the Chinese characters used for writing Mandarin do not normally demarcate word boundaries by spacing words apart, and for normal Japanese and Chinese writing including spaces between word boundaries can have a negative effect on reading times (Sainio et al, 2007; Bai et al, 2008). 
 
 # Results
 We found a distinct three-step distribution for English, Spanish and German CHILDES corpora, with a slight dip in the penultimate position of each sentence. The Mandarin and Japanese data, by comparison, 
@@ -77,7 +75,14 @@ We found a distinct three-step distribution for English, Spanish and German CHIL
 # Analysis
 
 # Wikipedia Data
-We also wanted to apply this analysis to large-scale text data, to compare with the parent-child speech data results from using CHILDES. Using Giuseppe Attardi's Wikiextractor tool \footnote{https://github.com/attardi/wikiextractor}, we extracted the text corpora for $165$ languages from Wikipedia. Each language corpus was cleaned and limited to sentences between $6$ and $50$ words. Similar to the data from CHILDES, we divided each corpus by sentence length, and then computed the unigram entropy measure on each word position within each sentence length. HOW DID WE JOIN TOGETHER SENTENCE LENGTHS
+We also wanted to apply this analysis to large-scale text data, to compare with the parent-child speech data results from using CHILDES. Using Giuseppe Attardi's Wikiextractor tool \footnote{https://github.com/attardi/wikiextractor}, we extracted the text corpora for $165$ languages from Wikipedia by downloading the data dump of Wikipedia. Each language corpus was cleaned and limited to sentences between $6$ and $50$ words. Similar to the data from CHILDES, we divided each corpus by sentence length, and then computed the unigram entropy measure on each word position within each sentence length. HOW DID WE JOIN TOGETHER SENTENCE LENGTHS
+
+## Clustering
+
+
+
+# Conclustions and future research
+The *wrap-up effect* is a popular hypothesis within the eye-tracking community. The hypothesis states that, in written text, sentence-final words are processed more slowly on average then sentence-medial or sentence-initial words, due to readers integrating information from the entire sentence in order to form a final, coherent thought expressed by the sentence, among other reasons. With these two ideas, information production distribution in spoken and written communication, and information integration in reading written texts, we move on to discuss cross-linguistic differences in the distribution of information across sentences. 
 
 # Acknowledgements
 
