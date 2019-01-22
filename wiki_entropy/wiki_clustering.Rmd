@@ -16,10 +16,7 @@ library(tidyverse)
 library(googlesheets)
 library(lingtypology)
 library(knitr)
-library(klaR)
 library(missMDA)
-library(clusteval)
-library(factoextra)
 library(cluster)
 library(widyr)
 
@@ -98,138 +95,12 @@ imputed_wf <- as.data.frame(rv[[1]][[99]])
 wals_clust_full <- kmodes(imputed_wf, NUM_CLUSTERS, iter.max=10, weighted = FALSE)
 ```
 
-```{r evaluate_clusters}
-wals_clusters <- wals_clust["cluster"] %>% unlist(use.names= FALSE)
-```
-
-```{r Gelman}
-## from http://www.stat.columbia.edu/~gelman/bda/regression.R
-
-sigma.hat <- function (object){
-  object.class <- class(object)[[1]]
-  if (object.class=="lm"){
-    sigma <- summary(object)$sigma
-    return (sigma)
-  }
-  else if (object.class=="glm"){
-    sigma <- summary(object, correlation=TRUE)$sigma
-    return (sigma)
-  }
-  else if (object.class=="lmer"){
-    object <- summary (object)
-    fcoef <- .Call("mer_fixef", object, PACKAGE = "lme4")
-    useScale <- object@devComp[8]
-    ngrps <- lapply(object@flist, function(x) length(levels(x)))
-    n.groupings <- length (ngrps)
-    varc <- VarCorr (object, useScale=useScale)
-    sc <- attr(varc, "sc")
-    recorr <- lapply(varc, function(el) el@factors$correlation)
-    reStdDev <- c(lapply(recorr, slot, "sd"), list(Residual = sc))
-    sigmas <- as.list (rep (NA, n.groupings+1))
-    sigmas[1] <- ifelse (useScale, sc, NA)
-    cors <- as.list (rep (NA, n.groupings+1))
-    names (sigmas) <- names (cors) <- c ("data", names (varc))
-    for (k in 1:n.groupings){
-      sigmas[[k+1]] <- reStdDev[[k]]
-      cors[[k+1]] <- as.matrix (recorr[[k]])
-      if (length (cors[[k+1]]) == 1) cors[[k+1]] <- NA
-    }
-    return (list (sigma=sigmas, cors=cors))
-  }
-}
-```
-
-```{r WALS_imputation_functions}
-#taken from https://www.tutorialspoint.com/r/r_mean_median_mode.htm
-getmode <- function(v) {
-   uniqv <- unique(v)
-   uniqv[which.max(tabulate(match(v, uniqv)))]
-}
-
-## imputation based on Gelman & Hill Chapter 25
-random.imp <- function(a) {
-  missed <- is.na(a)
-  num_missed <- sum(missed)
-  a.obs <- a[!missed]
-  imputed <- a
-  imputed[missed] <- base::sample(a.obs, num_missed, replace=TRUE)
-  return(imputed)
-}
-
-impute <- function(a, a.impute) {
-  ifelse(is.na(a), a.impute, a)
-}
-
-get_factor <- function(cname) {
-  a.imp <- wf.sub[c(cname)] %>%
-    random.imp() %>%
-    unlist(use.names = FALSE)
-}
-```
-
-
-```{r WALS_imputation_code}
-FEATURES <- c(1:144)
-for (i in c(1:144)) {
-  FEATURES[i] <- paste(FEATURES[i], "A", sep = "")
-} #get all WALS features in correct syntax
-
-NUM_CLUSTERS <- 4
-
-wf <- wals.feature(FEATURES)
-wf.sub <- wf[c("1A", "2A", "3A", "4A", "language")]
-wf.sub <- wf.sub %>% 
-  filter(language %in% LANGUAGES) %>%
-  unique()
-
-for (i in 1:4) {
-  wf.sub[, i] <- factor(wf.sub[, i])
-}
-
-a1.imp <- get_factor("1A")
-a2.imp <- get_factor("2A")
-a3.imp <- get_factor("3A")
-a4.imp <- get_factor("4A")
-
-a1.mode <- getmode(wf.sub$`1A`[!is.na(wf.sub$`1A`)]) #gets the most common non-na value of column 1A
-
-n.sims <- 10
-for (s in 1:n.sims) {
-  a1 <- wf.sub$`1A`
-  a1[is.na(a1)] <- getmode(a1[!is.na(a1)])
-  lm.1 <- glm(a1 ~ a2.imp + a3.imp + a4.imp, family = "binomial")
-  pred.1 <- rnorm(n, predict(lm.1), sigma.hat(lm.1)) ####
-  a1.imp <- impute(wf.sub[c("1A")], pred.1)
-}
-
-```
-
-```{r WALS_clustering}
-FEATURES <- c(1:144)
-for (i in c(1:144)) {
-  FEATURES[i] <- paste(FEATURES[i], "A", sep = "")
-} #get all WALS features in correct syntax
-
-
-wf <- wals.feature(FEATURES)
-wf %>% View()
-wf <- wf[, -(1:3)]
-wf <- wf[, -(ncol(wf) - 1)]
-wf <- wf %>% 
-  filter(language %in% LANGUAGES)
-wf <- wf[, complete.cases(wf)] #this significantly trims down the dataset but is necessary for k-modes
-rv <- kmodes(wf[, -(ncol(wf))], NUM_CLUSTERS, iter.max=10, weighted = FALSE)
-
-```
-
 ```{r}
-
 
 wf_many_langs <- wf_df %>%
   group_by(feature) %>%
   summarise(n = sum(!is.na(value))) %>%
   filter(n > 60)
-  
 
 wf_sub_langs <- wf_df %>%
   filter(feature %in% wf_many_langs$feature) %>%
@@ -240,13 +111,26 @@ wf_sub_langs <- wf_df %>%
 wf_sub <- wf_df %>%
   filter(feature %in% wf_many_langs$feature,
          language %in% wf_sub_langs$language) %>%
-  select(language, feature, value) %>%
+  dplyr::select(language, feature, value) %>%
   group_by(feature) %>%
   mutate(value = as.numeric(as.factor(value))) %>%
   group_by(feature) %>% # for each pair of language, does this feature assin them the same value
-  nest() %>%
+  nest() %>% #maps features to a table mapping languages to numerical factor feature values
   mutate(cors = map(data, my_pairwise_cor))
   select(-data) %>%
   unnest()
 
+wf_comp <- wf_sub %$%
+  data %>%
+  do.call(cbind, args=.) 
+wf_comp <- wf_comp[, -seq(3, length(wf_comp), 2)] #get values and one column of language
+  
+langs_to_compare <- wf_comp$language
+wkpd_comp <- wkpd %>%
+    filter(Language %in% langs_to_compare) 
+    
+```
+
+```{r evaluate_clusters}
+wals_clusters <- wals_clust["cluster"] %>% unlist(use.names= FALSE)
 ```
