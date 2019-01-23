@@ -21,6 +21,7 @@ library(cluster)
 library(widyr)
 library(lsa)
 library(magrittr)
+library(broom)
 
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -98,6 +99,16 @@ wals_clust_full <- kmodes(imputed_wf, NUM_CLUSTERS, iter.max=10, weighted = FALS
 ```
 
 ```{r}
+cosines <- wkpd %>%
+  t() %>%
+  cosine() %>%
+  as_data_frame(rownames = "language1") %>%
+  gather(language2, cosine, -language1)
+
+```
+
+
+```{r}
 
 wf_many_langs <- wf_df %>%
   group_by(feature) %>%
@@ -113,15 +124,31 @@ wf_sub_langs <- wf_df %>%
 wf_sub <- wf_df %>%
   filter(feature %in% wf_many_langs$feature,
          language %in% wf_sub_langs$language) %>%
-  dplyr::select(language, feature, value) %>%
-  group_by(feature) %>%
-  mutate(value = as.numeric(as.factor(value))) %>%
-  group_by(feature) %>% # for each pair of language, does this feature assin them the same value
-  nest() #maps features to a table mapping languages to numerical factor feature values
-  # mutate(cors = map(data, my_pairwise_cor))
-  # select(-data) %>%
-  # unnest()
+  select(language, feature, value) %>%
+  mutate(value = as.numeric(as.factor(value)))
 
+
+wf_pairwise <- expand.grid(language1 = wf_sub$language,
+                           language2 = wf_sub$language) %>%
+  left_join(wf_sub, by = c("language1" = "language")) %>%
+  rename(value1 = value) %>%
+  left_join(wf_sub, by = c("language2" = "language", "feature")) %>%
+  rename(value2 = value) %>%
+  mutate(same = value1 == value2) %>%
+  select(-value1, -value2) %>%
+  left_join(cosines, by = c("language1", "language2"))
+
+
+models <- wf_pairwise %>%
+  group_by(feature) %>%
+  nest() %>%
+  mutate(model = map(data, ~glm(same ~ cosine, 
+                                family = "binomial", data = .)))
+```
+
+
+```{r}
+  
 wf_comp <- wf_sub %$%
   data %>%
   do.call(cbind, args=.) 
