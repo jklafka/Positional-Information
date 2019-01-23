@@ -19,6 +19,8 @@ library(knitr)
 library(missMDA)
 library(cluster)
 library(widyr)
+library(lsa)
+library(magrittr)
 
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -115,20 +117,37 @@ wf_sub <- wf_df %>%
   group_by(feature) %>%
   mutate(value = as.numeric(as.factor(value))) %>%
   group_by(feature) %>% # for each pair of language, does this feature assin them the same value
-  nest() %>% #maps features to a table mapping languages to numerical factor feature values
-  mutate(cors = map(data, my_pairwise_cor))
-  select(-data) %>%
-  unnest()
+  nest() #maps features to a table mapping languages to numerical factor feature values
+  # mutate(cors = map(data, my_pairwise_cor))
+  # select(-data) %>%
+  # unnest()
 
 wf_comp <- wf_sub %$%
   data %>%
   do.call(cbind, args=.) 
-wf_comp <- wf_comp[, -seq(3, length(wf_comp), 2)] #get values and one column of language
-  
+
+wf_comp <- wf_comp[, -seq(3, length(wf_comp), 2)] 
 langs_to_compare <- wf_comp$language
+wf_comp %<>% 
+  as.data.frame(row.names=wf_comp$language) 
+
 wkpd_comp <- wkpd %>%
     filter(Language %in% langs_to_compare) 
-    
+wkpd_comp %<>% as.data.frame(row.names=wkpd_comp$Language)
+
+lang_pairs <- langs_to_compare %>%
+  combn(2, simplify = FALSE) 
+
+K <- length(lang_pairs)
+  
+lang_x <- lang_pairs %>%
+    unlist() %>%
+    matrix(nrow = K, byrow=TRUE) %>%
+    as.data.frame() %>%
+    mutate(wiki = lsa::cosine(wkpd_comp[V1, ], wkpd_comp[V2, ]), 
+           wals = lsa::cosine(wf_comp[V1, ], wf_comp[V2, ]))
+
+
 ```
 
 ```{r evaluate_clusters}
