@@ -99,7 +99,28 @@ wals_clust_full <- kmodes(imputed_wf, NUM_CLUSTERS, iter.max=10, weighted = FALS
 ```
 
 ```{r}
+wiki_gs <- gs_title("Wikipedia_absolute")
+wkpd <- gs_read(wiki_gs) 
+LANGUAGES <- wkpd$Language
+
+FEATURES <- c(1:144)
+for (i in c(1:144)) {
+  FEATURES[i] <- paste(FEATURES[i], "A", sep = "")
+} #get all WALS features in correct syntax
+
+wf <- wals.feature(FEATURES)
+
+wf_df <- wf %>%
+  as_data_frame() %>%
+  filter(language %in% LANGUAGES) %>%
+  group_by(language) %>%
+  slice(1) %>%
+  gather(feature, value, `1A`:`144A`) %>%
+  group_by(feature) %>%
+  mutate(value = factor(value))
+
 cosines <- wkpd %>%
+  column_to_rownames("Language") %>%
   t() %>%
   cosine() %>%
   as_data_frame(rownames = "language1") %>%
@@ -146,36 +167,6 @@ models <- wf_pairwise %>%
                                 family = "binomial", data = .)))
 ```
 
-
-```{r}
-  
-wf_comp <- wf_sub %$%
-  data %>%
-  do.call(cbind, args=.) 
-
-wf_comp <- wf_comp[, -seq(3, length(wf_comp), 2)] 
-langs_to_compare <- wf_comp$language
-wf_comp %<>% 
-  as.data.frame(row.names=wf_comp$language) 
-
-wkpd_comp <- wkpd %>%
-    filter(Language %in% langs_to_compare) 
-wkpd_comp %<>% as.data.frame(row.names=wkpd_comp$Language)
-
-lang_pairs <- langs_to_compare %>%
-  combn(2, simplify = FALSE) 
-
-K <- length(lang_pairs)
-  
-lang_x <- lang_pairs %>%
-    unlist() %>%
-    matrix(nrow = K, byrow=TRUE) %>%
-    as.data.frame() %>%
-    mutate(wiki = lsa::cosine(wkpd_comp[V1, ], wkpd_comp[V2, ]), 
-           wals = lsa::cosine(wf_comp[V1, ], wf_comp[V2, ]))
-
-
-```
 
 ```{r evaluate_clusters}
 wals_clusters <- wals_clust["cluster"] %>% unlist(use.names= FALSE)
