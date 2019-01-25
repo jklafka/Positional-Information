@@ -100,7 +100,8 @@ wals_clust_full <- kmodes(imputed_wf, NUM_CLUSTERS, iter.max=10, weighted = FALS
 
 ```{r}
 cosines <- wkpd %>%
-  t() %>%
+  column_to_rownames("Language") %>%
+  t()%>%
   cosine() %>%
   as_data_frame(rownames = "language1") %>%
   gather(language2, cosine, -language1)
@@ -144,6 +145,13 @@ models <- wf_pairwise %>%
   nest() %>%
   mutate(model = map(data, ~glm(same ~ cosine, 
                                 family = "binomial", data = .)))
+
+models %>%
+  mutate(coeffs = map(model, tidy)) %>%
+  select(-data, -model) %>%
+  unnest() %>%
+  filter(term == "cosine") %>%
+  arrange(desc(statistic))
 ```
 
 
