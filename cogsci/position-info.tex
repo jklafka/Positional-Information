@@ -404,20 +404,26 @@ predicting if the languages shared the same value for a WALS feature. We
 found this to be true.
 
 \begin{CodeChunk}
-
-
-  X  feature   term       estimate   std.error    statistic     p.value
----  --------  -------  ----------  ----------  -----------  ----------
-  1  83A       cosine    1.8386502   0.0103168   178.219026   0.0000000
-  2  95A       cosine    1.8971831   0.0110958   170.981718   0.0000000
-  3  81A       cosine    1.5149072   0.0098565   153.696819   0.0000000
-  4  97A       cosine    1.5767216   0.0115245   136.814432   0.0000000
-  5  144A      cosine    0.8782219   0.0117991    74.431427   0.0000000
-  6  138A      cosine    0.3951762   0.0085684    46.120042   0.0000000
-  7  87A       cosine    0.3334803   0.0083557    39.910595   0.0000000
-  8  143A      cosine    0.3736337   0.0094014    39.742361   0.0000000
-  9  82A       cosine    0.0298738   0.0092598     3.226171   0.0012546
-
+\begin{CodeOutput}
+\begin{table}[H]
+\centering
+\begin{tabular}{rrllrrrr}
+  \hline
+ & X & feature & term & estimate & std.error & statistic & p.value \\ 
+  \hline
+1 &   1 & 83A & cosine & 1.84 & 0.01 & 178.22 & 0.00 \\ 
+  2 &   2 & 95A & cosine & 1.90 & 0.01 & 170.98 & 0.00 \\ 
+  3 &   3 & 81A & cosine & 1.51 & 0.01 & 153.70 & 0.00 \\ 
+  4 &   4 & 97A & cosine & 1.58 & 0.01 & 136.81 & 0.00 \\ 
+  5 &   5 & 144A & cosine & 0.88 & 0.01 & 74.43 & 0.00 \\ 
+  6 &   6 & 138A & cosine & 0.40 & 0.01 & 46.12 & 0.00 \\ 
+  7 &   7 & 87A & cosine & 0.33 & 0.01 & 39.91 & 0.00 \\ 
+  8 &   8 & 143A & cosine & 0.37 & 0.01 & 39.74 & 0.00 \\ 
+  9 &   9 & 82A & cosine & 0.03 & 0.01 & 3.23 & 0.00 \\ 
+   \hline
+\end{tabular}
+\end{table}
+\end{CodeOutput}
 \end{CodeChunk}
 
 \section{Conclusions}\label{conclusions}
