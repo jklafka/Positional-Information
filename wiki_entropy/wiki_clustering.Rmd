@@ -31,7 +31,7 @@ opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
 theme_set(theme_classic(base_size = 16))
 ```
 
-```{r clustering}
+```{r hierarchical clustering}
 NUM_CLUSTERS <- 10
 
 ##read in googlesheet
@@ -61,41 +61,6 @@ wk_clusters %>%
   rename(cluster = V1) %>%
   arrange(cluster) %>% 
   View()
-```
-
-```{r MCA_imputation}
-wiki_gs <- gs_title("Wikipedia_absolute")
-wkpd <- gs_read(wiki_gs) 
-LANGUAGES <- wkpd$Language
-
-FEATURES <- c(1:144)
-for (i in c(1:144)) {
-  FEATURES[i] <- paste(FEATURES[i], "A", sep = "")
-} #get all WALS features in correct syntax
-
-wf <- wals.feature(FEATURES)
-
-wf_df <- wf %>%
-  as_data_frame() %>%
-  filter(language %in% LANGUAGES) %>%
-  group_by(language) %>%
-  slice(1) %>%
-  gather(feature, value, `1A`:`144A`) %>%
-  group_by(feature) %>%
-  mutate(value = factor(value))
-
-for (i in 1:4) {
-  wf.sub[, i] <- factor(wf.sub[, i])
-}
-
-wf.sub <- wf.sub[rowSums(is.na(wf.sub)) != 4, ]
-rownames(wf.sub) <- wf.sub$language
-wf.sub$language <- NULL
-rv <- MIMCA(wf.sub, ncp = 4)
-
-imputed_wf <- as.data.frame(rv[[1]][[99]])
-
-wals_clust_full <- kmodes(imputed_wf, NUM_CLUSTERS, iter.max=10, weighted = FALSE)
 ```
 
 ```{r}
@@ -165,6 +130,19 @@ models <- wf_pairwise %>%
   nest() %>%
   mutate(model = map(data, ~glm(same ~ cosine, 
                                 family = "binomial", data = .)))
+```
+
+```{r imputation for glm}
+imputed_result <- wf_df %>%
+  select(language, feature, value) %>%
+  ungroup() %>% 
+  spread(feature, value) %>% 
+  column_to_rownames("language") %>%
+  sapply(as.factor) %>%
+  as_data_frame() %>%
+  MIMCA(ncp = 7, maxiter = 999)
+
+imputed_wf <- as.data.frame(imputed_result[[1]][[99]])
 ```
 
 
