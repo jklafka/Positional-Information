@@ -85,6 +85,7 @@ wf_df <- wf %>%
   mutate(value = factor(value))
 
 cosines <- wkpd %>%
+  column_to_rownames("Language") %>%
   t() %>%
   cosine() %>%
   as_data_frame(rownames = "language1") %>%

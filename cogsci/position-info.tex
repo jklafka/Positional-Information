@@ -52,8 +52,8 @@
 % \textwidth 16cm
 % \textheight 21cm
 
-\title{A Language's Unigram Entropy Distribution Predicts Self-Paced Reading
-Times}
+\title{Information is Not Communicated Uniformly: Evidence from Spoken and
+Written Corpora}
 
 
 \author{{\large \bf Josef Klafka} \\ \texttt{jklafka@uchicago.edu} \\ Department of Psychology \\ University of Chicago \And {\large \bf Daniel Yurovsky} \\ \texttt{yurovsky@uchicago.edu} \\ Department of Psychology \\ University of Chicago}
@@ -63,18 +63,19 @@ Times}
 \maketitle
 
 \begin{abstract}
-A major line of research in the cognitive sciences has asked how
-speakers and writers distribute information in the linguistic material
-they produce. We provide evidence against the Uniform Information
-Density hypothesis (Jaeger, 2010) which proposes that information is
+We provide evidence against the popular Uniform Information Density
+hypothesis (Levy \& Jaeger, 2007) which proposes that information is
 transmitted at a constant rate close to channel capacity in human
-communication. We instead argue that the information structure and
-transmission rate in human communication varies predictably from
-language to language based on phonological and syntactic features. We
-draw evidence from written and spoken corpora, including corpora of
-parent and child communication at various ages and large-scale online
-corpora from Wikipedia in a typologically diverse collection of
-languages.
+communication. Using a method based on the original Genzel \& Charniak
+(2002) entropy measure, we construct a word-level model for entropy
+applicable to both spoken and written corpora. We apply this model to
+corpora from Wikipedia in well over a hundred languages. We find that
+not only is the Uniform Information Density hypothesis prediction wrong,
+but also that the by-word entropy distribution of a language is related
+to the typological features of the language. We use this evidence to
+suggest that people do not communicate information at a uniform rate,
+but that information distribution varies from language to language based
+on phonogical, morphological and syntactic features.
 
 \textbf{Keywords:}
 Entropy; information; information theory; communication
@@ -82,90 +83,123 @@ Entropy; information; information theory; communication
 
 \section{Background}\label{background}
 
-How do people convey information in speech and text? Is there a regular
-distribution to how information is conveyed across speech and text? Does
-speech, with its phonological properties, different from writing, with
-its semiotic properties, in how information is conveyed?
+Perhaps the most important reason people talk and write to one another
+is to give information. From Shannon (1948), we know that when
+information is being communicated, the rate of information transmission
+should be constant and as close as possible to the capacity of the
+communication channel to optimally transmit the information. Levy \&
+Jaeger (2007) introduce the \emph{uniform information density} (UID)
+hypothesis, arguing that people unconsciously structure their speech and
+writing to communicate information at a constant, optimal rate. Levy \&
+Jaeger (2007) argue that speakers and writers should attempt to
+communicate information as evenly as possible and as close to the
+channel capacity as possible. Their evidence concerns the use or lack of
+use of ``that''-complementizers in introducing English relative clauses.
+When the word preceding the relative clause or the initial word of the
+relative clause has high information content, then the authors argue
+that speakers are more likely to use the complementizer. The authors use
+adult-adult conversations from the Penn Treebank corpus.
 
-A major line of research in the current century has asked how speakers
-and writers distribute information in the linguistic material they
-produce. This begins with Claude Shannon in the years after World War
-II. Shannon (1948) defined ``information'' as a ``reduction in
-uncertainty''. Shannon followed by quantifying uncertainty in his
-measure of \emph{entropy}: the amount of uncertainty on the outcome of a
-random variable. Shannon proposed that the most efficient method of
-sending information through a noisy channel is at a constant rate.
-Genzel \& Charniak (2002) apply this principle to human communication:
-if people communicate information through speech and text optimally,
-then we should transmit information to one another at a constant rate.
-Genzel \& Charniak created a distribution of estimates for
-sentence-level entropy, each sentence taken without context, for
-newspaper articles from the Penn Treebank corpus. Obtaining a roughly
-monotonically increasing linear distribution, Genzel \& Charniak
-proposed the \emph{Constant Entropy Rate} (CER) principle: the entropy
-rate in speech and text with context should be constant as sentence
-number increases. Aylett \& Turk (2004) proposed a similar principle for
-the phonological level.
+UID has been applied broadly over the past decade, to determining
+whether linguistic alignment takes place (Jaeger \& Snider, 2013),
+Zipfian word length distributions (Piantadosi et al., 2011),
+communication efficiency (Mahowald et al., 2013), dialogue and
+turn-taking (Xu \& Reitter, 2018) and the significance of ambiguity in
+language (Piantadosi et al., 2012), among other research. However, other
+recent work has contradicted the UID hypothesis. Zhan and Levy (2018)
+study Mandarin Chinese classifier use for specific and general Mandarin
+classifiers. Specific classifiers are specific to certain nouns, and UID
+would predict that specific classifiers would appear when the production
+of the corresponding noun is easier, to spread the information contained
+by the classifier and noun less densely over time. General classifiers
+can be applied to any noun and contain no special information content.
+Zhan and Levy find that speakers use specific classifiers more often in
+cases where the production of the corresponding noun is more difficult
+than when the production is easier; speakers do not avoid unexpected
+peaks in information content for their listeners, but instead maximize
+their ease of production.
 
-Jaeger (2010) extends the CER principle to all levels of human
-communication: the \emph{Uniform Information Density} (UID) hypothesis.
-Jaeger argues that speakers will try to distribute information more
-evenly over the course of an utterance, to be as close to channel
-capacity (in a Shannon sense) as possible. In particular, Jaeger singles
-out the production of ``that'' at the beginning of relative clauses in
-English and the use of contractions such as ``he's'' and ``you're''
-versus ``he is'' and ``you are'' as instances where higher information
-density in the clause elicits the production of more material by
-speakers.
+Similar to the original Levy \& Jaeger (2007), Zhan and Levy (2018)
+focuses on information distribution at particular points in a sentence.
+By contrast, Jain et al. (2018) examine word order across spoken
+sentences in Hindi, a freer word order language than English, and find
+that information density has no significant effect on word order. For
+this paper, we focus on the sentence level instead of specific points,
+following a method described in Yu et al. (2016).
 
-More recent work has stood out in contrast to the traditional UID
-perspective. Zhan and Levy (2018) study Mandarin Chinese classifier use,
-and find that the use of specific classifiers, versus general
-classifiers, appears more often in cases where the production of the
-corresponding noun is more difficult than when the production is easier,
-as would be predicted by UID. The UID perspective is challenged in Yu et
-al. (2016), by performing an analysis of entropy by position within
-sentence in the text portion of the British National Corpus. This work
-serves as the basis for ours.
+Yu et al. (2016) challenges the UID hypothesis through examining an
+entropy measure across sentence positions within the text portion of the
+English-language British National Corpus (BNC). They partition the
+corpus by sentence length in number of words. For each word position
+\(X\) of sentences of length \(k\), they define \(w\) as a unique word
+occurring in position \(X\). They define \(p(w)\) as the number of times
+word \(w\) occurs in position \(X\) divided by the number of total words
+that occur in position \(X\) i.e.~the number of sentences of length
+\(k\). Then \(p(w)\) is the probability of obtaining word \(w\) by
+choosing a word at random in position \(X\) in sentences of length
+\(k\).
 
-\section{Methods}\label{methods}
+\[H(X) = \sum\limits_w p(w)\log\big(p(w)\big)\] With this measure, Yu et
+al. compute the unigram entropy at each position of sentences of each
+length within the corpus. The result of this method can be plotted for
+each utterance length as an \emph{entropy curve}, which can be visually
+compared across utterance length to observe the how the unigram entropy
+changes across absolute positions in each of the utterances. Genzel \&
+Charniak (2002) similarly examine a unigram entropy measure on
+sentences, and found that entropy at the sentence level increases
+linearly with sentence index within a corpus. UID applies this
+uniformity of entropy rate in sentences to all levels of speech, and so
+the Yu et al. method, which examines text at the word level, should find
+an affine function at the word level.
 
-To explore information transmission rate in speech, we used the CHILDES
-TalkBank (Brown 1973; MacWhinney 2000) corpora database of spoken
-adult-child conversations. We first used the Brown and Providence
-English corpora from CHILDES. The Brown corpus contains individual
-recordings of conversations between three children between 1.5 and
-6-years-old and their families in their homes. The Providence corpus
-recorded interactions between children between 1 and 3 years old and
-their parents in the home. We divided each corpus by speaker into child
-and non-child categories. We further divided the corpora by utterance
-length, so that all sentences of length \(k\) (e.g. \(6\)) were grouped
-together. Finally, within each utterance length, we computed the unigram
-entropy measure for each position. We follow Yu et al. (2016) in using
-the following formula for each word position X of sentences of fixed
-length k from the corpus, where each \(w\) is a word occurring in
-position \(X\) and \(p(w)\) is the number of times word \(w\) occurs in
-position X divided by the number of total words that occur in position
-\(X\) i.e.~the number of sentences of length \(k\).
+Let us assume that the UID perspective is correct. Then we expect that
+the entropy curve for every language should be close to an affine,
+linear function with some noise. Entropy should monotonically and
+uniformly increase at all word positions across utterances on average.
+We will find a contradiction with this claim through examining the
+average entropy at each position of a sentence for both speech and text
+data.
 
-\[H(X) = \sum\limits_w p(w)\log\big(p(w)\big)\]
+\section{Spoken data}\label{spoken-data}
 
-The result of this method can be plotted for each utterance length as an
-\emph{entropy curve}, which can be visually compared across utterance
-length to observe the how the unigram entropy changes across absolute
-positions in each of the utterances in the English CHILDES corpora. The
-entropy curves capture individual variation across positions in
-utterances of the same length. This allows us to directly observe and
-judge the amount of variation in words that appear in an individual
-position of a sentence. For speech data, which for the corpora in the
-CHILDES database consists of short and often disconnected utterances
-across hours of recordings, the unigram entropy measure is unaffected by
-context or lack thereof in utterances by the adults and children in the
-corpora. We can directly compare any two positions within utterances to
-determine the amount of uncertainty, and therefore information, on
-average contained by words within that position of utterances. We are
-applying the same approach as in Genzel and Charniak (2003), but within
-sentences instead of across sentences.
+The UID hypothesis predicts that information transmission rate will tend
+towards uniformity in both speech and text. We begin by examining speech
+to determine if we obtain the entropy curve shape we expect for spoken
+communication. We begin with the same source as Levy \& Jaeger (2007)
+and Jaeger (2010), the Switchboard corpus of adult telephone
+conversations {[}CITATION{]}. We also examine child-adult conversations
+in the CHILDES TalkBank (Brown 1973; MacWhinney 2014) corpora database
+of spoken adult-child conversations in multiple languages. Children are
+not fully developed speakers, so we want to compare the entropy curve we
+obtain by computing over the utterances in the CHILDES corpora to the
+utterances in the adult-adult Switchboard corpus.
+
+\subsection{Methods}\label{methods}
+
+Switchboard {[}To be put in{]}
+
+We used the Brown and Providence English corpora from CHILDES. The Brown
+corpus contains individual recordings of conversations between three
+children between 1.5 and 6-years-old and their families in their homes.
+The Providence corpus recorded interactions between children between 1
+and 3 years old and their parents in the home. We divided each corpus by
+speaker into child and non-child categories. We further divided the
+corpora by utterance length, so that all sentences of length \(k\) (e.g.
+\(6\)) were grouped together. Finally, within each utterance length, we
+computed the unigram entropy measure for each position.
+
+In the English CHILDES corpora. The entropy curves capture individual
+variation across positions in utterances of the same length. This allows
+us to directly observe and judge the amount of variation in words that
+appear in an individual position of a sentence. For speech data, which
+for the corpora in the CHILDES database consists of short and often
+disconnected utterances across hours of recordings, the unigram entropy
+measure is unaffected by context or lack thereof in utterances by the
+adults and children in the corpora. We can directly compare any two
+positions within utterances to determine the amount of uncertainty, and
+therefore information, on average contained by words within that
+position of utterances. We are applying the same approach as in Genzel
+and Charniak (2002), but within sentences instead of across sentences.
 
 Plots for the entropy distributions are below.
 
@@ -191,30 +225,24 @@ Plots for the entropy distributions are below.
 \end{figure*}
 \end{CodeChunk}
 
-We also ran this analysis on Spanish, German, Mandarin and Japanese
-corpora from CHILDES. We used the Shiro corpus for Spanish (Shiro,
-2000), which contains prompted narratives individually collected from
-over a hundred Venezualan schoolchildren, half from high SES backgrounds
-and half from low SES backgrounds. The German corpus we used was the
-Wagner corpus of spontaneous parent-child speech in the home, collected
-in single sessions for children between 1 and 14 years of age (Wagner,
-1985). We used the Zhou dinner corpus for Mandarin Chinese (Li \& Zhou,
-2015), which contains dinner conversations between 5 to 6-year-old
-children and their parents collected in Shanghai. We used the Okayama
-corpus for Japanese (Okayama, 1973), which consists of conversations
-between 2 to 4-year-old children and their mothers in single sessions.
+We also ran this analysis on Spanish and Mandarin corpora from CHILDES.
+We used the Shiro corpus for Spanish (Shiro, 2000), which contains
+prompted narratives individually collected from over a hundred
+Venezualan schoolchildren, half from high SES backgrounds and half from
+low SES backgrounds. We used the Zhou dinner corpus for Mandarin Chinese
+(Li \& Zhou, 2015), which contains dinner conversations between 5 to
+6-year-old children and their parents collected in Shanghai.
 
 For each corpus, we accessed transcripts of the corpus provided through
 the TalkBank system and computed over Roman alphabet transcriptions or
 transliterations of the original transcriptions. For Mandarin, we used
 pinyin transliterations of the utterances in the corpus with demarcated
 word boundaries, and for Japanese we used romanji (Roman alphabet)
-transliterations of words in the corpus. Japanese Hiragana, Katakana and
-Kanji writing systems, and the Chinese characters used for writing
-Mandarin do not normally demarcate word boundaries by spacing words
-apart, and for normal Japanese and Chinese writing including spaces
-between word boundaries can have a negative effect on reading times
-(Sainio et al, 2007; Bai et al, 2008).
+transliterations of words in the corpus. The Chinese characters used for
+writing Mandarin do not normally demarcate word boundaries by spacing
+words apart, and for normal Chinese writing including spaces between
+word boundaries can have a negative effect on reading times (Bai et al,
+2008).
 
 \begin{CodeChunk}
 \begin{figure*}[h]
@@ -230,17 +258,6 @@ between word boundaries can have a negative effect on reading times
 \begin{CodeChunk}
 \begin{figure*}[h]
 
-{\centering \includegraphics{figs/wagner_PE-1} 
-
-}
-
-\caption[Wagner corpus unigram entropy]{Wagner corpus unigram entropy}\label{fig:wagner_PE}
-\end{figure*}
-\end{CodeChunk}
-
-\begin{CodeChunk}
-\begin{figure*}[h]
-
 {\centering \includegraphics{figs/zhou_PE-1} 
 
 }
@@ -249,23 +266,12 @@ between word boundaries can have a negative effect on reading times
 \end{figure*}
 \end{CodeChunk}
 
-\begin{CodeChunk}
-\begin{figure*}[h]
+\subsection{Results \& Analysis}\label{results-analysis}
 
-{\centering \includegraphics{figs/okayama_PE-1} 
-
-}
-
-\caption[Okayama corpus unigram entropy]{Okayama corpus unigram entropy}\label{fig:okayama_PE}
-\end{figure*}
-\end{CodeChunk}
-
-\section{Results \& Analysis}\label{results-analysis}
-
-The Unigram Information Density account would predict that children have
-a lower channel capacity for communication and would instead communicate
-with a less unigram entropy curve. The adult and child entropy curves
-track one another almost identically. This not only indicates a
+The adult and child entropy curves track one another almost identically.
+This is surprising because UID would predict that the young children in
+the corpora who are not fully developed speakers would have more noise
+in their distribution of information rates. This not only indicates a
 robustness in the unigram entropy curve across speakers, but also across
 ages and addressees. We also observed a robustness across corpora for
 the same languages, and a robustness across utterance lengths within the
@@ -273,66 +279,48 @@ same corpus's entropy curve. This shows that the concept of an ``entropy
 curve'' for a specific language is well-founded when considering speech
 data.
 
-We found a distinct three-step distribution for English, Spanish and
-German CHILDES corpora, with a slight dip in the penultimate position of
-each sentence. We attribute the penultimate dip in these unigram entropy
-curves to the fact that most of the utterances in the CHILDES English,
-Spanish and German corpora we examined had a determiner such as ``the''
-or ``a'' in the second-to-last position of utterances. The beginnings of
-utterances in the English, German and Spanish CHILDES data were usually
-pronouns or grammatical subjects, while the final words were grammatical
-objects and had a great deal of variation in the exact word that
-appeared in the utterance-final position. The final position of
-utterances in child-directed speech is known to be important, dating
-back to Aslin (1993). The Mandarin and Japanese data, by comparison,
-have noticeably lower positional entropy values in utterance-final
-positions than in utterance-penultimate positions. The Japanese entropy
-curve begins high and then drops, unlike all of the other entropy
-curves.
+We found a distinct three-step distribution for English and Spanish
+CHILDES corpora, with a slight dip in the penultimate position of each
+sentence. The final position of utterances in child-directed speech is
+known to be important, dating back to Aslin (1993). The Mandarin corpus
+entropy curve, by comparison, has a noticeably lower positional entropy
+values in utterance-final positions than in utterance-penultimate
+positions.
 
-\begin{CodeChunk}
-\begin{figure*}[h]
+We attribute the penultimate dip in the English and Spanish entropy
+curves to the fact that most of the utterances in the CHILDES English
+and Spanish corpora we examined had a determiner such as ``the'' or
+``a'' in the second-to-last position of utterances. The beginnings of
+utterances in the English and Spanish CHILDES data were usually pronouns
+or grammatical subjects, while the final words were grammatical objects
+and had a great deal of variation in the exact word that appeared in the
+utterance-final position.
 
-{\centering \includegraphics{figs/MI_wagner-1} 
+These entropy curves are not what would be expected from UID. The
+robustness of the three-step distribution for English and its
+replication in Spanish do not resemble the affine function we would
+expect from UID. The Mandarin entropy curve, which does not at all
+resemble either the English/Spanish distribution or the predictions of
+UID, suggests that the entropy curve can vary from language to language.
+UID predicts that each language should have a similar distribution.
 
-}
+\section{Written data}\label{written-data}
 
-\caption[Mutual Information measures on utterances of length 6 in the Wagner corpus]{Mutual Information measures on utterances of length 6 in the Wagner corpus}\label{fig:MI_wagner}
-\end{figure*}
-\end{CodeChunk}
+The UID hypothesis also applies to written communication: we expect
+people to communicate information at a uniform rate through writing as
+well. We use Wikipedia as a source for written data, which provides two
+advantages. One, the quantity of data in Wikipedia is large for each
+language and two, there are hundreds of languages with Wikipedias. This
+allows us to perform the entropy analysis on a much greater scale and to
+directly compare the results of the entropy analysis on each language to
+one another, and ultimately to predict what typological features of a
+language help determine its entropy curve, if any. We will describe our
+method of harvesting and distilling text data from each Wikipedia as
+well as how we compare the entropy curves from each language to one
+another.
 
-\begin{CodeChunk}
-\begin{figure*}[h]
+\subsection{Methods}\label{methods-1}
 
-{\centering \includegraphics{figs/MI_okayama-1} 
-
-}
-
-\caption[Mutual Information measures on utterances of length 6 in the Okayama corpus]{Mutual Information measures on utterances of length 6 in the Okayama corpus}\label{fig:MI_okayama}
-\end{figure*}
-\end{CodeChunk}
-
-The mutual information statistic is a symmetric measure of the
-information gained about one random variable by learning about another,
-a bigram measure and indicator of the effect than the context of a word
-can have on its unigram entropy value. As seen in the images below, the
-final word in utterances of length \(6\) in German has a significant
-mutual information value with all other words in the utterance on
-average. This means that the words appearing in positions \(1\) through
-\(5\) all play a role in determining the word that appears in position
-\(6\) and vice versa. By contrast, the words that appear in positions
-\(1\) through \(4\) have little influence in determining the word that
-appears in position \(5\), the penultimate word that is often a
-determiner or function word, and instead the final word has the greatest
-influence in determining the penultimate word. For Japanese, the final
-word in an utterance has little to no influence on determining the rest
-of the words and vice versa, whereas the other words all play in role in
-determining what will go in each other's positions.
-
-\section{Large-scale text data}\label{large-scale-text-data}
-
-We also wanted to apply this analysis to large-scale text data, to
-compare with the parent-child speech data results from using CHILDES.
 Using Giuseppe Attardi's Wikiextractor tool
 \footnote{https://github.com/attardi/wikiextractor}, we extracted the
 text corpora for \(165\) languages from Wikipedia by downloading a
@@ -374,7 +362,7 @@ for the text Wikipedia corpora entropy curves and the speech CHILDES
 corpora entropy curves, supporting the argument for robustness across
 text and speech.
 
-\subsection{Clustering}\label{clustering}
+\subsection{Results and Analysis}\label{results-and-analysis}
 
 In the \emph{absolute} and \emph{relative 5} treatments, each language
 is cast as a point in \(5\)-dimensional space. In the \emph{relative 10}
@@ -387,31 +375,50 @@ performed a hierarchical clustering of the Wikipedia slope data within
 each treatment. A subset of the results at a glance for the
 \emph{absolute} treatment are below.
 
-\begin{CodeChunk}
-\begin{figure*}[h]
-
-{\centering \includegraphics{figs/absolute_clusters-1} 
-
-}
-
-\caption[Absolute clustering of Wikipedia corpora]{Absolute clustering of Wikipedia corpora}\label{fig:absolute_clusters}
-\end{figure*}
-\end{CodeChunk}
-
-\subsection{Language Features}\label{language-features}
-
 To determine which phonological, morphological and syntactic features
 affected the embedding of a language in the Wikipedia dataset, we looked
 at the list of \(144\) linguistic features in World Atlas of Language
 Structures (Dryer \& Haspelmath, 2013). We limited the languages in the
 WALS database to only those in our Wikipedia dataset and performed
 missing-value imputation to obtain the features not coded in WALS for
-the languages from Wikipedia. We then performed k-modes clustering and
-compared the results with the hierarchical clustering from Wikipedia.
-{[}Still working on this{]}
+the languages from Wikipedia.
 
-We also checked the effects of individual features on the embeddings of
-languages in the different treatments. {[}Still working on this{]}
+One approach is to cluster the languages used in the Wikipedia analysis
+on the basis of WALS features and then directly compare the WALS
+clustering results with the results of the hierarchical clustering on
+the Wikipedia slope data for each of the different treatments using
+clustering similarity evaluation methods such as the Rand index (Rand,
+1971). However, the problem then arises of which combination of WALS
+features and how many features to include in the clustering analysis.
+This is a computationally intractable operation. Additionallly, deciding
+how many clusters to use in an unsupervised clustering analysis is an
+unsolved problem in machine learning.
+
+We instead check the effects of individual features on the embeddings of
+languages in the different treatments. We computed pairwise cosine
+similarity between each pair of language vectors within a treatment. For
+a subset of WALS features which had values entered for most of the
+languages we obtained from Wikipedia, we used a generalized linear model
+to see whether the cosine similarity between languages mattered in
+predicting if the languages shared the same value for a WALS feature. We
+found this to be true.
+
+\begin{CodeChunk}
+
+
+  X  feature   term       estimate   std.error    statistic     p.value
+---  --------  -------  ----------  ----------  -----------  ----------
+  1  83A       cosine    1.8386502   0.0103168   178.219026   0.0000000
+  2  95A       cosine    1.8971831   0.0110958   170.981718   0.0000000
+  3  81A       cosine    1.5149072   0.0098565   153.696819   0.0000000
+  4  97A       cosine    1.5767216   0.0115245   136.814432   0.0000000
+  5  144A      cosine    0.8782219   0.0117991    74.431427   0.0000000
+  6  138A      cosine    0.3951762   0.0085684    46.120042   0.0000000
+  7  87A       cosine    0.3334803   0.0083557    39.910595   0.0000000
+  8  143A      cosine    0.3736337   0.0094014    39.742361   0.0000000
+  9  82A       cosine    0.0298738   0.0092598     3.226171   0.0012546
+
+\end{CodeChunk}
 
 \section{Conclusions}\label{conclusions}
 
