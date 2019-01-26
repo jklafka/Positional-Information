@@ -56,7 +56,9 @@
 Written Corpora}
 
 
-\author{{\large \bf Josef Klafka} \\ \texttt{jklafka@uchicago.edu} \\ Department of Psychology \\ University of Chicago \And {\large \bf Daniel Yurovsky} \\ \texttt{yurovsky@uchicago.edu} \\ Department of Psychology \\ University of Chicago}
+\author{Josef Klafka \and Daniel Yurovsky \\
+        \texttt{\{jklafka, yurovsky\}@uchicago.edu} \\
+       Department of Psychology \\ University of Chicago}
 
 \begin{document}
 
@@ -81,17 +83,15 @@ on phonogical, morphological and syntactic features.
 Entropy; information; information theory; communication
 \end{abstract}
 
-\section{Background}\label{background}
-
 Perhaps the most important reason people talk and write to one another
 is to give information. From Shannon (1948), we know that when
 information is being communicated, the rate of information transmission
 should be constant and as close as possible to the capacity of the
-communication channel to optimally transmit the information. Levy \&
-Jaeger (2007) introduce the \emph{uniform information density} (UID)
+communication channel to optimally transmit the information.
+({\textbf{???}}) introduce the \emph{uniform information density} (UID)
 hypothesis, arguing that people unconsciously structure their speech and
-writing to communicate information at a constant, optimal rate. Levy \&
-Jaeger (2007) argue that speakers and writers should attempt to
+writing to communicate information at a constant, optimal rate.
+({\textbf{???}}) argue that speakers and writers should attempt to
 communicate information as evenly as possible and as close to the
 channel capacity as possible. Their evidence concerns the use or lack of
 use of ``that''-complementizers in introducing English relative clauses.
@@ -102,34 +102,36 @@ adult-adult conversations from the Penn Treebank corpus.
 
 UID has been applied broadly over the past decade, to determining
 whether linguistic alignment takes place (Jaeger \& Snider, 2013),
-Zipfian word length distributions (Piantadosi et al., 2011),
-communication efficiency (Mahowald et al., 2013), dialogue and
-turn-taking (Xu \& Reitter, 2018) and the significance of ambiguity in
-language (Piantadosi et al., 2012), among other research. However, other
-recent work has contradicted the UID hypothesis. Zhan and Levy (2018)
-study Mandarin Chinese classifier use for specific and general Mandarin
-classifiers. Specific classifiers are specific to certain nouns, and UID
-would predict that specific classifiers would appear when the production
-of the corresponding noun is easier, to spread the information contained
-by the classifier and noun less densely over time. General classifiers
-can be applied to any noun and contain no special information content.
-Zhan and Levy find that speakers use specific classifiers more often in
-cases where the production of the corresponding noun is more difficult
-than when the production is easier; speakers do not avoid unexpected
-peaks in information content for their listeners, but instead maximize
-their ease of production.
+Zipfian word length distributions (Piantadosi, Tily, \& Gibson, 2011),
+communication efficiency (Mahowald, Fedorenko, Piantadosi, \& Gibson,
+2013), dialogue and turn-taking (Xu \& Reitter, 2018) and the
+significance of ambiguity in language (Piantadosi, Tily, \& Gibson,
+2012), among other research. However, other recent work has contradicted
+the UID hypothesis. Zhan \& Levy (2018) study Mandarin Chinese
+classifier use for specific and general Mandarin classifiers. Specific
+classifiers are specific to certain nouns, and UID would predict that
+specific classifiers would appear when the production of the
+corresponding noun is easier, to spread the information contained by the
+classifier and noun less densely over time. General classifiers can be
+applied to any noun and contain no special information content. Zhan and
+Levy find that speakers use specific classifiers more often in cases
+where the production of the corresponding noun is more difficult than
+when the production is easier; speakers do not avoid unexpected peaks in
+information content for their listeners, but instead maximize their ease
+of production.
 
-Similar to the original Levy \& Jaeger (2007), Zhan and Levy (2018)
-focuses on information distribution at particular points in a sentence.
-By contrast, Jain et al. (2018) examine word order across spoken
-sentences in Hindi, a freer word order language than English, and find
-that information density has no significant effect on word order. For
-this paper, we focus on the sentence level instead of specific points,
-following a method described in Yu et al. (2016).
+Similar to the original ({\textbf{???}}), Zhan \& Levy (2018) focuses on
+information distribution at particular points in a sentence. By
+contrast, Jain, Singh, Ranjan, Rajkumar, \& Agarwal (2018) examine word
+order across spoken sentences in Hindi, a freer word order language than
+English, and find that information density has no significant effect on
+word order. For this paper, we focus on the sentence level instead of
+specific points, following a method described in Yu, Cong, Liang, \& Liu
+(2016).
 
 Yu et al. (2016) challenges the UID hypothesis through examining an
 entropy measure across sentence positions within the text portion of the
-English-language British National Corpus (BNC). They partition the
+English-language British National Corpus (BNC, CITE). They partition the
 corpus by sentence length in number of words. For each word position
 \(X\) of sentences of length \(k\), they define \(w\) as a unique word
 occurring in position \(X\). They define \(p(w)\) as the number of times
@@ -140,16 +142,16 @@ choosing a word at random in position \(X\) in sentences of length
 \(k\).
 
 \[H(X) = \sum\limits_w p(w)\log\big(p(w)\big)\] With this measure, Yu et
-al. compute the unigram entropy at each position of sentences of each
-length within the corpus. The result of this method can be plotted for
-each utterance length as an \emph{entropy curve}, which can be visually
-compared across utterance length to observe the how the unigram entropy
-changes across absolute positions in each of the utterances. Genzel \&
-Charniak (2002) similarly examine a unigram entropy measure on
+al. (2016) compute the unigram entropy at each position of sentences of
+each length within the corpus. The result of this method can be plotted
+for each utterance length as an \emph{entropy curve}, which can be
+visually compared across utterance length to observe the how the unigram
+entropy changes across absolute positions in each of the utterances.
+Genzel \& Charniak (2002) similarly examine a unigram entropy measure on
 sentences, and found that entropy at the sentence level increases
 linearly with sentence index within a corpus. UID applies this
 uniformity of entropy rate in sentences to all levels of speech, and so
-the Yu et al. method, which examines text at the word level, should find
+the Yu et al. (2016), which examines text at the word level, should find
 an affine function at the word level.
 
 The entropy curve is a consequence of the information-theoretic rate of
@@ -167,21 +169,23 @@ text data.
 
 {[}Put in an illustration of what UID predicts?{]}
 
-\section{Spoken data}\label{spoken-data}
+\hypertarget{spoken-data}{%
+\section{Spoken data}\label{spoken-data}}
 
 The UID hypothesis predicts that information transmission rate will tend
 towards uniformity in both speech and text. We begin by examining speech
 to determine if we obtain the entropy curve shape we expect for spoken
-communication. We begin with the same source as Levy \& Jaeger (2007)
-and Jaeger (2010), the Switchboard corpus of adult telephone
-conversations. We also examine child-adult conversations in the CHILDES
-TalkBank (Brown 1973; MacWhinney 2014) corpora database of spoken
-adult-child conversations in multiple languages. Children are not fully
-developed speakers, so we want to compare the entropy curve we obtain by
-computing over the utterances in the CHILDES corpora to the utterances
-in the adult-adult Switchboard corpus.
+communication. We begin with the same source as ({\textbf{???}}) and
+Jaeger (2010), the Switchboard corpus of adult telephone conversations.
+We also examine child-adult conversations in the CHILDES TalkBank
+(Brown, 1973; MacWhinney, 2014) corpora database of spoken adult-child
+conversations in multiple languages. Children are not fully developed
+speakers, so we want to compare the entropy curve we obtain by computing
+over the utterances in the CHILDES corpora to the utterances in the
+adult-adult Switchboard corpus.
 
-\subsection{Methods}\label{methods}
+\hypertarget{methods}{%
+\subsection{Methods}\label{methods}}
 
 Switchboard {[}To be put in{]}
 
@@ -206,7 +210,7 @@ adults and children in the corpora. We can directly compare any two
 positions within utterances to determine the amount of uncertainty, and
 therefore information, on average contained by words within that
 position of utterances. We are applying the same approach as in Genzel
-and Charniak (2002), but within sentences instead of across sentences.
+\& Charniak (2002), but within sentences instead of across sentences.
 
 Plots for the entropy distributions are below.
 
@@ -273,7 +277,8 @@ word boundaries can have a negative effect on reading times (Bai et al,
 \end{figure*}
 \end{CodeChunk}
 
-\subsection{Results \& Analysis}\label{results-analysis}
+\hypertarget{results-analysis}{%
+\subsection{Results \& Analysis}\label{results-analysis}}
 
 The adult and child entropy curves track one another almost identically.
 This is surprising because UID would predict that the young children in
@@ -311,7 +316,8 @@ resemble either the English/Spanish distribution or the predictions of
 UID, suggests that the entropy curve can vary from language to language.
 UID predicts that each language should have a similar distribution.
 
-\section{Written data}\label{written-data}
+\hypertarget{written-data}{%
+\section{Written data}\label{written-data}}
 
 The UID hypothesis also applies to written communication: we expect
 people to communicate information at a uniform rate through writing as
@@ -326,7 +332,8 @@ method of harvesting and distilling text data from each Wikipedia as
 well as how we compare the entropy curves from each language to one
 another.
 
-\subsection{Methods}\label{methods-1}
+\hypertarget{methods-1}{%
+\subsection{Methods}\label{methods-1}}
 
 Using Giuseppe Attardi's Wikiextractor tool
 \footnote{https://github.com/attardi/wikiextractor}, we extracted the
@@ -366,7 +373,8 @@ langauge in the Wikipedia database.
 
 {[}Put in an illustration of the slope sections and treatments here?{]}
 
-\subsection{Results and Analysis}\label{results-and-analysis}
+\hypertarget{results-and-analysis}{%
+\subsection{Results and Analysis}\label{results-and-analysis}}
 
 In the \emph{absolute} and \emph{relative 5} treatments, each language
 is embedded in \(5\)-dimensional space. In the \emph{relative 10}
@@ -405,28 +413,24 @@ For eight features and \(45\) languages, we found this to be true. The
 table below shows the results for the generalized linear model we
 computed using WALS features and the absolute treatment.
 
-\begin{CodeChunk}
-\begin{CodeOutput}
-\begin{table}[H]
+\begin{table}[tb]
 \centering
-\begin{tabular}{rrllrrrr}
+\begin{tabular}{llrrrr}
   \hline
- & X & feature & term & estimate & std.error & statistic & p.value \\ 
+feature & term & estimate & std.error & statistic & p.value \\ 
   \hline
-1 &   1 & 83A & cosine & 1.84 & 0.01 & 178.22 & 0.00 \\ 
-  2 &   2 & 95A & cosine & 1.90 & 0.01 & 170.98 & 0.00 \\ 
-  3 &   3 & 81A & cosine & 1.51 & 0.01 & 153.70 & 0.00 \\ 
-  4 &   4 & 97A & cosine & 1.58 & 0.01 & 136.81 & 0.00 \\ 
-  5 &   5 & 144A & cosine & 0.88 & 0.01 & 74.43 & 0.00 \\ 
-  6 &   6 & 138A & cosine & 0.40 & 0.01 & 46.12 & 0.00 \\ 
-  7 &   7 & 87A & cosine & 0.33 & 0.01 & 39.91 & 0.00 \\ 
-  8 &   8 & 143A & cosine & 0.37 & 0.01 & 39.74 & 0.00 \\ 
-  9 &   9 & 82A & cosine & 0.03 & 0.01 & 3.23 & 0.00 \\ 
+83A & cosine & 1.84 & 0.01 & 178.22 & 0.00 \\ 
+  95A & cosine & 1.90 & 0.01 & 170.98 & 0.00 \\ 
+  81A & cosine & 1.51 & 0.01 & 153.70 & 0.00 \\ 
+  97A & cosine & 1.58 & 0.01 & 136.81 & 0.00 \\ 
+  144A & cosine & 0.88 & 0.01 & 74.43 & 0.00 \\ 
+  138A & cosine & 0.40 & 0.01 & 46.12 & 0.00 \\ 
+  87A & cosine & 0.33 & 0.01 & 39.91 & 0.00 \\ 
+  143A & cosine & 0.37 & 0.01 & 39.74 & 0.00 \\ 
+  82A & cosine & 0.03 & 0.01 & 3.23 & 0.00 \\ 
    \hline
 \end{tabular}
 \end{table}
-\end{CodeOutput}
-\end{CodeChunk}
 
 Cosine distance played some role in the feature determination. The top
 features were \(83\), \(81\), \(95\) and \(97\), which all characterize
@@ -437,7 +441,8 @@ features play a role in determining the positional entropy values for a
 language. This means that the entropy curves are in some way structured
 by the syntactic, morphological and phonological features of a language.
 
-\section{Conclusions}\label{conclusions}
+\hypertarget{conclusions}{%
+\section{Conclusions}\label{conclusions}}
 
 In this paper, we have characterized and applied a model based on Genzel
 \& Charniak (2002) for distinguishing entropy at each word position
@@ -478,13 +483,86 @@ both measures of log-probability surprisal, then in languages such as
 Hindi where the sentence-final positional entropy values are low we
 expect to find no wrap-up effect.
 
-\section{Acknowledgements}\label{acknowledgements}
+\hypertarget{acknowledgements}{%
+\section{Acknowledgements}\label{acknowledgements}}
 
 {[}Not here yet.{]}
 
-\section{References}\label{references}
+\hypertarget{references}{%
+\section{References}\label{references}}
 
-\setlength{\parindent}{-0.1in} \setlength{\leftskip}{0.125in} \noindent
+\setlength{\parindent}{-0.1in} 
+\setlength{\leftskip}{0.125in}
+
+\noindent
+
+\hypertarget{refs}{}
+\leavevmode\hypertarget{ref-brown1973}{}%
+Brown, R. (1973). \emph{A first language: The early stages.} Harvard U.
+Press.
+
+\leavevmode\hypertarget{ref-genzel2002}{}%
+Genzel, D., \& Charniak, E. (2002). Entropy rate constancy in text. In
+\emph{Proceedings of the 40th annual meeting on association for
+computational linguistics} (pp. 199--206). Association for Computational
+Linguistics.
+
+\leavevmode\hypertarget{ref-jaeger2010}{}%
+Jaeger, T. F. (2010). Redundancy and reduction: Speakers manage
+syntactic information density. \emph{Cognitive Psychology},
+\emph{61}(1), 23--62.
+
+\leavevmode\hypertarget{ref-jaeger2013}{}%
+Jaeger, T. F., \& Snider, N. E. (2013). Alignment as a consequence of
+expectation adaptation: Syntactic priming is affected by the prime's
+prediction error given both prior and recent experience.
+\emph{Cognition}, \emph{127}(1), 57--83.
+
+\leavevmode\hypertarget{ref-jain2018}{}%
+Jain, A., Singh, V., Ranjan, S., Rajkumar, R., \& Agarwal, S. (2018).
+Uniform information density effects on syntactic choice in hindi. In
+\emph{Proceedings of the workshop on linguistic complexity and natural
+language processing} (pp. 38--48).
+
+\leavevmode\hypertarget{ref-macwhinney2014}{}%
+MacWhinney, B. (2014). \emph{The childes project: Tools for analyzing
+talk, volume ii: The database}. Psychology Press.
+
+\leavevmode\hypertarget{ref-mahowald2013}{}%
+Mahowald, K., Fedorenko, E., Piantadosi, S. T., \& Gibson, E. (2013).
+Info/information theory: Speakers choose shorter words in predictive
+contexts. \emph{Cognition}, \emph{126}(2), 313--318.
+
+\leavevmode\hypertarget{ref-piantadosi2011}{}%
+Piantadosi, S. T., Tily, H., \& Gibson, E. (2011). Word lengths are
+optimized for efficient communication. \emph{Proceedings of the National
+Academy of Sciences}, \emph{108}(9), 3526--3529.
+
+\leavevmode\hypertarget{ref-piantadosi2012}{}%
+Piantadosi, S. T., Tily, H., \& Gibson, E. (2012). The communicative
+function of ambiguity in language. \emph{Cognition}, \emph{122}(3),
+280--291.
+
+\leavevmode\hypertarget{ref-shannon1948}{}%
+Shannon, C. E. (1948). A mathematical theory of communication.
+\emph{Bell System Technical Journal}, \emph{27}(3), 379--423.
+
+\leavevmode\hypertarget{ref-xu2018}{}%
+Xu, Y., \& Reitter, D. (2018). Information density converges in
+dialogue: Towards an information-theoretic model. \emph{Cognition},
+\emph{170}, 147--163.
+
+\leavevmode\hypertarget{ref-yu2016}{}%
+Yu, S., Cong, J., Liang, J., \& Liu, H. (2016). The distribution of
+information content in english sentences. \emph{arXiv Preprint
+arXiv:1609.07681}.
+
+\leavevmode\hypertarget{ref-zhan2018}{}%
+Zhan, M., \& Levy, R. (2018). Comparing theories of speaker choice using
+a model of classifier production in mandarin chinese. In
+\emph{Proceedings of the 2018 conference of the north american chapter
+of the association for computational linguistics: Human language
+technologies, volume 1 (long papers)} (Vol. 1, pp. 1997--2005).
 
 \bibliographystyle{apacite}
 
