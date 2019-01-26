@@ -37,3 +37,6 @@ rsconnect/
 
 .DS_Store
 .Rproj.user
+
+cogsci/position-info.tex
+cogsci/position-info.log

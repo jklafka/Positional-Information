@@ -20,7 +20,7 @@ output: cogsci2016::cogsci_paper
 ---
 
 ```{r global_options, include=FALSE}
-knitr::opts_chunk$set(fig.width=3, fig.height=3, fig.crop = F, fig.pos = "tb", fig.path='figs/', echo=F, warning=F, cache=F, message=F, sanitize = T)
+knitr::opts_chunk$set(fig.width=3, fig.height=3, fig.crop = F, fig.pos = "tb", fig.path='figs/', echo=F, warning=F, cache=T, message=F, sanitize = T)
 ```
 
 ```{r, libraries}
@@ -30,26 +30,39 @@ library(tidyverse)
 library(xtable)
 ```
 
-Perhaps the most important reason people talk and write to one another is to give information. From @shannon1948, we know that when information is being communicated, the rate of information transmission should be constant and as close as possible to the capacity of the communication channel to optimally transmit the information. @levy2007 introduce the *uniform information density* (UID) hypothesis, arguing that people unconsciously structure their speech and writing to communicate information at a constant, optimal rate. @levy2007 argue that speakers and writers should attempt to communicate information as evenly as possible and as close to the channel capacity as possible. Their evidence concerns the use or lack of use of “that”-complementizers in introducing English relative clauses. When the word preceding the relative clause or the initial word of the relative clause has high information content, then the authors argue that speakers are more likely to use the complementizer. The authors use adult-adult conversations from the Penn Treebank corpus. 
+Over 7,000 languages are spoken around the modern world [@simons2018]. These language vary along many dimensions, but all share a core goal: communicating information. If speakers and writers of these languages act near-optimally to achieve their communicative goals, regularities of use across these diverse languages can be explained by a rational theory of communication [@anderson1991]. 
+Information theory, a mathematical framework developed by @shannon1948 to describe the transmission and decoding of signals, has been a unifying language for the recent development of such theories in human and machine language processing [@jelinek1976;@levy2007]. 
 
-UID has been applied broadly over the past decade, to determining whether linguistic alignment takes place [@jaeger2013], Zipfian word length distributions [@piantadosi2011], communication efficiency [@mahowald2013], dialogue and turn-taking [@xu2018] and the significance of ambiguity in language [@piantadosi2012], among other research. However, other recent work has contradicted the UID hypothesis. @zhan2018 study Mandarin Chinese classifier use for specific and general Mandarin classifiers. Specific classifiers are specific to certain nouns, and UID would predict that specific classifiers would appear when the production of the corresponding noun is easier, to spread the information contained by the classifier and noun less densely over time. General classifiers can be applied to any noun and contain no special information content. Zhan and Levy find that speakers use specific classifiers more often in cases where the production of the corresponding noun is more difficult than when the production is easier; speakers do not avoid unexpected peaks in information content for their listeners, but instead maximize their ease of production. 
+These theories model the process of communication as transmission of information over a noisy channel. The producer begins with an intended meaning, packages this meaning into a linguistic format, and then sends it to the receiver over a communcative channel. The receiver must then decode from the signal they receive on their end of the chanel the producer's intended meaning. The problem is that the channel is noisy, and sometimes the signal can get corrupted (e.g. the producer can misspeak, or the receiver can mishear). In order to maximize the probability that the correct meaning is transmitted, these theories predict that producers should choose linguistic messages that keep the rate of information across words constant. The intuition is that if the receiver misperceives a word, and that word contains most of the information in the sentence, then the communication will have failed. Because producers cannot predict which word a speaker will mishear, their best strategy is spread the information evenly across all of the words in a sentence, i.e. maintain *uniform information density* [@genzel2002; @levy2007].
 
-Similar to the original @levy2007, @zhan2018 focuses on information distribution at particular points in a sentence. By contrast, @jain2018 examine word order across spoken sentences in Hindi, a freer word order language than English, and find that information density has no significant effect on word order. For this paper, we focus on the sentence level instead of specific points, following a method described in @yu2016. 
+
+**Evidence for UID here. Maybe see if you can present this work at a slightly higher level**
+Their evidence concerns the use or lack of use of “that”-complementizers in introducing English relative clauses. When the word preceding the relative clause or the initial word of the relative clause has high information content, then the authors argue that speakers are more likely to use the complementizer. The authors use adult-adult conversations from the Penn Treebank corpus. 
+
+UID has been applied broadly over the past decade, to determining whether linguistic alignment takes place [@jaeger2013], Zipfian word length distributions [@piantadosi2011], communication efficiency [@mahowald2013], dialogue and turn-taking [@xu2018] and the significance of ambiguity in language [@piantadosi2012], among other research. 
+
+**Evidence against UID here. Again, can you present this at a higher level?**
+However, other recent work has contradicted the UID hypothesis. @zhan2018 study Mandarin Chinese classifier use for specific and general Mandarin classifiers. Specific classifiers are specific to certain nouns, and UID would predict that specific classifiers would appear when the production of the corresponding noun is easier, to spread the information contained by the classifier and noun less densely over time. General classifiers can be applied to any noun and contain no special information content. Zhan and Levy find that speakers use specific classifiers more often in cases where the production of the corresponding noun is more difficult than when the production is easier; speakers do not avoid unexpected peaks in information content for their listeners, but instead maximize their ease of production. 
+Similar to the original @levy2007, @zhan2018 focuses on information distribution at particular points in a sentence. By contrast, @jain2018 examine word order across spoken sentences in Hindi, a freer word order language than English, and find that information density has no significant effect on word order. 
+
+Recently, @yu2016 developed a more direct test of the Uniform Information Density hypothesis, applying the logic used by @genzel2002 to look at the distribution of information *within* individual sentences. **SOME HIGHER LEVEL DESCRIPTION HERE, WE'll GET INTO THE DETAILS BELOW**
+
+Because people process language incrementally--using the previous words in a sentence to predict the words that will come next, the amount of information that a word contains when seen in isolation should increase over the course of a sentence. Analyzing a large corpus of written English, they find a different pattern: Entropy increases over the first few words of an utterance and then remains constant until the final word where it again jumps up (see Figure \ref{fig:our_replication}). @yu2016 conclude that the Uniform Information Density hypothesis must not hold for medial words in a sentence.
+
+We extend and generalize @yu2016 in two ways: we confirm that this same pattern is found in spoken English--in both adult and child speakers. We then examine entropy curves cross-linguistically, finding a diversity of shapes across the world's languages. Finally, we show that entropy curves are predictable from the structure of individual languages, namely word order. Taken together, our results suggest a refinement of the Uniform information density hypothesis: Speakers may choose to order words in order to preserve uniform uniformation, but they must do so under prior constraints on word order imposed by the language they speak.
+
+
+
+
+The UID hypothesis predicts that information transmission rate will tend towards uniformity in both speech and text. We begin by examining speech to determine if we obtain the entropy curve shape we expect for spoken communication. We begin with the same source as @levy2007 and @jaeger2010, the Switchboard corpus of adult telephone conversations. We also examine child-adult conversations in the CHILDES TalkBank [@brown1973; @macwhinney2014] corpora database of spoken adult-child conversations in multiple languages. Children are not fully developed speakers, so we want to compare the entropy curve we obtain by computing over the utterances in the CHILDES corpora to the utterances in the adult-adult Switchboard corpus. 
+
+## Methods
+
 
 @yu2016 challenges the UID hypothesis through examining an entropy measure across sentence positions within the text portion of the English-language British National Corpus (BNC, CITE). They partition the corpus by sentence length in number of words. For each word position $X$ of sentences of length $k$, they define $w$ as a unique word occurring in position $X$. They define $p(w)$ as the number of times word $w$ occurs in position $X$ divided by the number of total words that occur in position $X$ i.e. the number of sentences of length $k$. Then $p(w)$ is the probability of obtaining word $w$ by choosing a word at random in position $X$ in sentences of length $k$. 
 
 $$H(X) = \sum\limits_w p(w)\log\big(p(w)\big)$$
 With this measure, @yu2016  compute the unigram entropy at each position of sentences of each length within the corpus. The result of this method can be plotted for each utterance length as an *entropy curve*, which can be visually compared across utterance length to observe the how the unigram entropy changes across absolute positions in each of the utterances. @genzel2002 similarly examine a unigram entropy measure on sentences, and found that entropy at the sentence level increases linearly with sentence index within a corpus. UID applies this uniformity of entropy rate in sentences to all levels of speech, and so the @yu2016, which examines text at the word level, should find an affine function at the word level. 
-
-The entropy curve is a consequence of the information-theoretic rate of information transfer in a language, where information is defined as a reduction in uncertainty. Thus the more entropy at a word position in a sentence [@yu2016] or a sentence index in a text [@genzel2002], the more information is on average contained around that position. Let us assume that the UID perspective is correct. Then we expect that the entropy curve for every language should be close to an affine, linear function with some noise. Entropy should monotonically and uniformly increase at all word positions across utterances on average. We will find a contradiction with this claim through examining the average entropy at each position of a sentence for both speech and text data. 
-
-[Put in an illustration of what UID predicts?]
-
-# Spoken data
-
-The UID hypothesis predicts that information transmission rate will tend towards uniformity in both speech and text. We begin by examining speech to determine if we obtain the entropy curve shape we expect for spoken communication. We begin with the same source as @levy2007 and @jaeger2010, the Switchboard corpus of adult telephone conversations. We also examine child-adult conversations in the CHILDES TalkBank [@brown1973; @macwhinney2014] corpora database of spoken adult-child conversations in multiple languages. Children are not fully developed speakers, so we want to compare the entropy curve we obtain by computing over the utterances in the CHILDES corpora to the utterances in the adult-adult Switchboard corpus. 
-
-## Methods
 
 Switchboard [To be put in]
 
