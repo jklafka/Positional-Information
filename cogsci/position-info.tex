@@ -152,13 +152,20 @@ uniformity of entropy rate in sentences to all levels of speech, and so
 the Yu et al. method, which examines text at the word level, should find
 an affine function at the word level.
 
-Let us assume that the UID perspective is correct. Then we expect that
-the entropy curve for every language should be close to an affine,
-linear function with some noise. Entropy should monotonically and
-uniformly increase at all word positions across utterances on average.
-We will find a contradiction with this claim through examining the
-average entropy at each position of a sentence for both speech and text
-data.
+The entropy curve is a consequence of the information-theoretic rate of
+information transfer in a language, where information is defined as a
+reduction in uncertainty. Thus the more entropy at a word position in a
+sentence (Yu et al., 2016) or a sentence index in a text (Genzel \&
+Charniak, 2002), the more information is on average contained around
+that position. Let us assume that the UID perspective is correct. Then
+we expect that the entropy curve for every language should be close to
+an affine, linear function with some noise. Entropy should monotonically
+and uniformly increase at all word positions across utterances on
+average. We will find a contradiction with this claim through examining
+the average entropy at each position of a sentence for both speech and
+text data.
+
+{[}Put in an illustration of what UID predicts?{]}
 
 \section{Spoken data}\label{spoken-data}
 
@@ -167,12 +174,12 @@ towards uniformity in both speech and text. We begin by examining speech
 to determine if we obtain the entropy curve shape we expect for spoken
 communication. We begin with the same source as Levy \& Jaeger (2007)
 and Jaeger (2010), the Switchboard corpus of adult telephone
-conversations {[}CITATION{]}. We also examine child-adult conversations
-in the CHILDES TalkBank (Brown 1973; MacWhinney 2014) corpora database
-of spoken adult-child conversations in multiple languages. Children are
-not fully developed speakers, so we want to compare the entropy curve we
-obtain by computing over the utterances in the CHILDES corpora to the
-utterances in the adult-adult Switchboard corpus.
+conversations. We also examine child-adult conversations in the CHILDES
+TalkBank (Brown 1973; MacWhinney 2014) corpora database of spoken
+adult-child conversations in multiple languages. Children are not fully
+developed speakers, so we want to compare the entropy curve we obtain by
+computing over the utterances in the CHILDES corpora to the utterances
+in the adult-adult Switchboard corpus.
 
 \subsection{Methods}\label{methods}
 
@@ -327,19 +334,19 @@ text corpora for \(165\) languages from Wikipedia by downloading a
 stored collection of Wikipedia entries in each langauge and randomly
 selecting several thousand articles from each Wikipedia language. Each
 language corpus was cleaned and limited to sentences between \(6\) and
-\(50\) words. Similar to the data from CHILDES, we divided each corpus
-by sentence length, and then computed the unigram entropy measure on
-each word position within each sentence length.
-
-To classify the unigram entropy curves of the different distributions,
-we computed three slope treatments of each curve. In the \emph{absolute}
-treatment, with sentence length denoted as \(n\), we computed the slope
-between positions \(1\) and \(2\), positions \(2\) and \(3\), positions
-\(3\) and \(n-2\), positions \(n-2\) and \(n-1\) and positions \(n-1\)
-and \(n\). For the short utterances appearing the CHILDES speech corpora
-we examined, these appeared to be important junctions in the
-distributions, with a seeming plateau in the middle of the unigram
-entropy curve for each of the language corpora we examined in CHILDES.
+\(50\) words. Similar to our process for the Switchboard and CHILDES
+spoken corpora, we divided each corpus by sentence length, and then
+computed the unigram entropy measure on each word position within each
+sentence length. We wanted to directly compare and classify the unigram
+entropy curves of the languages from Wikipedia. We computed three slope
+treatments of each curve. In the \emph{absolute} treatment, with
+sentence length denoted as \(n\), we computed the slope between
+positions \(1\) and \(2\), positions \(2\) and \(3\), positions \(3\)
+and \(n-2\), positions \(n-2\) and \(n-1\) and positions \(n-1\) and
+\(n\). For the short utterances appearing the CHILDES speech corpora we
+examined, these appeared to be important junctions in the distributions,
+with a seeming plateau in the middle of the unigram entropy curve for
+each of the language corpora we examined in CHILDES.
 
 However, because the portion of sentences of length greater than \(10\)
 in the Wikipedia corpora were significantly larger than the CHILDES
@@ -357,29 +364,22 @@ treatment then all of the \(0\%\) to \(20\%\) slopes were averaged
 together. This created three treatments for the entropy curve for each
 langauge in the Wikipedia database.
 
-For the German and Japanese entropy curves, we observed the same shape
-for the text Wikipedia corpora entropy curves and the speech CHILDES
-corpora entropy curves, supporting the argument for robustness across
-text and speech.
+{[}Put in an illustration of the slope sections and treatments here?{]}
 
 \subsection{Results and Analysis}\label{results-and-analysis}
 
 In the \emph{absolute} and \emph{relative 5} treatments, each language
-is cast as a point in \(5\)-dimensional space. In the \emph{relative 10}
-treatment, each language is cast as a point in \(10\)-dimensional space.
-This allows for direct comparison using cosine similarity and moreover
-for unsupervised clustering analysis to compare the results of the
-Wikipedia entropy analysis to known typological features within the
-langauges in the Wikipedia dataset. Using the R hclust package, we
-performed a hierarchical clustering of the Wikipedia slope data within
-each treatment. A subset of the results at a glance for the
-\emph{absolute} treatment are below.
-
-To determine which phonological, morphological and syntactic features
-affected the embedding of a language in the Wikipedia dataset, we looked
-at the list of \(144\) linguistic features in World Atlas of Language
-Structures (Dryer \& Haspelmath, 2013). We limited the languages in the
-WALS database to only those in our Wikipedia dataset and performed
+is embedded in \(5\)-dimensional space. In the \emph{relative 10}
+treatment, each language is embedded in \(10\)-dimensional space. This
+allows for direct comparison between languages on Wikipedia using cosine
+similarity and moreover for unsupervised clustering analysis to compare
+the results of the Wikipedia entropy analysis to known typological
+features within the langauges in the Wikipedia dataset. To determine
+which phonological, morphological and syntactic features affected the
+embedding of a language in the Wikipedia dataset, we looked at the list
+of \(144\) linguistic features in World Atlas of Language Structures
+(Dryer \& Haspelmath, 2013). We limited the languages in the WALS
+database to only those in our Wikipedia dataset and performed
 missing-value imputation to obtain the features not coded in WALS for
 the languages from Wikipedia.
 
@@ -400,8 +400,10 @@ similarity between each pair of language vectors within a treatment. For
 a subset of WALS features which had values entered for most of the
 languages we obtained from Wikipedia, we used a generalized linear model
 to see whether the cosine similarity between languages mattered in
-predicting if the languages shared the same value for a WALS feature. We
-found this to be true.
+predicting if the languages shared the same value for a WALS feature.
+For eight features and \(45\) languages, we found this to be true. The
+table below shows the results for the generalized linear model we
+computed using WALS features and the absolute treatment.
 
 \begin{CodeChunk}
 \begin{CodeOutput}
@@ -426,35 +428,61 @@ found this to be true.
 \end{CodeOutput}
 \end{CodeChunk}
 
+Cosine distance played some role in the feature determination. The top
+features were \(83\), \(81\), \(95\) and \(97\), which all characterize
+word order. This makes intuitive sense, and indicates that for this
+small subset of features and subset of languages that the embeddings in
+the slope space are related to the WALS features. Therefore typological
+features play a role in determining the positional entropy values for a
+language. This means that the entropy curves are in some way structured
+by the syntactic, morphological and phonological features of a language.
+
 \section{Conclusions}\label{conclusions}
 
-In this paper we have explored the differences in rate of information
-transmission among spoken child-adult conversational corpora in several
-languages and text corpora pulled from Wikipedia for well over a hundred
-other corpora. We have seen that the entropy curve, a representation of
-information at each position of an utterance without regard to context,
-varies from language to language and is predicted by a subset of
-syntactic, phonological and morphological features in a language. We
-have provided evidence against the Uniform Information Density
-hypothesis and provided an alternate explanation for the rate at which
-information is encoded and transmitted in human communication, namely
-one that is robust across corpora, language dependent and arises from
-the features of the language.
+In this paper, we have characterized and applied a model based on Genzel
+\& Charniak (2002) for distinguishing entropy at each word position
+within sentences. In doing so, we have provided evidence against the
+Uniform Information Density hypothesis. Our work indicates that
+information is not distributed uniformly throughout an utterance
+regardless of languages, but that languages possess a characteristic
+information distribution determined by their syntactic, morphological
+and phonological features.
 
-A large volume of research has indicated the effects of surprisal on
-fixation duration during eye-tracking studies: higher surprisal of a
-word corresponds to higher fixation duration. The \emph{wrap-up effect}
-is a popular hypothesis within the eye-tracking community. The
-hypothesis states that, in written text, sentence-final words are
-processed more slowly on average then sentence-medial or
-sentence-initial words, due to readers integrating information from the
-entire sentence in order to form a final, coherent thought expressed by
-the sentence, among other reasons. The wrap-up effect is drawn from
+Our work has focused on words within sentences in both speech and text
+across typologically diverse languages. Other researchers have explored
+information rate cross-linguistically as a single number characterizing
+each language, most notably including Aylett \& Turk (2004). That work
+characterizes information rate as information per unit time, and is
+complementary to the work we accomplish here. Languages may possess both
+an overall information transfer rate, showing the average amount of
+semantic information transmitted per syllable or word, and an entropy
+distribution indicative of the language's information distribution.
+
+Research has indicated the effects of surprisal on fixation duration
+during eye-tracking studies (Demberg \& Keller, 2008) (Boston et al.,
+2008) (Smith \& Levy, 2013). Higher surprisal of a word is on average
+predictive of higher fixation duration. The \emph{wrap-up effect} states
+that when a person reads written text, he or she will process
+sentence-final words more slowly on average then sentence-medial or
+sentence-initial words, due to integrating information from the entire
+sentence to form a final understanding of the sentence's meaning (Stowe
+et al., 2018) (Kuperman et al., 2010). The wrap-up effect is drawn from
 evidence in English, German and Dutch, all of which are languages with a
 large final increase in their entropy curve from our study. We aim to
-see in the future if as a consquence of our work in this paper, the
+see in the future if as a consequence of our work in this paper, the
 wrap-up effect falls out from the final jump in the entropy curves in
-some languages.
+some languages. We would analyze eye-tracking data from languages with
+low positional entropy in sentence-final positions. Since the lexical
+surprisal metric in eye-tracking and our positional entropy metric are
+both measures of log-probability surprisal, then in languages such as
+Hindi where the sentence-final positional entropy values are low we
+expect to find no wrap-up effect.
+
+\section{Acknowledgements}\label{acknowledgements}
+
+{[}Not here yet.{]}
+
+\section{References}\label{references}
 
 \setlength{\parindent}{-0.1in} \setlength{\leftskip}{0.125in} \noindent
 
