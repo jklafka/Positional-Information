@@ -58,26 +58,29 @@ $$H(X) = \sum\limits_w p(w)\log\big(p(w)\big)$$
 With this measure, @yu2016  compute the unigram entropy at each position of sentences of each length within the corpus. The result of this method can be plotted for each utterance length as an *entropy curve*, which can be visually compared across utterance length to observe the how the unigram entropy changes across absolute positions in each of the utterances. @genzel2002 similarly examine a unigram entropy measure on sentences, and found that entropy at the sentence level increases linearly with sentence index within a corpus. UID applies this uniformity of entropy rate in sentences to all levels of speech, and so the @yu2016, which examines text at the word level, should find an affine function at the word level. 
 
 ```{r switchboard, include=FALSE}
+library(feather)
 
-process_switchboard <- function() {
+sb_tokens <- read_feather("../switchboard/switchboard.feather") %>%
+  mutate(length = str_count(value, " ") + 1) %>%
+  mutate(utterance_id = 1:n()) %>%
+  unnest_tokens(word, value) %>%
+  group_by(utterance_id) %>%
+  mutate(word_order = 1:n()) 
   
-}
 
-unigram_entropy <- function(tokens) {
-     
+unigram_entropy <- function(sen_length, tokens) {
   tokens %>%
+    filter(length == sen_length) %>%
     group_by(word_order, word) %>%
     summarise(n = n()) %>%
     tidyboot(summary_function = function(x) x %>% 
                summarise(entropy = entropy(n, unit = "log2")),
              statistics_functions = function(x) x %>%
              summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
-    mutate(role = role, length = sen_length)
+    mutate(length = sen_length)
 }
 
-tokens <- process_switchboard()
-
-entropies <- map(2:10, ~unigram_entropy("", .x, brown_utterances)) %>%
+entropies <- map(2:10, ~unigram_entropy(.x, sb_tokens)) %>%
   bind_rows()
 
 ggplot(entropies, aes(x = word_order, y = empirical_entropy,
