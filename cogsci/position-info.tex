@@ -151,17 +151,6 @@ jumps up (see Figure \ref{fig:our_replication}). Yu et al. (2016)
 conclude that the Uniform Information Density hypothesis must not hold
 for medial words in a sentence.
 
-\begin{CodeChunk}
-\begin{figure*}[h]
-
-{\centering \includegraphics{figs/our_replication-1} 
-
-}
-
-\caption[Providence corpus unigram entropy]{Providence corpus unigram entropy}\label{fig:our_replication}
-\end{figure*}
-\end{CodeChunk}
-
 We extend and generalize Yu et al. (2016) in three ways: we confirm that
 this same pattern is found in spoken English--in both adult and child
 speakers. We then examine entropy curves cross-linguistically, finding a
@@ -183,68 +172,93 @@ TalkBank (Brown, 1973; MacWhinney, 2014) corpora database of spoken
 adult-child conversations in multiple languages. Children are not fully
 developed speakers, so we want to compare the entropy curve we obtain by
 computing over the utterances in the CHILDES corpora to the utterances
-in the adult-adult Switchboard corpus.
+in the adult-adult Switchboard corpus. Finally, we extend our
+cross-linguistic findings on a small number of languages from the
+CHILDES experiment to a direct comparison of several dozen languages in
+Wikipedia.
+
+\subsection{General methods}\label{general-methods}
+
+Here we will describe our adaptation of the by-word entropy method in Yu
+et al. (2016), which uses the text portion of the British National
+Corpus Clear (1993). We replicate their results at the end of this
+subsection. Given a text or speech corpus divided into individual
+utterances, we partition the corpus by utterance length in number of
+words. For each word position \(X\) of utterances of length \(k\), we
+define \(w\) as a unique word occurring in position \(X\). We further
+define \(p(w)\) as the number of times word \(w\) occurs in position
+\(X\), divided by the number of total words that occur in position \(X\)
+i.e.~the number of sentences of length \(k\). This creates a probability
+distribution over the words occurring in position \(X\), and computing
+the Shannon entropy \(H(X)\) Shannon (1948) of this probability
+distribution gives the positional entropy of position \(X\) in
+utterances of length \(k\).
+
+\[H(X) = \sum\limits_w p(w)\log\big(p(w)\big)\]
+
+Our replication of the Yu et al. (2016) results
+
+\begin{CodeChunk}
+
+\includegraphics{figs/read_and_plot_bnc-1} \end{CodeChunk}
+
+With this measure, we compute the unigram entropy at each position of
+sentences of each length within the corpus. The result of this method
+can be plotted for each utterance length as an \emph{entropy curve},
+which can be visually compared across utterance length to observe the
+how the unigram entropy changes across absolute positions in each of the
+utterances. Genzel \& Charniak (2002) similarly examine a unigram
+entropy measure on sentences, and found that entropy at the sentence
+level increases linearly with sentence index within a corpus. UID
+applies this uniformity of entropy rate in sentences to all levels of
+speech, and so our method obtained from Yu et al. (2016), which examines
+text at the word level, should find an affine function at the word
+level.
+
+The entropy curves capture individual variation across positions in
+utterances of the same length. This allows us to directly observe and
+judge the amount of variation in words that appear in an individual
+position of a sentence. We can directly compare any two positions within
+utterances to determine the amount of uncertainty, and therefore
+information, on average contained by words within that position of
+utterances. We are applying the same approach as in Genzel \& Charniak
+(2002), but within sentences instead of across sentences.
 
 \section{Experiment 1}\label{experiment-1}
 
-Yu et al. (2016) challenges the UID hypothesis through examining an
-entropy measure across sentence positions within the text portion of the
-English-language British National Corpus (BNC) Clear (1993). They
-partition the corpus by sentence length in number of words. For each
-word position \(X\) of sentences of length \(k\), they define \(w\) as a
-unique word occurring in position \(X\). They define \(p(w)\) as the
-number of times word \(w\) occurs in position \(X\) divided by the
-number of total words that occur in position \(X\) i.e.~the number of
-sentences of length \(k\). Then \(p(w)\) is the probability of obtaining
-word \(w\) by choosing a word at random in position \(X\) in sentences
-of length \(k\).
+We first used the same source for data as R. P. Levy \& Jaeger (2007),
+the Switchboard corpus of American telephone conversations Godfrey,
+Holliman, \& McDaniel (1992). The Switchboard corpus contains telephone
+conversations of American English between strangers, with individual
+utterances ranging from one word to several dozen words. We divided the
+Switchboard corpus by utterance length and
 
-\[H(X) = \sum\limits_w p(w)\log\big(p(w)\big)\] With this measure, Yu et
-al. (2016) compute the unigram entropy at each position of sentences of
-each length within the corpus. The result of this method can be plotted
-for each utterance length as an \emph{entropy curve}, which can be
-visually compared across utterance length to observe the how the unigram
-entropy changes across absolute positions in each of the utterances.
-Genzel \& Charniak (2002) similarly examine a unigram entropy measure on
-sentences, and found that entropy at the sentence level increases
-linearly with sentence index within a corpus. UID applies this
-uniformity of entropy rate in sentences to all levels of speech, and so
-the Yu et al. (2016), which examines text at the word level, should find
-an affine function at the word level.
+\subsection{Results and Analysis}\label{results-and-analysis}
+
+\begin{CodeChunk}
+
+\includegraphics{figs/read_and_plot_switchboard-1} \end{CodeChunk}
 
 \section{Experiment 2}\label{experiment-2}
 
-We used the Providence English corpus from CHILDES. The Providence
+After replicating the Yu et al. (2016) results using the spoken
+conversation corpus from R. P. Levy \& Jaeger (2007), we want to
+determine whether the entropy curves will remain robust over child-adult
+conversational corpora.
+
+The corpora in the CHILDES database consists of short and often
+disconnected utterances across hours of recordings, the unigram entropy
+measure is unaffected by context or lack thereof in utterances by the
+adults and children in the corpora. For our first corpus, we used the
+Providence English corpus from CHILDES MacWhinney (2014). The Providence
 corpus recorded interactions between children between 1 and 3 years old
 and their parents in the home. We divided the corpus by speaker into
 child and non-child categories. We further divided the corpus by
 utterance length, so that all sentences of length \(k\) (e.g. \(6\))
 were grouped together. Finally, within each utterance length, we
-computed the unigram entropy measure for each position.
-
-The entropy curves capture individual variation across positions in
-utterances of the same length. This allows us to directly observe and
-judge the amount of variation in words that appear in an individual
-position of a sentence. For speech data, which for the corpora in the
-CHILDES database consists of short and often disconnected utterances
-across hours of recordings, the unigram entropy measure is unaffected by
-context or lack thereof in utterances by the adults and children in the
-corpora. We can directly compare any two positions within utterances to
-determine the amount of uncertainty, and therefore information, on
-average contained by words within that position of utterances. We are
-applying the same approach as in Genzel \& Charniak (2002), but within
-sentences instead of across sentences.
-
-\begin{CodeChunk}
-\begin{figure*}[h]
-
-{\centering \includegraphics{figs/providence_PE-1} 
-
-}
-
-\caption[Providence corpus unigram entropy]{Providence corpus unigram entropy}\label{fig:providence_PE}
-\end{figure*}
-\end{CodeChunk}
+computed the unigram entropy measure for each position. Computation of
+positional entropy was identical to our general method after dividing
+for utterance length.
 
 We also ran this analysis on Spanish and Mandarin corpora from CHILDES.
 We used the Shiro corpus for Spanish Shiro (2000), which contains
@@ -263,6 +277,19 @@ Mandarin do not normally demarcate word boundaries by spacing words
 apart, and for normal Chinese writing including spaces between word
 boundaries can have a negative effect on reading times Bai, Yan,
 Liversedge, Zang, \& Rayner (2008).
+
+\subsection{Results and Analysis}\label{results-and-analysis-1}
+
+\begin{CodeChunk}
+\begin{figure*}[h]
+
+{\centering \includegraphics{figs/providence_PE-1} 
+
+}
+
+\caption[Providence corpus unigram entropy]{Providence corpus unigram entropy}\label{fig:providence_PE}
+\end{figure*}
+\end{CodeChunk}
 
 \begin{CodeChunk}
 \begin{figure*}[h]
@@ -285,8 +312,6 @@ Liversedge, Zang, \& Rayner (2008).
 \caption[Zhou Dinner corpus entropy]{Zhou Dinner corpus entropy}\label{fig:zhou_PE}
 \end{figure*}
 \end{CodeChunk}
-
-\subsection{Results \& Analysis}\label{results-analysis}
 
 The adult and child entropy curves track one another almost identically.
 This is surprising because UID would predict that the young children in
@@ -369,41 +394,35 @@ corpora, then we also computed relative slope treatments. In the
 \(80\%\) and \(80\%\) and \(100\%\) of the relative word positions in
 each sentence. When one of these percentages was not a whole number,
 then the closest whole number position was used instead for slope
-calculation. In the \emph{relative 10} treatment, we computed the slopes
-between every \(10\%\) of the relative word positions in each sentence.
-Each comparative slope within each treatment was averaged together
-between different sentence lengths, for example in the \emph{relative 5}
-treatment then all of the \(0\%\) to \(20\%\) slopes were averaged
-together. This created three treatments for the entropy curve for each
-langauge in the Wikipedia database.
+calculation. Each comparative slope within each treatment was averaged
+together between different sentence lengths, for example in the
+\emph{relative 5} treatment then all of the \(0\%\) to \(20\%\) slopes
+were averaged together. This created three treatments for the entropy
+curve for each langauge in the Wikipedia database.
 
-\subsection{Results and Analysis}\label{results-and-analysis}
-
-In the \emph{absolute} and \emph{relative 5} treatments, each language
-is embedded in \(5\)-dimensional space. In the \emph{relative 10}
-treatment, each language is embedded in \(10\)-dimensional space. This
-allows for direct comparison between languages on Wikipedia using cosine
-similarity and moreover for unsupervised clustering analysis to compare
-the results of our position-wise analysis on datasets from Wikipedia to
-known typological features within the languages. To determine which
+In both the \emph{absolute} and \emph{relative 5} treatments, each
+language is embedded in \(5\)-dimensional space. This allows for direct
+comparison between languages on Wikipedia using cosine similarity and
+moreover for unsupervised clustering analysis to compare the results of
+our position-wise analysis on datasets from Wikipedia to known
+typological features within the languages. To determine which
 phonological, morphological and syntactic features affected the
 embedding of a language in the Wikipedia dataset, we use the linguistic
 features in World Atlas of Language Structures (Dryer \& Haspelmath,
 2013).
 
-{[}Ideally do everything, but missing values in WALS, and how to compare
-every combination of features{]} An ideal approach using all of the
-corpora we can download from Wikipedia and all \(144\) features from the
-WALS database. Cluster the languages used in the Wikipedia analysis on
-the basis of WALS features and then directly compare the WALS clustering
-results with the results of the hierarchical clustering on the Wikipedia
-slope data for each of the different treatments using clustering
-similarity evaluation methods such as the Rand index (Rand, 1971).
-However, the problem then arises of which combination of WALS features
-and how many features to include in the clustering analysis. This is a
-computationally intractable operation. Additionallly, deciding how many
-clusters to use in an unsupervised clustering analysis is an unsolved
-problem in machine learning.
+An ideal approach would use all of the corpora we can download from
+Wikipedia and all \(144\) features from the WALS database. Cluster the
+languages used in the Wikipedia analysis on the basis of WALS features
+and then directly compare the WALS clustering results with the results
+of the hierarchical clustering on the Wikipedia slope data for each of
+the different treatments using clustering similarity evaluation methods
+such as the Rand index (Rand, 1971). However, the problem then arises of
+which combination of WALS features and how many features to include in
+the clustering analysis. This is a computationally intractable
+operation. Additionallly, deciding how many clusters to use in an
+unsupervised clustering analysis is an unsolved problem in machine
+learning.
 
 We instead check the effects of individual features on the embeddings of
 languages in the different treatments. We computed pairwise cosine
@@ -412,6 +431,9 @@ a subset of WALS features which had values entered for most of the
 languages we obtained from Wikipedia, we used a generalized linear model
 to see whether the cosine similarity between languages mattered in
 predicting if the languages shared the same value for a WALS feature.
+
+\subsection{Results and Analysis}\label{results-and-analysis-2}
+
 For eight features and \(45\) languages, we found this to be true. The
 table below shows the results for the generalized linear model we
 computed using WALS features and the absolute treatment.
@@ -531,6 +553,12 @@ Genzel, D., \& Charniak, E. (2002). Entropy rate constancy in text. In
 \emph{Proceedings of the 40th annual meeting on association for
 computational linguistics} (pp. 199--206). Association for Computational
 Linguistics.
+
+\hypertarget{ref-godfrey1992}{}
+Godfrey, J. J., Holliman, E. C., \& McDaniel, J. (1992). SWITCHBOARD:
+Telephone speech corpus for research and development. In
+\emph{Acoustics, speech, and signal processing, 1992. icassp-92., 1992
+ieee international conference on} (Vol. 1, pp. 517--520). IEEE.
 
 \hypertarget{ref-jaeger2010}{}
 Jaeger, T. F. (2010). Redundancy and reduction: Speakers manage

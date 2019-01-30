@@ -64,7 +64,7 @@ wk_clusters %>%
 ```
 
 ```{r}
-wiki_gs <- gs_title("Wikipedia_absolute")
+wiki_gs <- gs_title("Wikipedia_relative5")
 wkpd <- gs_read(wiki_gs) 
 LANGUAGES <- wkpd$Language
 
@@ -150,9 +150,4 @@ imputed_result <- wf_df %>%
   MIMCA(ncp = 7, maxiter = 999)
 
 imputed_wf <- as.data.frame(imputed_result[[1]][[99]])
-```
-
-
-```{r evaluate_clusters}
-wals_clusters <- wals_clust["cluster"] %>% unlist(use.names= FALSE)
 ```
