@@ -120,6 +120,43 @@ For each corpus, we accessed transcripts of the corpus provided through the Talk
 We expect that our entropy analysis on the Providence corpus will produce an identical entropy curve shape to the BNC and Switchboard curves. We expect similar results to English in the Spanish Shiro entropy curve, while we expect that our Mandarin corpus will produce a different entropy curve shape. 
 
 ## Results and Analysis
+
+```{r entropy generation code}
+prov_utterances <- get_utterances(corpus = "Providence") #stem or gloss
+shiro_utterances <- get_utterances(corpus = "Shiro") #use gloss
+zhou_utterances <- get_utterances(corpus = "ZhouDinner") #use stem, NOT gloss
+
+get_entropies <- function(role, sen_length, utterances, stemgloss) {
+  
+  if(role == "Target_Child") {
+    sub_utterances <- utterances %>%
+      filter(speaker_role == "Target_Child") %>%
+      mutate(length = str_count(stemgloss, pattern = " +") + 1) # uses stems of words, not original words
+  } else {
+     sub_utterances <- utterances %>%
+      filter(speaker_role != "Target_Child") %>%
+      mutate(length = str_count(stemgloss, pattern = " +") + 1)
+  }
+
+  tokens <- sub_utterances %>%
+    filter(length == sen_length) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, gloss) %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n()) %>%
+    group_by(word_order, word) %>%
+    filter(word_order <= length)
+   
+  tokens %>%
+    summarise(n = n()) %>%
+    tidyboot(summary_function = function(x) x %>% 
+               summarise(entropy = entropy(n, unit = "log2")),
+             statistics_functions = function(x) x %>%
+             summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
+    mutate(role = role, length = sen_length)
+}
+```
+
 ```{r providence_PE, fig.env = "figure*", fig.pos = "h", fig.width=6, fig.height=3, fig.align = "center", set.cap.width=T, num.cols.cap=2, fig.cap = "Providence corpus unigram entropy"}
 img <- png::readPNG("figs/Prov_corpus_result.png")
 grid::grid.raster(img)
