@@ -31,6 +31,8 @@ library(xtable)
 library(tidytext)
 library(tidyboot)
 library(entropy)
+library(here)
+library(feather)
 ```
 
 # Introduction
@@ -60,15 +62,20 @@ The UID hypothesis predicts that information transmission rate will tend towards
 $$H(X) = \sum\limits_w p(w)\log\big(p(w)\big)$$
 With this measure, @yu2016  compute the unigram entropy at each position of sentences of each length within the corpus. The result of this method can be plotted for each utterance length as an *entropy curve*, which can be visually compared across utterance length to observe the how the unigram entropy changes across absolute positions in each of the utterances. @genzel2002 similarly examine a unigram entropy measure on sentences, and found that entropy at the sentence level increases linearly with sentence index within a corpus. UID applies this uniformity of entropy rate in sentences to all levels of speech, and so the @yu2016, which examines text at the word level, should find an affine function at the word level. 
 
-```{r switchboard, include=FALSE}
-library(feather)
-
-sb_tokens <- read_feather("../switchboard/switchboard.feather") %>%
+```{r bnc_and_switchboard, eval = F}
+sb_tokens <- read_feather(here("../switchboard/switchboard.feather")) %>%
   mutate(length = str_count(value, pattern = " +") + 1) %>% 
   mutate(utterance_id = 1:n()) %>%
   unnest_tokens(word, value, token = stringr::str_split, pattern = " +") %>%
   group_by(utterance_id) %>%
   mutate(word_order = 1:n()) 
+
+bnc10_tokens <- read_feather(here("../bnc/bnc10.feather")) %>%
+  mutate(word = as.numeric(as.factor(word)))
+bnc20_tokens <- read_feather(here("../bnc/bnc20.feather")) %>%
+  mutate(word = as.numeric(as.factor(word)))
+bnc30_tokens <- read_feather(here("../bnc/bnc30.feather")) %>%
+  mutate(word = as.numeric(as.factor(word)))
 
 unigram_entropy <- function(sen_length, tokens) {
   tokens %>%
@@ -82,14 +89,37 @@ unigram_entropy <- function(sen_length, tokens) {
     mutate(length = sen_length)
 }
 
-entropies <- map(2:10, ~unigram_entropy(.x, sb_tokens)) %>%
-  bind_rows()
 
-ggplot(entropies, aes(x = word_order, y = empirical_entropy,
+switchboard_entropies <- map_df(2:10, ~unigram_entropy(.x, sb_tokens)) 
+
+bnc10_entropies <- unigram_entropy(10, bnc10_tokens)
+bnc20_entropies <- unigram_entropy(20, bnc20_tokens)
+bnc30_entropies <- unigram_entropy(30, bnc30_tokens)
+
+bnc_entropies <- bind_rows(bnc10_entropies, bnc20_entropies, bnc30_entropies)
+
+write_csv(bnc_entropies, here("data/bnc_entropies.csv"))
+write_csv(switchboard_entropies, here("data/switchboard_entropies.csv"))
+```
+
+```{r read_bnc_and_switchboard}
+bnc_entropies <- read_csv(here("data/bnc_entropies.csv"))
+switchboard_entropies <- read_csv(here("data/switchboard_entropies.csv"))
+```
+
+```{r plot_bnc_and_switchboard}
+ggplot(switchboard_entropies, aes(x = word_order, y = empirical_entropy,
                       ymin = ci_lower, ymax = ci_upper)) +
   facet_wrap(~ length) + 
   geom_pointrange() +
   geom_smooth(se = F)
+
+
+ggplot(bnc_entropies, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_line()
 ```
 
 We used the Providence English corpus from CHILDES. The Providence corpus recorded interactions between children between 1 and 3 years old and their parents in the home. We divided the corpus by speaker into child and non-child categories. We further divided the corpus by utterance length, so that all sentences of length $k$ (e.g. $6$) were grouped together. Finally, within each utterance length, we computed the unigram entropy measure for each position.  
