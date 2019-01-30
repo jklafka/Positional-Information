@@ -10,3 +10,8 @@ dplyr
 stringr
 forcats
 xtable
+tidytext
+tidyboot
+entropy
+feather
+bindrcpp

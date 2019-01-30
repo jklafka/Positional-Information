@@ -52,8 +52,7 @@
 % \textwidth 16cm
 % \textheight 21cm
 
-\title{Information is Not Communicated Uniformly: Evidence from Spoken and
-Written Corpora}
+\title{Information Distribution Depends on Language-Specific Features}
 
 
 \author{Josef Klafka \and Daniel Yurovsky \\
@@ -65,20 +64,19 @@ Written Corpora}
 \maketitle
 
 \begin{abstract}
-We provide evidence against the popular Uniform Information Density
-hypothesis (Levy \& Jaeger, 2007) which proposes that information is
-transmitted at a constant rate close to channel capacity in human
-communication. Using a method based on the original Genzel \& Charniak
-(2002) entropy measure, we construct a word-level model for entropy
-applicable to both spoken and written corpora. We apply this model to
-corpora from Wikipedia in well over a hundred languages. We find that
-the Uniform Information Density hypothesis does not predict the outcome
-of our word-level entropy model, but also that the by-word entropy
-distribution of a language is related to the typological features of the
-language. We use this evidence to suggest that people do not communicate
-information at a uniform rate, but that information distribution varies
-from language to language based on phonogical, morphological and
-syntactic features.
+We argue for a reformulation of the Uniform Information Density
+hypothesis R. P. Levy \& Jaeger (2007) in which the grammatical,
+phonological and morphological features of a language determine how
+information is distributed throughout utterances. We expand on a method
+from Yu, Cong, Liang, \& Liu (2016) to compute entropy based on word
+position within utterances as a derivation of information distribution.
+We analyze adult and child spoken corpora as well as text corpora drawn
+from a variety of languages on Wikipedia. We find that each language has
+a robust, characteristic entropy curve across word position, and present
+evidence that these entropy curves are in part determined by typological
+features. We conclude that speakers may tend towards communicating
+information uniformly, but the distribution of information in their
+utterances is conditioned on the language they communicate in.
 
 \textbf{Keywords:}
 Entropy; information; information theory; communication
@@ -99,12 +97,12 @@ processing (Jelinek, 1976; R. P. Levy \& Jaeger, 2007).
 
 These theories model the process of communication as transmission of
 information over a noisy channel. The producer begins with an intended
-meaning, packages this meaning into a linguistic format, and then sends
-it to the receiver over a communcative channel. The receiver must then
-decode from the signal they receive on their end of the chanel the
-producer's intended meaning. The problem is that the channel is noisy,
-and sometimes the signal can get corrupted (e.g.~the producer can
-misspeak, or the receiver can mishear). In order to maximize the
+meaning, packages this meaning into language, and then sends the meaning
+to their intended receiver over a communcative channel. The receiver
+must then decode from the signal they receive on their end of the
+channel the producer's intended meaning. The problem is that the channel
+is noisy, and sometimes the signal can get corrupted (e.g.~the producer
+can misspeak, or the receiver can mishear). In order to maximize the
 probability that the correct meaning is transmitted, these theories
 predict that producers should choose linguistic messages that keep the
 rate of information across words constant. The intuition is that if the
@@ -134,18 +132,17 @@ to the original R. P. Levy \& Jaeger (2007), Zhan \& Levy (2018) focuses
 on information distribution at particular points in sentences. Zhan \&
 Levy (2018) finds that more information-rich classifiers in Mandarin
 Chinese are produced when production of the neighboring noun is
-difficult, not when the information content is high. On a sentential
-level, Jain, Singh, Ranjan, Rajkumar, \& Agarwal (2018) examine word
-order across spoken sentences in Hindi, a freer word order language than
-English, and find that information density has no significant effect on
-word order.
+difficult, not when the information content is high. Jain, Singh,
+Ranjan, Rajkumar, \& Agarwal (2018) examine word order across spoken
+sentences in Hindi, a freer word order language than English, and find
+that information density has no significant effect on word order.
 
-Recently, Yu, Cong, Liang, \& Liu (2016) developed a more direct test of
-the Uniform Information Density hypothesis, applying the logic used by
-Genzel \& Charniak (2002) to look at the distribution of information
-\emph{within} individual sentences. Because people process language
+Recently, Yu et al. (2016) developed a more direct test of the Uniform
+Information Density hypothesis, applying the logic used by Genzel \&
+Charniak (2002) to look at the distribution of information \emph{within}
+individual sentences. Because people process language
 incrementally--using the previous words in a sentence to predict the
-words that will come next, the amount of information that a word
+words that will come next--the amount of information that a word
 contains when seen in isolation should increase over the course of a
 sentence. Analyzing a large corpus of written English, they find a
 different pattern: Entropy increases over the first few words of an
@@ -154,16 +151,27 @@ jumps up (see Figure \ref{fig:our_replication}). Yu et al. (2016)
 conclude that the Uniform Information Density hypothesis must not hold
 for medial words in a sentence.
 
+\begin{CodeChunk}
+\begin{figure*}[h]
+
+{\centering \includegraphics{figs/our_replication-1} 
+
+}
+
+\caption[Providence corpus unigram entropy]{Providence corpus unigram entropy}\label{fig:our_replication}
+\end{figure*}
+\end{CodeChunk}
+
 We extend and generalize Yu et al. (2016) in three ways: we confirm that
 this same pattern is found in spoken English--in both adult and child
 speakers. We then examine entropy curves cross-linguistically, finding a
 diversity of shapes across the world's languages. Finally, we show that
 entropy curves are predictable from the structure of individual
 languages, namely word order. Taken together, our results suggest a
-refinement of the Uniform Information Density hypothesis: Speakers may
-choose to order words in order to preserve uniform information, but they
-must do so under prior constraints on word order imposed by the language
-they speak.
+refinement of the Uniform Information Density hypothesis: speakers may
+structure their utterances to optimize information density, but they
+must do so under the constraints of the language they use to
+communicate.
 
 The UID hypothesis predicts that information transmission rate will tend
 towards uniformity in both speech and text. We begin by examining speech
@@ -177,7 +185,7 @@ developed speakers, so we want to compare the entropy curve we obtain by
 computing over the utterances in the CHILDES corpora to the utterances
 in the adult-adult Switchboard corpus.
 
-\subsection{Methods}\label{methods}
+\section{Experiment 1}\label{experiment-1}
 
 Yu et al. (2016) challenges the UID hypothesis through examining an
 entropy measure across sentence positions within the text portion of the
@@ -204,9 +212,9 @@ uniformity of entropy rate in sentences to all levels of speech, and so
 the Yu et al. (2016), which examines text at the word level, should find
 an affine function at the word level.
 
-Switchboard {[}To be put in{]}
+\section{Experiment 2}\label{experiment-2}
 
-We used the Providence English corpds from CHILDES. The Providence
+We used the Providence English corpus from CHILDES. The Providence
 corpus recorded interactions between children between 1 and 3 years old
 and their parents in the home. We divided the corpus by speaker into
 child and non-child categories. We further divided the corpus by
@@ -239,7 +247,7 @@ sentences instead of across sentences.
 \end{CodeChunk}
 
 We also ran this analysis on Spanish and Mandarin corpora from CHILDES.
-We used the Shiro corpus for Spanish (Shiro, 2000), which contains
+We used the Shiro corpus for Spanish Shiro (2000), which contains
 prompted narratives individually collected from over a hundred
 Venezualan schoolchildren, half from high SES backgrounds and half from
 low SES backgrounds. We used the Zhou dinner corpus for Mandarin Chinese
@@ -247,15 +255,14 @@ low SES backgrounds. We used the Zhou dinner corpus for Mandarin Chinese
 6-year-old children and their parents collected in Shanghai.
 
 For each corpus, we accessed transcripts of the corpus provided through
-the TalkBank system and computed over Roman alphabet transcriptions or
-transliterations of the original transcriptions. For Mandarin, we used
-pinyin transliterations of the utterances in the corpus with demarcated
-word boundaries, and for Japanese we used romanji (Roman alphabet)
-transliterations of words in the corpus. The Chinese characters used for
-writing Mandarin do not normally demarcate word boundaries by spacing
-words apart, and for normal Chinese writing including spaces between
-word boundaries can have a negative effect on reading times (Bai et al,
-2008).
+the TalkBank system and computed over the Latin alphabet transcriptions
+or transliterations of the original transcriptions. For Mandarin, we
+used pinyin transliterations of the utterances in the corpus with
+demarcated word boundaries. The Chinese characters used for writing
+Mandarin do not normally demarcate word boundaries by spacing words
+apart, and for normal Chinese writing including spaces between word
+boundaries can have a negative effect on reading times Bai, Yan,
+Liversedge, Zang, \& Rayner (2008).
 
 \begin{CodeChunk}
 \begin{figure*}[h]
@@ -317,7 +324,7 @@ resemble either the English/Spanish distribution or the predictions of
 UID, suggests that the entropy curve can vary from language to language.
 UID predicts that each language should have a similar distribution.
 
-\section{Written data}\label{written-data}
+\section{Experiment 3}\label{experiment-3}
 
 The UID hypothesis also applies to written communication: we expect
 people to communicate information at a uniform rate through writing as
@@ -332,27 +339,27 @@ method of harvesting and distilling text data from each Wikipedia as
 well as how we compare the entropy curves from each language to one
 another.
 
-\subsection{Methods}\label{methods-1}
+\subsection{Methods}\label{methods}
 
 Using Giuseppe Attardi's Wikiextractor tool
-\footnote{https://github.com/attardi/wikiextractor}, we extracted the
-text corpora for \(165\) languages from Wikipedia by downloading a
-stored collection of Wikipedia entries in each langauge and randomly
-selecting several thousand articles from each Wikipedia language. Each
-language corpus was cleaned and limited to sentences between \(6\) and
-\(50\) words. Similar to our process for the Switchboard and CHILDES
-spoken corpora, we divided each corpus by sentence length, and then
-computed the unigram entropy measure on each word position within each
-sentence length. We wanted to directly compare and classify the unigram
-entropy curves of the languages from Wikipedia. We computed three slope
-treatments of each curve. In the \emph{absolute} treatment, with
-sentence length denoted as \(n\), we computed the slope between
-positions \(1\) and \(2\), positions \(2\) and \(3\), positions \(3\)
-and \(n-2\), positions \(n-2\) and \(n-1\) and positions \(n-1\) and
-\(n\). For the short utterances appearing the CHILDES speech corpora we
-examined, these appeared to be important junctions in the distributions,
-with a seeming plateau in the middle of the unigram entropy curve for
-each of the language corpora we examined in CHILDES.
+\footnote{https://github.com/attardi/wikiextractor}, we extract text
+corpora from Wikipedia by downloading a stored collection of Wikipedia
+entries in each langauge and randomly selecting several thousand
+articles from each Wikipedia language. Each language corpus was cleaned
+and limited to sentences between \(6\) and \(50\) words. Similar to our
+process for the Switchboard and CHILDES spoken corpora, we divided each
+corpus by sentence length, and then computed the unigram entropy measure
+on each word position within each sentence length. We wanted to directly
+compare and classify the unigram entropy curves of the languages from
+Wikipedia. We computed three slope treatments of each curve. In the
+\emph{absolute} treatment, with sentence length denoted as \(n\), we
+computed the slope between positions \(1\) and \(2\), positions \(2\)
+and \(3\), positions \(3\) and \(n-2\), positions \(n-2\) and \(n-1\)
+and positions \(n-1\) and \(n\). For the short utterances appearing the
+CHILDES speech corpora we examined, these appeared to be important
+junctions in the distributions, with a seeming plateau in the middle of
+the unigram entropy curve for each of the language corpora we examined
+in CHILDES.
 
 However, because the portion of sentences of length greater than \(10\)
 in the Wikipedia corpora were significantly larger than the CHILDES
@@ -370,8 +377,6 @@ treatment then all of the \(0\%\) to \(20\%\) slopes were averaged
 together. This created three treatments for the entropy curve for each
 langauge in the Wikipedia database.
 
-{[}Put in an illustration of the slope sections and treatments here?{]}
-
 \subsection{Results and Analysis}\label{results-and-analysis}
 
 In the \emph{absolute} and \emph{relative 5} treatments, each language
@@ -379,26 +384,26 @@ is embedded in \(5\)-dimensional space. In the \emph{relative 10}
 treatment, each language is embedded in \(10\)-dimensional space. This
 allows for direct comparison between languages on Wikipedia using cosine
 similarity and moreover for unsupervised clustering analysis to compare
-the results of the Wikipedia entropy analysis to known typological
-features within the langauges in the Wikipedia dataset. To determine
-which phonological, morphological and syntactic features affected the
-embedding of a language in the Wikipedia dataset, we looked at the list
-of \(144\) linguistic features in World Atlas of Language Structures
-(Dryer \& Haspelmath, 2013). We limited the languages in the WALS
-database to only those in our Wikipedia dataset and performed
-missing-value imputation to obtain the features not coded in WALS for
-the languages from Wikipedia.
+the results of our position-wise analysis on datasets from Wikipedia to
+known typological features within the languages. To determine which
+phonological, morphological and syntactic features affected the
+embedding of a language in the Wikipedia dataset, we use the linguistic
+features in World Atlas of Language Structures (Dryer \& Haspelmath,
+2013).
 
-One approach is to cluster the languages used in the Wikipedia analysis
-on the basis of WALS features and then directly compare the WALS
-clustering results with the results of the hierarchical clustering on
-the Wikipedia slope data for each of the different treatments using
-clustering similarity evaluation methods such as the Rand index (Rand,
-1971). However, the problem then arises of which combination of WALS
-features and how many features to include in the clustering analysis.
-This is a computationally intractable operation. Additionallly, deciding
-how many clusters to use in an unsupervised clustering analysis is an
-unsolved problem in machine learning.
+{[}Ideally do everything, but missing values in WALS, and how to compare
+every combination of features{]} An ideal approach using all of the
+corpora we can download from Wikipedia and all \(144\) features from the
+WALS database. Cluster the languages used in the Wikipedia analysis on
+the basis of WALS features and then directly compare the WALS clustering
+results with the results of the hierarchical clustering on the Wikipedia
+slope data for each of the different treatments using clustering
+similarity evaluation methods such as the Rand index (Rand, 1971).
+However, the problem then arises of which combination of WALS features
+and how many features to include in the clustering analysis. This is a
+computationally intractable operation. Additionallly, deciding how many
+clusters to use in an unsupervised clustering analysis is an unsolved
+problem in machine learning.
 
 We instead check the effects of individual features on the embeddings of
 languages in the different treatments. We computed pairwise cosine
@@ -431,54 +436,45 @@ feature & term & estimate & std.error & statistic & p.value \\
 \end{table}
 
 Cosine distance played some role in the feature determination. The top
-features were \(83\), \(81\), \(95\) and \(97\), which all characterize
-word order. This makes intuitive sense, and indicates that for this
-small subset of features and subset of languages that the embeddings in
-the slope space are related to the WALS features. Therefore typological
-features play a role in determining the positional entropy values for a
-language. This means that the entropy curves are in some way structured
-by the syntactic, morphological and phonological features of a language.
+four features all characterize word order, which indicates that for this
+subset of features and languages that the embeddings in the slope space
+are related to the WALS features. Therefore typological features play a
+role in determining the positional entropy values for a language. This
+means that the entropy curves are in some way structured by the
+syntactic, morphological and phonological features of a language.
 
-\section{Conclusions}\label{conclusions}
+\section{Discussion}\label{discussion}
 
-In this paper, we have characterized and applied a model based on Genzel
-\& Charniak (2002) for distinguishing entropy at each word position
-within sentences. In doing so, we have provided evidence against the
-Uniform Information Density hypothesis. Our work indicates that
-information is not distributed uniformly throughout an utterance
-regardless of languages, but that languages possess a characteristic
-information distribution determined by their syntactic, morphological
-and phonological features.
+In this paper, we have extended and applied a model from Yu et al.
+(2016) and derived from Genzel \& Charniak (2002) for distinguishing
+entropy at each word position within sentences. We have argued that the
+outcomes of this model are derived from the information distribution of
+a language. As this model varies cross-linguistically in terms of
 
-Our work has focused on words within sentences in both speech and text
-across typologically diverse languages. Other researchers have explored
-information rate cross-linguistically as a single number characterizing
-each language, most notably including Aylett \& Turk (2004). That work
-characterizes information rate as information per unit time, and is
-complementary to the work we accomplish here. Languages may possess both
-an overall information transfer rate, showing the average amount of
-semantic information transmitted per syllable or word, and an entropy
-distribution indicative of the language's information distribution.
+Follow-up with WALS features using missing-value imputation. However
+here are some of the problems with that.
 
-Research has indicated the effects of surprisal on fixation duration
-during eye-tracking studies (Demberg \& Keller, 2008) (Boston et al.,
-2008) (Smith \& Levy, 2013). Higher surprisal of a word is on average
-predictive of higher fixation duration. The \emph{wrap-up effect} states
-that when a person reads written text, he or she will process
-sentence-final words more slowly on average then sentence-medial or
-sentence-initial words, due to integrating information from the entire
-sentence to form a final understanding of the sentence's meaning (Stowe
-et al., 2018) (Kuperman et al., 2010). The wrap-up effect is drawn from
-evidence in English, German and Dutch, all of which are languages with a
-large final increase in their entropy curve from our study. We aim to
-see in the future if as a consequence of our work in this paper, the
-wrap-up effect falls out from the final jump in the entropy curves in
-some languages. We would analyze eye-tracking data from languages with
-low positional entropy in sentence-final positions. Since the lexical
-surprisal metric in eye-tracking and our positional entropy metric are
-both measures of log-probability surprisal, then in languages such as
-Hindi where the sentence-final positional entropy values are low we
-expect to find no wrap-up effect.
+Our work complements the approach of studies such as Aylett \& Turk
+(2004), where languages are characterized by a rate of semantic
+information per syllable. This body of work attests to languages
+possessing different rates of information transfer based on typological
+features as well.
+
+We also propose follow-up within linguistic processing using evidence
+from cross-linguistic eye-tracking. Research has indicated the effects
+of surprisal on fixation duration during eye-tracking studies (Boston,
+Hale, Kliegl, Patil, \& Vasishth, 2008; Demberg \& Keller, 2008; Smith
+\& Levy, 2013); higher surprisal of a word is on average predictive of
+higher fixation duration. The \emph{wrap-up effect} states that when a
+person reads written text, he or she will process sentence-final words
+more slowly on average then sentence-medial or sentence-initial words,
+due to integrating information from the entire sentence to form a final
+understanding of the sentence's meaning (Kuperman, Dambacher, Nuthmann,
+\& Kliegl, 2010; Stowe, Kaan, Sabourin, \& Taylor, 2018). The wrap-up
+effect is drawn from evidence in languages with a large final increase
+in their entropy curve from our study, so perhaps the wrap-up effect
+derives from the sentence-final increase in entropy curves observed in
+English and other Germanic languages.
 
 \section{Acknowledgements}\label{acknowledgements}
 
@@ -493,6 +489,24 @@ expect to find no wrap-up effect.
 Anderson, J. R. (1991). The adaptive nature of human categorization.
 \emph{Psychological Review}, \emph{98}(3), 409.
 
+\hypertarget{ref-aylett2004}{}
+Aylett, M., \& Turk, A. (2004). The smooth signal redundancy hypothesis:
+A functional explanation for relationships between redundancy, prosodic
+prominence, and duration in spontaneous speech. \emph{Language and
+Speech}, \emph{47}(1), 31--56.
+
+\hypertarget{ref-bai2008}{}
+Bai, X., Yan, G., Liversedge, S. P., Zang, C., \& Rayner, K. (2008).
+Reading spaced and unspaced chinese text: Evidence from eye movements.
+\emph{Journal of Experimental Psychology: Human Perception and
+Performance}, \emph{34}(5), 1277.
+
+\hypertarget{ref-boston2008}{}
+Boston, M. F., Hale, J., Kliegl, R., Patil, U., \& Vasishth, S. (2008).
+Parsing costs as predictors of reading difficulty: An evaluation using
+the potsdam sentence corpus. \emph{Journal of Eye Movement Research},
+\emph{2}(1).
+
 \hypertarget{ref-brown1973}{}
 Brown, R. (1973). \emph{A first language: The early stages.} Harvard U.
 Press.
@@ -500,6 +514,11 @@ Press.
 \hypertarget{ref-clear1993british}{}
 Clear, J. H. (1993). The british national corpus. \emph{The Digital
 World}, 163--187.
+
+\hypertarget{ref-demberg2008}{}
+Demberg, V., \& Keller, F. (2008). Data from eye-tracking corpora as
+evidence for theories of syntactic processing complexity.
+\emph{Cognition}, \emph{109}(2), 193--210.
 
 \hypertarget{ref-frank2008speaking}{}
 Frank, A. F., \& Jaeger, T. F. (2008). Speaking rationally: Uniform
@@ -534,6 +553,12 @@ language processing} (pp. 38--48).
 Jelinek, F. (1976). Continuous speech recognition by statistical
 methods. \emph{Proceedings of the IEEE}, \emph{64}(4), 532--556.
 
+\hypertarget{ref-kuperman2010}{}
+Kuperman, V., Dambacher, M., Nuthmann, A., \& Kliegl, R. (2010). The
+effect of word position on eye-movements in sentence and paragraph
+reading. \emph{The Quarterly Journal of Experimental Psychology},
+\emph{63}(9), 1838--1857.
+
 \hypertarget{ref-levy2007}{}
 Levy, R. P., \& Jaeger, T. F. (2007). Speakers optimize information
 density through syntactic reduction. In \emph{Advances in neural
@@ -562,9 +587,23 @@ function of ambiguity in language. \emph{Cognition}, \emph{122}(3),
 Shannon, C. E. (1948). A mathematical theory of communication.
 \emph{Bell System Technical Journal}, \emph{27}(3), 379--423.
 
+\hypertarget{ref-shiro2000}{}
+Shiro, M. (2000). Diferencias sociales en la construcción del`` yo'' y
+del`` otro'': Expresiones evaluativas en la narrativa de niños
+caraqueños en edad escolar. In \emph{Lengua, discurso, texto: I simposio
+internacional de análisis del discurso} (pp. 1303--1318). Visor.
+
 \hypertarget{ref-simons2018}{}
 Simons, G. F., \& Fenning, C. D. (Eds.). (2018). \emph{Ethnologue:
 Languages of the world, 21st edition}. Dallas, Texas: SIL International.
+
+\hypertarget{ref-smith2013}{}
+Smith, N. J., \& Levy, R. (2013). The effect of word predictability on
+reading time is logarithmic. \emph{Cognition}, \emph{128}(3), 302--319.
+
+\hypertarget{ref-stowe2018}{}
+Stowe, L. A., Kaan, E., Sabourin, L., \& Taylor, R. C. (2018). The
+sentence wrap-up dogma. \emph{Cognition}, \emph{176}, 232--247.
 
 \hypertarget{ref-xu2018}{}
 Xu, Y., \& Reitter, D. (2018). Information density converges in
