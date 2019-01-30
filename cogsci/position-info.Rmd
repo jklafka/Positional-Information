@@ -28,6 +28,9 @@ library(png)
 library(grid)
 library(tidyverse)
 library(xtable)
+library(tidytext)
+library(tidyboot)
+library(entropy)
 ```
 
 # Introduction
@@ -61,12 +64,11 @@ With this measure, @yu2016  compute the unigram entropy at each position of sent
 library(feather)
 
 sb_tokens <- read_feather("../switchboard/switchboard.feather") %>%
-  mutate(length = str_count(value, " ") + 1) %>%
+  mutate(length = str_count(value, pattern = " +") + 1) %>% 
   mutate(utterance_id = 1:n()) %>%
-  unnest_tokens(word, value) %>%
+  unnest_tokens(word, value, token = stringr::str_split, pattern = " +") %>%
   group_by(utterance_id) %>%
   mutate(word_order = 1:n()) 
-  
 
 unigram_entropy <- function(sen_length, tokens) {
   tokens %>%
