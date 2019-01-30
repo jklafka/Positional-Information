@@ -31,6 +31,8 @@ library(xtable)
 library(tidytext)
 library(tidyboot)
 library(entropy)
+library(here)
+library(feather)
 ```
 
 # Introduction
@@ -73,15 +75,20 @@ The entropy curves capture individual variation across positions in utterances o
 
 We first used the same source for data as @levy2007, the Switchboard corpus of American telephone conversations @godfrey1992. 
 
-```{r switchboard, include=FALSE}
-library(feather)
-
-sb_tokens <- read_feather("../switchboard/switchboard.feather") %>%
+```{r bnc_and_switchboard, eval = F}
+sb_tokens <- read_feather(here("../switchboard/switchboard.feather")) %>%
   mutate(length = str_count(value, pattern = " +") + 1) %>% 
   mutate(utterance_id = 1:n()) %>%
   unnest_tokens(word, value, token = stringr::str_split, pattern = " +") %>%
   group_by(utterance_id) %>%
   mutate(word_order = 1:n()) 
+
+bnc10_tokens <- read_feather(here("../bnc/bnc10.feather")) %>%
+  mutate(word = as.numeric(as.factor(word)))
+bnc20_tokens <- read_feather(here("../bnc/bnc20.feather")) %>%
+  mutate(word = as.numeric(as.factor(word)))
+bnc30_tokens <- read_feather(here("../bnc/bnc30.feather")) %>%
+  mutate(word = as.numeric(as.factor(word)))
 
 unigram_entropy <- function(sen_length, tokens) {
   tokens %>%
@@ -95,10 +102,25 @@ unigram_entropy <- function(sen_length, tokens) {
     mutate(length = sen_length)
 }
 
-entropies <- map(c(5, 7, 9), ~unigram_entropy(.x, sb_tokens)) %>%
-  bind_rows()
+switchboard_entropies <- map_df(2:10, ~unigram_entropy(.x, sb_tokens)) 
 
-ggplot(entropies, aes(x = word_order, y = empirical_entropy,
+bnc10_entropies <- unigram_entropy(10, bnc10_tokens)
+bnc20_entropies <- unigram_entropy(20, bnc20_tokens)
+bnc30_entropies <- unigram_entropy(30, bnc30_tokens)
+
+bnc_entropies <- bind_rows(bnc10_entropies, bnc20_entropies, bnc30_entropies)
+
+write_csv(bnc_entropies, here("data/bnc_entropies.csv"))
+write_csv(switchboard_entropies, here("data/switchboard_entropies.csv"))
+```
+
+```{r read_bnc_and_switchboard}
+bnc_entropies <- read_csv(here("data/bnc_entropies.csv"))
+switchboard_entropies <- read_csv(here("data/switchboard_entropies.csv"))
+```
+
+```{r plot_bnc_and_switchboard}
+ggplot(switchboard_entropies, aes(x = word_order, y = empirical_entropy,
                       ymin = ci_lower, ymax = ci_upper)) +
   facet_wrap(~ length) + 
   ggtitle("Representative Switchboard Entropy Curves Faceted on Utterance Length") + 
@@ -107,6 +129,13 @@ ggplot(entropies, aes(x = word_order, y = empirical_entropy,
   scale_x_discrete(limits = "1":"9") + 
   geom_pointrange() +
   geom_smooth(se = F)
+
+
+ggplot(bnc_entropies, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_line()
 ```
 
 # Experiment 2
