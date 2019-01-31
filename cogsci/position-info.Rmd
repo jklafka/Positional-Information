@@ -260,18 +260,22 @@ write_csv(childes_entropies, here("data/childes_entropies.csv"))
 ```{r plot_childes, fig.env = "figure*", fig.width=7, fig.height=4, fig.align = "center", set.cap.width=T, num.cols.cap=2, fig.cap = "Representative Entropy Curves for Three Childes Corpora in English, Mandarin, and Spanish. Points average entropies, error bars show 95\\% confidence intervals computed by non-parametric bootstrap."}
 childes_entropies <- read_csv(here("data/childes_entropies.csv"))
 
+label_data <- data_frame(length = 9, language = "Spanish", word_order = 6,
+                         person = c("Adult", "Child"), empirical_entropy = c(7,9.5))
+
+
 ggplot(childes_entropies, aes(x = word_order, y = empirical_entropy,
-                      ymin = ci_lower, ymax = ci_upper, color = person,
+                      color = person,
                       label = person)) +
   facet_grid(language ~ length, scales = "free") + 
   xlab("Utterance position") +
   ylab("Positional entropy") +
-  geom_pointrange(size = .25) +
+  geom_pointrange(size = .25, aes(ymin = ci_lower, ymax = ci_upper)) +
   geom_line(size = .25) +
   theme_classic(base_size = 10) + 
-  scale_color_ptol() + 
-  theme(legend.position = "none") + 
-  geom_dl(method = list(dl.trans(x=x +2.2), "last.qp", cex=.7)) 
+  scale_color_ptol() +
+  theme(legend.position = "nones") + 
+  geom_text(data = label_data)
 ```
 
 The adult and child entropy curves track one another almost identically. This is surprising because UID would predict that the young children in the corpora who are not fully developed speakers would have more noise in their distribution of information rates. This not only indicates a robustness in the unigram entropy curve across speakers, but also across ages and addressees. We also observed a robustness across corpora for the same languages, and a robustness across utterance lengths within the same corpus's entropy curve. This shows that the concept of an "entropy curve" for a specific language is well-founded when considering speech data.  
