@@ -34,6 +34,12 @@ library(entropy)
 library(here)
 library(feather)
 library(magrittr)
+library(childesr)
+library(ggthemes)
+library(gridExtra)
+library(directlabels)
+
+theme_set(theme_classic(base_size = 10))
 ```
 
 # Introduction
@@ -44,7 +50,7 @@ Information theory, a mathematical framework developed by @shannon1948 to descri
 These theories model the process of communication as transmission of information over a noisy channel. The producer begins with an intended meaning, packages this meaning into language, and then sends the meaning to their intended receiver over a communcative channel. The receiver must then decode from the signal they receive on their end of the channel the producer's intended meaning. The problem is that the channel is noisy, and sometimes the signal can get corrupted (e.g. the producer can misspeak, or the receiver can mishear). In order to maximize the probability that the correct meaning is transmitted, these theories predict that producers should choose linguistic messages that keep the rate of information across words constant. The intuition is that if the receiver misperceives a word, and that word contains most of the information in the sentence, then the communication will have failed. Because producers cannot predict which word a speaker will mishear, their best strategy is spread the information evenly across all of the words in a sentence, i.e. maintain *uniform information density* [@genzel2002; @levy2007].
 
 <!-- **Evidence for UID here. Maybe see if you can present this work at a slightly higher level** -->
-The original evidence in @levy2007 finds that the insertion of complementizers in relative clauses in English corresponds to where neighboring words have high information content. Similarly, @frank2008speaking argues that contradictions in English such as "you're" do not occur when neighboring words are highly informative. The evidence in favor of UID largely been situation-specific and English-language driven, while the hypothesis itself has been applied broadly over the past decade. Applications include determining whether linguistic alignment takes place [@jaeger2013], Zipfian word length distributions [@piantadosi2011], communication efficiency [@mahowald2013], dialogue and turn-taking [@xu2018] and the significance of ambiguity in language [@piantadosi2012], among other research. 
+The original evidence in @levy2007 finds that the insertion of complementizers in relative clauses in English corresponds to where neighboring words have high information content. Similarly, @frank2008 argues that contradictions in English such as "you're" do not occur when neighboring words are highly informative. The evidence in favor of UID largely been situation-specific and English-language driven, while the hypothesis itself has been applied broadly over the past decade. Applications include determining whether linguistic alignment takes place [@jaeger2013], Zipfian word length distributions [@piantadosi2011], communication efficiency [@mahowald2013], dialogue and turn-taking [@xu2018] and the significance of ambiguity in language [@piantadosi2012], among other research. 
 
 <!-- **Evidence against UID here. Again, can you present this at a higher level?** -->
 However, other recent work has contradicted the UID hypothesis. Similar to the original @levy2007, @zhan2018 focuses on information distribution at particular points in sentences. @zhan2018 finds that more information-rich classifiers in Mandarin Chinese are produced when production of the neighboring noun is difficult, not when the information content is high. @jain2018 examine word order across spoken sentences in Hindi, a freer word order language than English, and find that information density has no significant effect on word order. 
@@ -53,11 +59,11 @@ Recently, @yu2016 developed a more direct test of the Uniform Information Densit
 
 We extend and generalize @yu2016 in three ways: we confirm that this same pattern is found in spoken English--in both adult and child speakers. We then examine entropy curves cross-linguistically, finding a diversity of shapes across the world's languages. Finally, we show that entropy curves are predictable from the structure of individual languages, namely word order. Taken together, our results suggest a refinement of the Uniform Information Density hypothesis: speakers may structure their utterances to optimize information density, but they must do so under the constraints of the language they use to communicate.
 
-The UID hypothesis predicts that information transmission rate will tend towards uniformity in both speech and text. We begin by examining speech to determine if we obtain the entropy curve shape we expect for spoken communication. We begin with the same source as @levy2007 and @jaeger2010, the Switchboard corpus of adult telephone conversations. We also examine child-adult conversations in the CHILDES TalkBank [@brown1973; @macwhinney2014] corpora database of spoken adult-child conversations in multiple languages. Children are not fully developed speakers, so we want to compare the entropy curve we obtain by computing over the utterances in the CHILDES corpora to the utterances in the adult-adult Switchboard corpus. Finally, we extend our cross-linguistic findings on a small number of languages from the CHILDES experiment to a direct comparison of several dozen languages in Wikipedia. 
+The UID hypothesis predicts that information transmission rate will tend towards uniformity in both speech and text. We begin by examining speech to determine if we obtain the entropy curve shape we expect for spoken communication. We begin with the same source as @levy2007 and @jaeger2010, the Switchboard corpus of adult telephone conversations. We also examine child-adult conversations in the CHILDES TalkBank [@demuth2006; @macwhinney2014] corpora database of spoken adult-child conversations in multiple languages. Children are not fully developed speakers, so we want to compare the entropy curve we obtain by computing over the utterances in the CHILDES corpora to the utterances in the adult-adult Switchboard corpus. Finally, we extend our cross-linguistic findings on a small number of languages from the CHILDES experiment to a direct comparison of several dozen languages in Wikipedia. 
 
 ## General methods
 
-Here we will describe our adaptation of the by-word entropy method in @yu2016, which uses the text portion of the British National Corpus @clear1993british. We replicate their results at the end of this subsection. Given a text or speech corpus divided into individual utterances, we partition the corpus by utterance length in number of words. For each word position $X$ of utterances of length $k$, we define $w$ as a unique word occurring in position $X$. We further define $p(w)$ as the number of times word $w$ occurs in position $X$, divided by the number of total words that occur in position $X$ i.e. the number of sentences of length $k$. This creates a probability distribution over the words occurring in position $X$, and computing the Shannon entropy $H(X)$ @shannon1948 of this probability distribution gives the positional entropy of position $X$ in utterances of length $k$.
+Here we will describe our adaptation of the by-word entropy method in @yu2016, which uses the text portion of the British National Corpus [@clear1993]. We replicate their results at the end of this subsection. Given a text or speech corpus divided into individual utterances, we partition the corpus by utterance length in number of words. For each word position $X$ of utterances of length $k$, we define $w$ as a unique word occurring in position $X$. We further define $p(w)$ as the number of times word $w$ occurs in position $X$, divided by the number of total words that occur in position $X$ i.e. the number of sentences of length $k$. This creates a probability distribution over the words occurring in position $X$, and computing the Shannon entropy $H(X)$ @shannon1948 of this probability distribution gives the positional entropy of position $X$ in utterances of length $k$.
 
 $$H(X) = \sum\limits_w p(w)\log\big(p(w)\big)$$
 
@@ -65,24 +71,53 @@ With this measure, we compute the unigram entropy at each position of sentences 
 
 The entropy curves capture individual variation across positions in utterances of the same length. This allows us to directly observe and judge the amount of variation in words that appear in an individual position of a sentence. We can directly compare any two positions within utterances to determine the amount of uncertainty, and therefore information, on average contained by words within that position of utterances. We are applying the same approach as in @genzel2002, but within sentences instead of across sentences. 
 
-We replicated the @yu2016 results and found the same characteristic three-step distribution as they did for the BNC entropy curves. 
-
-```{r read_and_plot_bnc}
-bnc_entropies <- read_csv(here("data/bnc_entropies.csv"))
-
-ggplot(bnc_entropies, aes(x = word_order, y = empirical_entropy,
-                      ymin = ci_lower, ymax = ci_upper)) +
-  facet_wrap(~ length) + 
-  ggtitle("Representative BNC Entropy Curves Faceted on Utterance Length") + 
-  xlab("Word Order within Utterance") +
-  ylab("Positional Entropy") +
-  geom_pointrange() +
-  geom_line()
-```
-
 The positional entropy at the beginning of sentences is low, then rises and plateaus for sentence-medial word positions before dropping slightly in the second-to-last position and rising again. However, this curve could simply be a result of the written words in the BNC. We will expand this analysis and replicate the result with a spoken American English corpus.
 
 # Experiment 1
+
+```{r entropy_func}
+unigram_entropy <- function(sen_length, tokens) {
+  tokens %>%
+    filter(length == sen_length) %>%
+    group_by(word_order, word) %>%
+    summarise(n = n()) %>%
+    tidyboot(summary_function = function(x) x %>% 
+               summarise(entropy = entropy(n, unit = "log2")),
+             statistics_functions = function(x) x %>%
+             summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
+    mutate(length = sen_length)
+}
+```
+
+```{r bnc_and_switchboard, eval = F}
+
+sb_tokens <- read_feather(here("../switchboard/switchboard.feather")) %>%
+  mutate(length = str_count(value, pattern = " +") + 1) %>% 
+  mutate(utterance_id = 1:n()) %>%
+  unnest_tokens(word, value, token = stringr::str_split, pattern = " +") %>%
+  group_by(utterance_id) %>%
+  mutate(word_order = 1:n()) 
+
+bnc10_tokens <- read_feather(here("../bnc/bnc10.feather")) %>%
+  mutate(word = as.numeric(as.factor(word)))
+bnc20_tokens <- read_feather(here("../bnc/bnc20.feather")) %>%
+  mutate(word = as.numeric(as.factor(word)))
+bnc30_tokens <- read_feather(here("../bnc/bnc30.feather")) %>%
+  mutate(word = as.numeric(as.factor(word)))
+
+switchboard_entropies <- map_df(2:10, ~unigram_entropy(.x, sb_tokens)) 
+
+bnc10_entropies <- unigram_entropy(10, bnc10_tokens)
+bnc20_entropies <- unigram_entropy(20, bnc20_tokens)
+bnc30_entropies <- unigram_entropy(30, bnc30_tokens)
+bnc_entropies <- bind_rows(bnc10_entropies, bnc20_entropies, bnc30_entropies)
+
+write_csv(bnc_entropies, here("data/bnc_entropies.csv"))
+write_csv(switchboard_entropies, here("data/switchboard_entropies.csv"))
+```
+
+
+We replicated the @yu2016 results and found the same characteristic three-step distribution as they did for the BNC entropy curves. 
 
 We first used the same source for data as @levy2007, the Switchboard corpus of American telephone conversations @godfrey1992. The Switchboard corpus contains telephone conversations of American English between strangers, with individual utterances ranging from one word to several dozen words. We divided the Switchboard corpus by utterance length and computed the positional entropy for each position within each sentence length, then plotted the result as an entropy curve.  
 
@@ -90,19 +125,32 @@ We first used the same source for data as @levy2007, the Switchboard corpus of A
 
 Our plots for three representative utterance lengths are below. We found the same characteristic shape for the American English Switchboard corpus as in our replication of the @yu2016 results for the BNC. 
 
-```{r read_and_plot_switchboard}
+```{r read_and_plot_switchboard, fig.env = "figure*", fig.width=7, fig.height=4, fig.align = "center", set.cap.width=T, num.cols.cap=2, fig.cap = "Representative Entropy Curves for the British National Corpus (top) and Switchboard (bottom). Points average entropies, error bars show 95\\% confidence intervals computed by non-parametric bootstrap."}
+
+bnc_entropies <- read_csv(here("data/bnc_entropies.csv"))
+
 switchboard_entropies <- read_csv(here("data/switchboard_entropies.csv")) %>%
   filter(length %in% c(5, 7, 9))
 
-ggplot(switchboard_entropies, aes(x = word_order, y = empirical_entropy,
+bnc_plot <- ggplot(bnc_entropies, aes(x = word_order, y = empirical_entropy,
                       ymin = ci_lower, ymax = ci_upper)) +
-  facet_wrap(~ length) + 
-  ggtitle("Representative Switchboard Entropy Curves Faceted on Utterance Length") + 
-  xlab("Word Order within Utterance") +
-  ylab("Positional Entropy") +
-  scale_x_discrete(limits = "1":"9") + 
-  geom_pointrange() +
-  geom_smooth(se = F)
+  facet_wrap(~ length, scales = "free_x") + 
+  xlab("British National Corpus utterance position") +
+  ylab("Positional entropy") +
+  geom_pointrange(size = .25) +
+  geom_line(size = .25) +
+  theme_classic(base_size = 10)
+
+sw_plot <- ggplot(switchboard_entropies, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length, scales = "free_x") + 
+  xlab("Switchboard utterance position") +
+  ylab("Positional entropy") +
+  geom_pointrange(size = .25) +
+  geom_line(size = .25) +
+  theme_classic(base_size = 10)
+
+grid.arrange(bnc_plot, sw_plot, nrow = 2)
 ```
 
 The shape we find in these two English data is notable for a number of reasons, but what we find most interesting is one, the shape of the distribution does not follow our predictions from UID and two, the distribution is robust across an unrelated pair of spoken and written English corpora. This suggests that the entropy curve is characteristic of the English language at least, and is not a specific effect of computing positional entropies in the written British English texts in the BNC. For our next step, we want to expand the positional entropy analysis to child-adult conversational corpora and languages beyond English to see if the same three-step distribution appears. 
@@ -111,9 +159,9 @@ The shape we find in these two English data is notable for a number of reasons, 
 
 After replicating the @yu2016 results using the spoken conversation corpus from @levy2007, we want to determine whether the entropy curves will remain robust over child-adult conversational corpora. We also wanted to see whether the curves would show the same characteristic three-step shape across languages. To accomplish both of these goals, we used data from the CHILDES Talkbank system @macwhinney2014. 
 
-The corpora in the CHILDES database consists of short and often disconnected utterances across hours of recordings, the unigram entropy measure is unaffected by context or lack thereof in utterances by the adults and children in the corpora. For our first corpus, we used the Providence English corpus @demuth2006word. The Providence corpus recorded interactions between children between 1 and 3 years old and their parents in the home. We divided the corpus by speaker into child and non-child categories. We further divided the corpus by utterance length, so that all sentences of length $k$ (e.g. $6$) were grouped together. Finally, within each utterance length, we computed the unigram entropy measure for each position. Computation of positional entropy was identical to our general method after dividing for utterance length. 
+The corpora in the CHILDES database consists of short and often disconnected utterances across hours of recordings, the unigram entropy measure is unaffected by context or lack thereof in utterances by the adults and children in the corpora. For our first corpus, we used the Providence English corpus @demuth2006. The Providence corpus recorded interactions between children between 1 and 3 years old and their parents in the home. We divided the corpus by speaker into child and non-child categories. We further divided the corpus by utterance length, so that all sentences of length $k$ (e.g. $6$) were grouped together. Finally, within each utterance length, we computed the unigram entropy measure for each position. Computation of positional entropy was identical to our general method after dividing for utterance length. 
 
-We also ran this analysis on Spanish and Mandarin corpora from CHILDES. Spanish is an Indo-European language like English, possessing similar grammar, word order and numerous cognate word. Mandarin Chinese is typologically completed unrelated to English. We used the Shiro corpus for Spanish @shiro2000, which contains prompted narratives individually collected from over a hundred Venezualan schoolchildren, half from high SES backgrounds and half from low SES backgrounds. We used the Zhou dinner corpus for Mandarin Chinese @zhou2015dinner, which contains dinner conversations between 5 to 6-year-old children and their parents collected in Shanghai. 
+We also ran this analysis on Spanish and Mandarin corpora from CHILDES. Spanish is an Indo-European language like English, possessing similar grammar, word order and numerous cognate word. Mandarin Chinese is typologically completed unrelated to English. We used the Shiro corpus for Spanish @shiro2000, which contains prompted narratives individually collected from over a hundred Venezualan schoolchildren, half from high SES backgrounds and half from low SES backgrounds. We used the Zhou dinner corpus for Mandarin Chinese @li2015, which contains dinner conversations between 5 to 6-year-old children and their parents collected in Shanghai. 
 
 For each corpus, we accessed transcripts of the corpus provided through the TalkBank system and computed over the Latin alphabet transcriptions or transliterations of the original transcriptions. For Mandarin, we used pinyin transliterations of the utterances in the corpus with demarcated word boundaries. The Chinese characters used for writing Mandarin do not normally demarcate word boundaries by spacing words apart, and for normal Chinese writing including spaces between word boundaries can have a negative effect on reading times @bai2008. 
 
@@ -121,56 +169,109 @@ We expect that our entropy analysis on the Providence corpus will produce an ide
 
 ## Results and Analysis
 
-```{r entropy generation code}
+```{r childes_entropy, eval = F}
+
+extract_stem_tokens <- function(role, min_length, max_length, utterances) {
+  
+  if (role == "child") {
+    lengths <- utterances %>%
+      filter(speaker_role == "Target_Child") %>%
+      mutate(length = str_count(stem, " ") + 1)
+
+} else {
+    lengths <- utterances %>%
+      filter(speaker_role != "Target_Child") %>%
+      mutate(length = str_count(stem, " ") + 1)
+}
+  
+  tokens <- lengths %>% 
+    filter(length >= min_length) %>%
+    filter(length <= max_length) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, stem, token = stringr::str_split, pattern = " +") %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n()) %>%
+    group_by(length, word_order, word) %>%
+    filter(word_order <= length) %>% 
+    summarise(n = n()) 
+}
+
+extract_gloss_tokens <- function(role,  min_length, max_length,  utterances) {
+  
+  if (role == "child") {
+    lengths <- utterances %>%
+      filter(speaker_role == "Target_Child") %>%
+      mutate(length = str_count(gloss, " ") + 1)
+
+} else {
+    lengths <- utterances %>%
+      filter(speaker_role != "Target_Child") %>%
+      mutate(length = str_count(gloss, " ") + 1)
+}
+  
+  tokens <- lengths %>% 
+    filter(length >= min_length) %>%
+    filter(length <= max_length) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, gloss, token = stringr::str_split, pattern = " +") %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n()) %>%
+    group_by(length, word_order, word) %>%
+    filter(word_order <= length) %>% 
+    summarise(n = n()) 
+}
+ 
+
 prov_utterances <- get_utterances(corpus = "Providence") #stem or gloss
 shiro_utterances <- get_utterances(corpus = "Shiro") #use gloss
 zhou_utterances <- get_utterances(corpus = "ZhouDinner") #use stem, NOT gloss
 
-get_entropies <- function(role, sen_length, utterances, stemgloss) {
-  
-  if(role == "Target_Child") {
-    sub_utterances <- utterances %>%
-      filter(speaker_role == "Target_Child") %>%
-      mutate(length = str_count(stemgloss, pattern = " +") + 1) # uses stems of words, not original words
-  } else {
-     sub_utterances <- utterances %>%
-      filter(speaker_role != "Target_Child") %>%
-      mutate(length = str_count(stemgloss, pattern = " +") + 1)
-  }
+prov_child_tokens <- extract_stem_tokens("child", 5, 9, prov_utterances) 
+prov_adult_tokens <- extract_stem_tokens("not child",5, 9, prov_utterances) 
 
-  tokens <- sub_utterances %>%
-    filter(length == sen_length) %>%
-    mutate(utterance_id = 1:n()) %>%
-    unnest_tokens(word, gloss) %>%
-    group_by(utterance_id) %>%
-    mutate(word_order = 1:n()) %>%
-    group_by(word_order, word) %>%
-    filter(word_order <= length)
-   
-  tokens %>%
-    summarise(n = n()) %>%
-    tidyboot(summary_function = function(x) x %>% 
-               summarise(entropy = entropy(n, unit = "log2")),
-             statistics_functions = function(x) x %>%
-             summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
-    mutate(role = role, length = sen_length)
-}
+prov_child_entropies <-  map_df(c(5,7,9), ~unigram_entropy(.x, prov_child_tokens)) %>%
+  mutate(language = "English", person = "Child")
+prov_adult_entropies <-  map_df(c(5,7,9), ~unigram_entropy(.x, prov_adult_tokens)) %>%
+  mutate(language = "English", person = "Adult")
+
+shiro_child_tokens <- extract_gloss_tokens("child", 5, 9, shiro_utterances) 
+shiro_adult_tokens <- extract_gloss_tokens("not child",5, 9, shiro_utterances) 
+
+shiro_child_entropies <-  map_df(c(5,7,9), ~unigram_entropy(.x, shiro_child_tokens)) %>%
+  mutate(language = "Spanish", person = "Child")
+shiro_adult_entropies <-  map_df(c(5,7,9), ~unigram_entropy(.x, shiro_adult_tokens)) %>%
+  mutate(language = "Spanish", person = "Adult")
+
+zhou_child_tokens <- extract_stem_tokens("child", 5, 9, zhou_utterances) 
+zhou_adult_tokens <- extract_stem_tokens("not child",5, 9, zhou_utterances) 
+
+zhou_child_entropies <-  map_df(c(5,7,9), ~unigram_entropy(.x, zhou_child_tokens)) %>%
+  mutate(language = "Mandarin", person = "Child")
+zhou_adult_entropies <-  map_df(c(5,7,9), ~unigram_entropy(.x, zhou_adult_tokens)) %>%
+  mutate(language = "Mandarin", person = "Adult")
+
+childes_entropies <- bind_rows(prov_child_entropies, prov_adult_entropies, 
+                               shiro_child_entropies, shiro_adult_entropies,
+                               zhou_child_entropies, zhou_adult_entropies)
+
+write_csv(childes_entropies, here("data/childes_entropies.csv"))
 ```
 
-```{r providence_PE, fig.env = "figure*", fig.pos = "h", fig.width=6, fig.height=3, fig.align = "center", set.cap.width=T, num.cols.cap=2, fig.cap = "Providence corpus unigram entropy"}
-img <- png::readPNG("figs/Prov_corpus_result.png")
-grid::grid.raster(img)
-```
+```{r plot_childes, fig.env = "figure*", fig.width=7, fig.height=4, fig.align = "center", set.cap.width=T, num.cols.cap=2, fig.cap = "Representative Entropy Curves for Three Childes Corpora in English, Mandarin, and Spanish. Points average entropies, error bars show 95\\% confidence intervals computed by non-parametric bootstrap."}
+childes_entropies <- read_csv(here("data/childes_entropies.csv"))
 
-```{r shiro_PE, fig.env = "figure*", fig.pos = "h", fig.width=6, fig.height=3, fig.align = "center", set.cap.width=T, num.cols.cap=2, fig.cap = "Shiro corpus entropy"}
-img <- png::readPNG("figs/Spanish_unigram_entropies_with_stemming.png")
-grid::grid.raster(img)
-```
-
-
-```{r zhou_PE, fig.env = "figure*", fig.pos = "h", fig.width=6, fig.height=3, fig.align = "center", set.cap.width=T, num.cols.cap=2, fig.cap = "Zhou Dinner corpus entropy"}
-img <- png::readPNG("figs/Mandarin_unigram_entropies.png")
-grid::grid.raster(img)
+ggplot(childes_entropies, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper, color = person,
+                      label = person)) +
+  facet_grid(language ~ length, scales = "free") + 
+  xlab("Utterance position") +
+  ylab("Positional entropy") +
+  geom_pointrange(size = .25) +
+  geom_line(size = .25) +
+  theme_classic(base_size = 10) + 
+  scale_color_ptol() + 
+  theme(legend.position = "none") + 
+  geom_dl(method = list(dl.trans(x=x +2.2), "last.qp", cex=.7)) 
 ```
 
 The adult and child entropy curves track one another almost identically. This is surprising because UID would predict that the young children in the corpora who are not fully developed speakers would have more noise in their distribution of information rates. This not only indicates a robustness in the unigram entropy curve across speakers, but also across ages and addressees. We also observed a robustness across corpora for the same languages, and a robustness across utterance lengths within the same corpus's entropy curve. This shows that the concept of an "entropy curve" for a specific language is well-founded when considering speech data.  
@@ -191,9 +292,9 @@ Using Giuseppe Attardi's Wikiextractor tool \footnote{https://github.com/attardi
 
 We computed two slope treatments of each curve. In the *absolute* treatment, with sentence length denoted as $k$, we computed the slope between positions $1$ and $2$, positions $2$ and $3$, positions $3$ and $k-2$, positions $k-2$ and $k-1$ and positions $k-1$ and $k$. For the short utterances appearing the CHILDES speech corpora, the slopes between the first and second slopes on either end of the distributions appeared to be more characteristic of the distribution as a whole, with a plateau in the middle of the entropy curve for each of the language corpora we examined in CHILDES.
 
-However, sentences of length greater than ten in the Wikipedia corpora were significantly more common than in the CHILDES. Therefore we also computed relative slope treatments. In the *relative 5* treatment, we computed the slopes between every $20%$ of the relative word positions in each sentence length, e.g. the slope between $0\%$ and $20\%$ of sentences of length $10$ is the slope between the position entropies at the sentence-initial word position and the position representing the third word. When computing the word position index to make those cuts, if the slope was not a whole number, then the closest whole number position was used instead for slope calculation. Each comparative slope within each treatment was averaged together between different sentence lengths, for example all of the $0\%$ to $20\%$ slopes over all sentence lengths were averaged together. 
+However, sentences of length greater than ten in the Wikipedia corpora were significantly more common than in the CHILDES. Therefore we also computed relative slope treatments. In the *relative 5* treatment, we computed the slopes between every $20\%$ of the relative word positions in each sentence length, e.g. the slope between $0\%$ and $20\%$ of sentences of length $10$ is the slope between the position entropies at the sentence-initial word position and the position representing the third word. When computing the word position index to make those cuts, if the slope was not a whole number, then the closest whole number position was used instead for slope calculation. Each comparative slope within each treatment was averaged together between different sentence lengths, for example all of the $0\%$ to $20\%$ slopes over all sentence lengths were averaged together. 
 
-In both the absolute and relative $5$ treatments, each language is embedded in $5$-dimensional space. This permitted us to use cosine similarity for direct comparison between the languages we pulled from Wikipedia. To determine which phonological, morphological and syntactic features affected the embedding of a language in the Wikipedia dataset, we use the linguistic features in World Atlas of Language Structures @dryer2013wals. We checked the effects of individual features on the embeddings of languages in the different treatments. We computed pairwise cosine similarity between each pair of language vectors within each treatment. For a subset of eight WALS features, we used a generalized linear model to see whether the cosine similarity between languages mattered in predicting if the languages shared the same value for a WALS feature. 
+In both the absolute and relative $5$ treatments, each language is embedded in $5$-dimensional space. This permitted us to use cosine similarity for direct comparison between the languages we pulled from Wikipedia. To determine which phonological, morphological and syntactic features affected the embedding of a language in the Wikipedia dataset, we use the linguistic features in World Atlas of Language Structures @dryer2013. We checked the effects of individual features on the embeddings of languages in the different treatments. We computed pairwise cosine similarity between each pair of language vectors within each treatment. For a subset of eight WALS features, we used a generalized linear model to see whether the cosine similarity between languages mattered in predicting if the languages shared the same value for a WALS feature. 
 
 ## Results and Analysis
 
@@ -217,7 +318,7 @@ In this paper, we have extended and applied a model from @yu2016 and derived fro
 
 Our work complements the approach of studies such as @aylett2004, where languages are characterized by a single number, representing the rate of semantic information transfer per syllable. This body of work attests to languages possessing different rates of information transfer based on typological features as well. Within the information transfer rate literature, the rate is an overall feature of language that does not vary corpus to corpus. Similarly, in our work we have obtained a characteristic entropy distribution for each language. Both information rate and entropy distribution are characterized by typological features. This indicates that the structure and rate of how people communicate information varies cross-linguistically based on typological features. 
 
-We initially wanted to use several hundred language corpora pulled from Wikipedia and all $144$ linguistic features from WALS. We considered an computing unsupervized clusterings of the $5$-dimensional vectors of our Wikipedia entropy curves, and comparing those clusterings to clusterings of the WALS features directly using a cluster similarity measure such as the Rand index @rand1971objective. However, the problem then arises of which combination of WALS features and how many features to include in the clustering analysis, with $144!$ different combinations. Two additional problems presented themselves: one, deciding how many clusters to use in an unsupervised clustering analysis is an unsolved problem in machine learning; and two, not all of the languages on Wikipedia have values inputted for their WALS features. As a follow-up, we are considering missing-data imputation on the WALS features in order to run the generalized linear model analysis on a large dataset of languages.  
+We initially wanted to use several hundred language corpora pulled from Wikipedia and all $144$ linguistic features from WALS. We considered an computing unsupervized clusterings of the $5$-dimensional vectors of our Wikipedia entropy curves, and comparing those clusterings to clusterings of the WALS features directly using a cluster similarity measure such as the Rand index @rand1971. However, the problem then arises of which combination of WALS features and how many features to include in the clustering analysis, with $144!$ different combinations. Two additional problems presented themselves: one, deciding how many clusters to use in an unsupervised clustering analysis is an unsolved problem in machine learning; and two, not all of the languages on Wikipedia have values inputted for their WALS features. As a follow-up, we are considering missing-data imputation on the WALS features in order to run the generalized linear model analysis on a large dataset of languages.  
 
 On a more mechanical level, we expect that our entropy model will have implications for how long people take to read individual words at different positions of a sentence. Eye-tracking research has indicated the effects of surprisal on fixation duration during eye-tracking studies [@demberg2008; @boston2008; @smith2013]; higher surprisal of a word is on average predictive of higher fixation duration. The *wrap-up effect* states that people process sentence-final words more slowly on average then sentence-medial or sentence-initial words when reading, due to integrating information to form a final understanding of the sentence's meaning [@stowe2018; @kuperman2010]. The wrap-up effect is drawn from evidence in languages with a large final increase in their entropy curve from our study, so we hypothesize that the supposed wrap-up effect derives from the same source sentence-final increase in entropy curves observed in English and other Germanic languages. 
 
