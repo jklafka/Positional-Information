@@ -299,6 +299,99 @@ In both the absolute and relative $5$ treatments, each language is embedded in $
 
 For eight features and $45$ languages we pulled from Wikipedia, we found that the cosine similarity between WALS features. The table below shows the results for the generalized linear model we computed using WALS features and the absolute treatment. 
 
+```{r }
+library(tidyverse)
+library(googlesheets)
+library(lingtypology)
+library(knitr)
+library(missMDA)
+library(cluster)
+library(widyr)
+library(lsa)
+library(magrittr)
+library(broom)
+
+wiki_gs <- gs_title("Wikipedia_relative5")
+wkpd <- gs_read(wiki_gs) 
+LANGUAGES <- wkpd$Language
+
+FEATURES <- c(1:144)
+for (i in c(1:144)) {
+  FEATURES[i] <- paste(FEATURES[i], "A", sep = "")
+} #get all WALS features in correct syntax
+
+wf <- wals.feature(FEATURES)
+
+wf_df <- wf %>%
+  as_data_frame() %>%
+  filter(language %in% LANGUAGES) %>%
+  group_by(language) %>%
+  slice(1) %>%
+  gather(feature, value, `1A`:`144A`) %>%
+  group_by(feature) %>%
+  mutate(value = factor(value))
+
+cosines <- wkpd %>%
+  column_to_rownames("Language") %>%
+  t() %>%
+  cosine() %>%
+  as_data_frame(rownames = "language1") %>%
+  gather(language2, cosine, -language1)
+
+wf_many_langs <- wf_df %>%
+  group_by(feature) %>%
+  summarise(n = sum(!is.na(value))) %>%
+  filter(n > 60)
+
+wf_sub_langs <- wf_df %>%
+  filter(feature %in% wf_many_langs$feature) %>%
+  group_by(language) %>%
+  summarise(keep = sum(is.na(value)) == 0) %>%
+  filter(keep)
+
+wf_sub <- wf_df %>%
+  filter(feature %in% wf_many_langs$feature,
+         language %in% wf_sub_langs$language) %>%
+  select(language, feature, value) %>%
+  mutate(value = as.numeric(as.factor(value)))
+
+
+wf_pairwise <- expand.grid(language1 = wf_sub$language,
+                           language2 = wf_sub$language) %>%
+  left_join(wf_sub, by = c("language1" = "language")) %>%
+  rename(value1 = value) %>%
+  left_join(wf_sub, by = c("language2" = "language", "feature")) %>%
+  rename(value2 = value) %>%
+  mutate(same = value1 == value2) %>%
+  select(-value1, -value2) %>%
+  left_join(cosines, by = c("language1", "language2"))
+
+
+models <- wf_pairwise %>%
+  group_by(feature) %>%
+  nest() %>%
+  mutate(model = map(data, ~glm(same ~ cosine, 
+                                family = "binomial", data = .)))
+
+models %>%
+  mutate(coeffs = map(model, tidy)) %>%
+  select(-data, -model) %>%
+  unnest() %>%
+  filter(term == "cosine") %>%
+  arrange(desc(statistic))
+
+### generate dendrogram plot
+dendro_langs <- wf_sub_langs$language
+
+wk_clust_tree <- wkpd %>% 
+              filter(Language %in% dendro_langs) %>%
+              column_to_rownames(var = "Language") %>%
+              dist() %>%
+              hclust("ward.D2") 
+
+wk_clust_tree %>% plot(hang = -1)
+```
+
 ```{r tables, results="asis", tab.env = "table"}
 glm_model <- read_csv("glm.csv") %>%
     select(-X1)
