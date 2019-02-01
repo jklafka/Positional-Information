@@ -140,6 +140,16 @@ models %>%
 ```
 
 ```{r imputation for glm}
+dendro_langs <- wf_sub_langs$language
+
+wk_clust_tree <- wkpd %>% 
+              filter(Language %in% dendro_langs) %>%
+              column_to_rownames(var = "Language") %>%
+              dist() %>%
+              hclust("ward.D2") 
+
+wk_clust_tree %>% plot(hang = -1)
+
 imputed_result <- wf_df %>%
   select(language, feature, value) %>%
   ungroup() %>% 

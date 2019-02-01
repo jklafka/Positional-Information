@@ -52,51 +52,63 @@ bootstrap entropy slopes
 extract_stem_tokens <- function(role, target_length, utterances) {
   
   if (role == "child") {
-    lengths <- utterances %>%
+    sub_utterances <- utterances %>%
       filter(speaker_role == "Target_Child") %>%
-      mutate(length = str_count(stem, " ") + 1)
+      mutate(length = str_count(stem, pattern = " +") + 1)
 
 } else {
-    lengths <- utterances %>%
+    sub_utterances <- utterances %>%
       filter(speaker_role != "Target_Child") %>%
-      mutate(length = str_count(stem, " ") + 1)
+      mutate(length = str_count(stem, pattern = " +") + 1)
 }
   
-  tokens <- lengths %>% 
-    filter(length >= min_length) %>%
-    filter(length <= max_length) %>%
+  tokens <- sub_utterances %>%
+    filter(length == target_length) %>%
     mutate(utterance_id = 1:n()) %>%
-    unnest_tokens(word, stem, token = stringr::str_split, pattern = " +") %>%
+    unnest_tokens(word, stem) %>%
     group_by(utterance_id) %>%
     mutate(word_order = 1:n()) %>%
-    group_by(length, word_order, word) %>%
-    filter(word_order <= length) %>% 
-    summarise(n = n()) 
+    group_by(word_order, word) %>%
+    filter(word_order <= length)
+   
+  tokens %>%
+    summarise(n = n()) %>%
+    tidyboot(summary_function = function(x) x %>% 
+               summarise(entropy = entropy(n, unit = "log2")),
+             statistics_functions = function(x) x %>%
+             summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
+    mutate(role = role, length = target_length)
 }
 
 extract_gloss_tokens <- function(role, target_length, utterances) {
   
   if (role == "child") {
-    lengths <- utterances %>%
+    sub_utterances <- utterances %>%
       filter(speaker_role == "Target_Child") %>%
-      mutate(length = str_count(gloss, " ") + 1)
+      mutate(length = str_count(gloss, pattern = " +") + 1)
 
 } else {
-    lengths <- utterances %>%
+    sub_utterances <- utterances %>%
       filter(speaker_role != "Target_Child") %>%
-      mutate(length = str_count(gloss, " ") + 1)
+      mutate(length = str_count(gloss, pattern = " +") + 1)
 }
-  
-  tokens <- lengths %>% 
-    filter(length >= min_length) %>%
-    filter(length <= max_length) %>%
+
+  tokens <- sub_utterances %>%
+    filter(length == target_length) %>%
     mutate(utterance_id = 1:n()) %>%
-    unnest_tokens(word, stem, token = stringr::str_split, pattern = " +") %>%
+    unnest_tokens(word, gloss) %>%
     group_by(utterance_id) %>%
     mutate(word_order = 1:n()) %>%
-    group_by(length, word_order, word) %>%
-    filter(word_order <= length) %>% 
-    summarise(n = n()) 
+    group_by(word_order, word) %>%
+    filter(word_order <= length)
+   
+  tokens %>%
+    summarise(n = n()) %>%
+    tidyboot(summary_function = function(x) x %>% 
+               summarise(entropy = entropy(n, unit = "log2")),
+             statistics_functions = function(x) x %>%
+             summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
+    mutate(role = role, length = target_length)
 }
  
 #compute the unigram entropy measure from the counts of each word in each position
