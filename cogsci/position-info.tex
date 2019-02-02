@@ -85,9 +85,9 @@ Uniform information density; language structure; corpus analysis
 \end{abstract}
 
 Over 7,000 languages are spoken around the modern world (Simons \&
-Fenning, 2018). These language vary along many dimensions, but all share
-a core goal: communicating information. If speakers and writers of these
-languages act near-optimally to achieve their communicative goals,
+Fenning, 2018). These languages vary along many dimensions, but all
+share a core goal: communicating information. If speakers and writers of
+these languages act near-optimally to achieve their communicative goals,
 regularities of use across these diverse languages can be explained by a
 rational theory of communication (Anderson, 1991). Information theory, a
 mathematical framework developed by Shannon (1948) to describe the
@@ -113,32 +113,33 @@ mishear, their best strategy is spread the information evenly across all
 of the words in a sentence, i.e.~maintain \emph{Uniform Information
 Density} (Genzel \& Charniak, 2002; R. P. Levy \& Jaeger, 2007).
 
-The evidence in favor of Uniform Information Density largely been
-situation-specific and English-language driven, while the hypothesis
-itself has been applied broadly over the past decade. The original
-evidence in favor of Uniform Information Density in R. P. Levy \& Jaeger
-(2007) finds that the insertion of complementizers (e.g. ``that'') in
-relative clauses in English corresponds to where neighboring words have
-high information content. Similarly, A. F. Frank \& Jaeger (2008) argues
-that contractions in English such as ``you're'' do not occur when
-neighboring words are highly informative. Applications of Uniform
-Information Density include determining whether linguistic alignment
-takes place (Jaeger \& Snider, 2013), Zipfian word length distributions
-(Piantadosi, Tily, \& Gibson, 2011), communication efficiency (Mahowald,
-Fedorenko, Piantadosi, \& Gibson, 2013), dialogue and turn-taking (Xu \&
-Reitter, 2018) and the significance of ambiguity in language
-(Piantadosi, Tily, \& Gibson, 2012), among other research.
+The evidence in favor of Uniform Information Density has largely focused
+on specific points within sentences, while the hypothesis itself has
+been applied broadly over the past decade. The original evidence in
+favor of Uniform Information Density in R. P. Levy \& Jaeger (2007)
+finds that the insertion of complementizers (e.g. ``that'') in relative
+clauses in English corresponds to where neighboring words have high
+information content. Similarly, A. F. Frank \& Jaeger (2008) argues that
+contractions in English such as ``you're'' do not occur when neighboring
+words are highly informative. Applications of Uniform Information
+Density include determining whether linguistic alignment takes place
+(Jaeger \& Snider, 2013), Zipfian word length distributions (Piantadosi,
+Tily, \& Gibson, 2011), communication efficiency (Mahowald, Fedorenko,
+Piantadosi, \& Gibson, 2013), dialogue and turn-taking (Xu \& Reitter,
+2018) and the significance of ambiguity in language (Piantadosi, Tily,
+\& Gibson, 2012), among other research.
 
 However, other recent work has contradicted the Uniform Information
-Density hypothesis. Similar to the original R. P. Levy \& Jaeger (2007),
-Zhan \& Levy (2018) focuses on information distribution at particular
-points in sentences. Zhan \& Levy (2018) finds that more
+Density hypothesis. Similar to the original work in R. P. Levy \& Jaeger
+(2007), Zhan \& Levy (2018) focuses on information distribution at
+particular points in sentences. Zhan \& Levy (2018) finds that more
 information-rich classifiers in Mandarin Chinese are produced when
 production of the neighboring noun is difficult, not when the
-information content is high. Jain, Singh, Ranjan, Rajkumar, \& Agarwal
-(2018) examine word order across spoken sentences in Hindi, a freer word
-order language than English, and find that information density has no
-significant effect on determining a Hindi speaker's word order.
+information content is high. Examining the information density at the
+sentence level, Jain, Singh, Ranjan, Rajkumar, \& Agarwal (2018) study
+word order across written sentences in Hindi, a freer word order
+language than English, and find that information density has no
+significant effect on determining a Hindi writer's word order.
 
 Recently, Yu et al. (2016) developed a more direct test of the Uniform
 Information Density hypothesis, applying the logic used by Genzel \&
@@ -156,13 +157,13 @@ jumps up (see top of Figure \ref{fig:read_and_plot_exp1}). Yu et al.
 hold for medial words in a sentence.
 
 We extend and generalize Yu et al. (2016) in three ways: We confirm that
-this same pattern is found in English--in written language, and in
-conversational speech between adults and between parents and their
+this same pattern is found throughout English--in written language, and
+in conversational speech between adults and between parents and their
 children. Thus, this entropy curve is a robust feature of English
 linguistic productions. We then examine entropy curves
-cross-linguistically, and show that characteristic curves vary across
-the world's languages. Finally, we show that this variation is
-predictable in part from the structure of individual languages
+cross-linguistically, and show that the characteristic entropy curves
+vary across the world's languages. Finally, we show that this variation
+is predictable in part from the structure of individual languages
 (i.e.~word order). Taken together, our results suggest a refinement of
 the Uniform Information Density hypothesis: speakers may structure their
 utterances to optimize information density, but they must do so under
@@ -186,19 +187,19 @@ this probability distribution gives the positional entropy of position
 
 \[H(X) = \sum\limits_w p(w)\log\big(p(w)\big)\]
 
-With this measure, we can compute the unigram entropy at each word
-position of sentences of each length within a corpus. The result of this
-method can be plotted for each sentence length as an \emph{entropy
-curve}, which can be visually compared across sentence lengths to
-observe how the unigram entropy changes across absolute positions in
-each of the sentences. Genzel \& Charniak (2002) similarly examine a
-unigram entropy measure on sentences, and found that entropy at the
-sentence level increases linearly with sentence index within a corpus.
-Uniform Information Density applies this uniformity of entropy rate in
-sentences to all levels of speech (R. P. Levy \& Jaeger, 2007), and so
-our method obtained from Yu et al. (2016), which examines text at the
-word level, should find a monotonically increasing affine function at
-the word level.
+With this measure, we can compute the unigram positional entropy at each
+word position of sentences of each length within a corpus. The result of
+this method across word positions can be plotted for each sentence
+length as an \emph{entropy curve}, which can be visually compared across
+sentence lengths to observe how the unigram entropy changes across
+absolute positions in each of the sentences. Genzel \& Charniak (2002)
+similarly examine a unigram entropy measure on sentences, and found that
+entropy at the sentence level increases linearly with sentence index
+within a corpus. Uniform Information Density applies this uniformity of
+entropy rate in sentences to all levels of speech (R. P. Levy \& Jaeger,
+2007), and so our method obtained from Yu et al. (2016), which examines
+text at the word level, should find a monotonically increasing affine
+function at the word level.
 
 The entropy curves capture individual variation across positions in
 utterances of the same length. This allows us to directly observe and
@@ -217,9 +218,9 @@ written English (Clear, 1993). We then applied the same method to the
 Switchboard corpus--a collection of spoken English (Godfrey, Holliman,
 \& McDaniel, 1992). This allowed us to ask whether the characteristic
 function identified by Yu et al. (2016) is a general feature of English,
-or instead a function of written language.
+or instead a function of their written language corpus.
 
-\section{Data and Analysis}\label{data-and-analysis}
+\subsection{Data and Analysis}\label{data-and-analysis}
 
 The British National Corpus consists of predominantly (90\%) written
 documents collected in the early 1980s and 1990s across a variety of
@@ -229,18 +230,18 @@ British National Corpus contains \(\sim\) 100 million tokens. The
 Switchboard corpus is a collection of \(\sim\) 2,400 telephone
 conversations between unacquainted adults prompted with subjects of
 conversation. Switchboard is the corpus used in Levy and Jaeger's (2007)
-original demonstration of the Uniform Information Density Hypothesis.
+original demonstration of the Uniform Information Density hypothesis.
 
 For each corpus, we computed entropy curves using the method described
 above for all sentences from length 4 to 30.
 
-\section{Results}\label{results}
+\subsection{Results}\label{results}
 
 The entropy curves computed in both the British National Corpus and
 Switchboard were remarkably consistent both across corpora and across
 the range of sentence lengths we analyzed (Figure
 \ref{fig:read_and_plot_exp1}). Confirming Yu et al.'s (2016) findings,
-we find that the positional entropy at the beginning of sentences is
+we found that the positional entropy at the beginning of sentences is
 low, then rises and plateaus for sentence-medial word positions before
 dropping slightly in the second-to-last position and rising again for
 the sentence-final word.
@@ -252,7 +253,7 @@ the sentence-final word.
 
 }
 
-\caption[Representative Entropy Curves for the British National Corpus (top) and Switchboard (bottom)]{Representative Entropy Curves for the British National Corpus (top) and Switchboard (bottom). Points average entropies, error bars show 95\% confidence intervals computed by non-parametric bootstrap.}\label{fig:read_and_plot_exp1}
+\caption[Representative Entropy Curves for the British National Corpus (top) and Switchboard (bottom)]{Representative Entropy Curves for the British National Corpus (top) and Switchboard (bottom). Points represent average entropies, error bars show 95\% confidence intervals computed by non-parametric bootstrap.}\label{fig:read_and_plot_exp1}
 \end{figure*}
 \end{CodeChunk}
 
@@ -363,13 +364,13 @@ are generally large, and (2) hundreds of languages are represented. To
 understand how variability in entropy curves is related to the structure
 of language, we used features from the World Atlas of Language
 Structures (WALS, Dryer \& Haspelmath, 2013). WALS is a curated
-collection of typological features which analyze and classify the
-diversity across the world's languages. However, as the collection
-includes contributions from many authors studying a heterogeneous set of
-topics and languages, most features are missing for most languages. For
-our sample, we sought to balance diversity of languages with coverage in
-WALS. We selected \(45\) languages for which eight specific WALS
-features were coded (Figure \ref{fig:clust_tree}). Unfortunately, these
+collection of typological features which help to classify the diversity
+across the world's languages. However, as the collection includes
+contributions from many authors studying a heterogeneous set of topics
+and languages, most features are missing for most languages. For our
+sample, we sought to balance diversity of languages with coverage in
+WALS. We selected eight specific WALS features for which the same \(45\)
+languages were coded (Figure \ref{fig:clust_tree}). Unfortunately, these
 features all reflected the order of words in a sentence in each language
 (e.g.~whether objects come before verbs, whether adjectives come before
 nouns). A consistent set of results across these features would be
@@ -379,36 +380,36 @@ no other feature types are available for comparison.
 We computed entropy curves separately for each language as before. In
 order to understand how these curves varied across languages, we
 developed a method for compressing the curves into a few representative
-values. We noticed that curves tended to vary in predictable utterance
-positions: The majority were flat in the middle of utterances, but had
-either rising or falling slopes at the beginnings and ends. For each
-language, for each utterance length \(k\) we computed 5 slopes: The
-change between the 1st and 2nd position, the change between the 2nd and
-3rd position, the slope between the 3rd position and the 3rd-to-last
-position (\(k-1\)), the slope between the 3rd-to-last and the
-2nd-to-last position (\(k-1\)), and the slope between the 2nd-to-last
-and final positions. We then averaged these slopes across utterance
-lengths within a language to estimate a language-typical signature. We
-performed an additional analysis dividing each utterance into fifths
-evenly and computing the slopes between these fifths. Results from this
-second analysis were qualitatively similar.
+values. We noticed that curves tended to vary at predictable positions
+within sentences: The majority were flat in the middle, but had either
+rising or falling slopes at the beginnings and ends. For each language,
+for each sentence length \(k\) we computed 5 slopes: The change between
+the 1st and 2nd position, the change between the 2nd and 3rd position,
+the slope between the 3rd position and the 3rd-to-last position
+(\(k-1\)), the slope between the 3rd-to-last and the 2nd-to-last
+position (\(k-1\)), and the slope between the 2nd-to-last and final
+positions. We then averaged these slopes across sentence lengths within
+a language to estimate a language-typical signature. We performed an
+additional analysis dividing each sentence into fifths evenly and
+computing the slopes between these fifths. Results from this second
+analysis were qualitatively similar.
 
 \subsection{Results}\label{results-2}
 
-We treated these 5 slopes as a vector, allowing us to compute the
+We treated these five slopes as a vector, allowing us to compute the
 pairwise similarity between languages with cosine--a standard measure of
 vector similarity (Landauer \& Dumais, 1997). Intuitively, vectors with
 a smaller angle between them are more similar. Figure
 \ref{fig:clust_tree} shows a hierarchical clustering of these 5
 dimensional vectors, demonstrating that entropy curve similarity appears
-to capture typological relatedly, e.g.~Slavic languages are similar to
-each-other.
+to capture typological relatedly (e.g.~Slavic languages are similar to
+each other).
 
 We then asked whether these pairwise similarities were related to
-overlap in linguistic features. For each of the 8 WALS features we
+overlap in linguistic features. For each of the eight WALS features we
 measured, we fit a logistic regression predicting whether two languages
-would have the same value for that feature from the similarity of their
-pairwise entropy curves. Overlap on all 8 features was reliably
+would have the same value for that feature from the pairwise similarity
+of their entropy curves. Overlap on all eight features was reliably
 predicted by entropy curve similarity (largest \(p = .001\)), with the
 amount of variance in feature overlap predicted varying across
 predictors \ref{tab:tab_features}. Order of object and verb (\(83A\))
@@ -486,10 +487,12 @@ final segment of the entropy curve, such as Mandarin. We also expect
 that readers of a language will take longer on average to read parts of
 sentences where the entropy curve is relatively high, due to the
 presence of higher information content. This may explain the so-called
-wrap-up effect in sentence processing, in which the end of the sentence
-in English and other Germanic languages is processed more slowly during
-reading (Kuperman, Dambacher, Nuthmann, \& Kliegl, 2010; Stowe, Kaan,
-Sabourin, \& Taylor, 2018).
+wrap-up effect in sentence processing, in which the ends of sentences
+are processed more slowly during reading (Kuperman, Dambacher, Nuthmann,
+\& Kliegl, 2010; Stowe, Kaan, Sabourin, \& Taylor, 2018). The entropy
+curve analysis can be carried out on any language across a wide variety
+of text corpora, making it a powerful tool for analyzing the information
+structure of both spoken and written utterances in a language.
 
 \section{References}\label{references}
 
