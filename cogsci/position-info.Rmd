@@ -125,7 +125,7 @@ write_csv(switchboard_entropies, here("data/switchboard_entropies.csv"))
 The entropy curves computed in both the British National Corpus and Switchboard were remarkably consistent both across corpora and across the range of sentence lengths we analyzed (Figure \ref{fig:read_and_plot_exp1}). Confirming Yu et al.'s [-@yu2016] findings, we find that
 the positional entropy at the beginning of sentences is low, then rises and plateaus for sentence-medial word positions before dropping slightly in the second-to-last position and rising again.
 
-```{r read_and_plot_exp1, fig.env = "figure*", fig.width=6, fig.height=3, fig.align = "center", set.cap.width=T, num.cols.cap=2, fig.cap = "Representative Entropy Curves for the British National Corpus (top) and Switchboard (bottom). Points average entropies, error bars show 95\\% confidence intervals computed by non-parametric bootstrap."}
+```{r read_and_plot_exp1, fig.env = "figure*", fig.width=6, fig.height=4, fig.align = "center", set.cap.width=T, num.cols.cap=2, fig.cap = "Representative Entropy Curves for the British National Corpus (top) and Switchboard (bottom). Points average entropies, error bars show 95\\% confidence intervals computed by non-parametric bootstrap."}
 
 bnc_entropies <- read_csv(here("data/bnc_entropies.csv"))
 
