@@ -38,6 +38,7 @@ library(childesr)
 library(ggthemes)
 library(gridExtra)
 library(directlabels)
+library(ggdendro)
 
 theme_set(theme_classic(base_size = 10))
 ```
@@ -124,7 +125,7 @@ write_csv(switchboard_entropies, here("data/switchboard_entropies.csv"))
 The entropy curves computed in both the British National Corpus and Switchboard were remarkably consistent both across corpora and across the range of sentence lengths we analyzed (Figure \ref{fig:read_and_plot_exp1}). Confirming Yu et al.'s [-@yu2016] findings, we find that
 the positional entropy at the beginning of sentences is low, then rises and plateaus for sentence-medial word positions before dropping slightly in the second-to-last position and rising again.
 
-```{r read_and_plot_exp1, fig.env = "figure*", fig.width=7, fig.height=4, fig.align = "center", set.cap.width=T, num.cols.cap=2, fig.cap = "Representative Entropy Curves for the British National Corpus (top) and Switchboard (bottom). Points average entropies, error bars show 95\\% confidence intervals computed by non-parametric bootstrap."}
+```{r read_and_plot_exp1, fig.env = "figure*", fig.width=6, fig.height=3, fig.align = "center", set.cap.width=T, num.cols.cap=2, fig.cap = "Representative Entropy Curves for the British National Corpus (top) and Switchboard (bottom). Points average entropies, error bars show 95\\% confidence intervals computed by non-parametric bootstrap."}
 
 bnc_entropies <- read_csv(here("data/bnc_entropies.csv"))
 
@@ -277,29 +278,47 @@ ggplot(childes_entropies, aes(x = word_order, y = empirical_entropy,
 
 Across corpora, we found similar entropy curve shapes for adults and children, but distinct shapes for each language. Figure \ref{fig:plot_childes} shows representative curves across corpora, but shapes were robust across the full range utterances we analyzed. We found a distinct three-step distribution for English and Spanish CHILDES corpora, with a slight dip in the penultimate position of each sentence. The Mandarin corpus entropy curve, by comparison, has a noticeably lower positional entropy values in utterance-final positions than in utterance-penultimate positions. 
 
-These results present two important pieces of information. First, our analysis of the Providence corpus broadly replicates the shape we found in both the British National Corpus and in Switchboard. Thus, the entropy curve of English appears not just in adult-adult conversation, but even in speech produced by parents to their children, and speech produced by very young children to their parents. This suggests that it is a highly robust feature of English langauge, as it structures the productions of even pre-schooled aged children. 
+These results present two important pieces of information. First, the Providence corpus entropy curve broadly replicates the curves found in both the British National Corpus and in Switchboard. Thus, the entropy curve of English appears not just in adult-adult conversation, but even in speech produced by parents to their children, and speech produced by very young children to their parents. This suggests that it is a highly robust feature of English language, as it structures the productions of even pre-schooled aged children. 
 
-Second, the entropy curves of English, Spanish, and Mandarin were not identical. None of these shapes resembled the affine function predicted naively from Uniform Information Density, but also Mandarin was quite different from both English and Spanish. This suggests that the entropy curve can vary from language to language. One possibility is that this variation arises from typological features of languages, such as characteristic word order. We noticed, for instance, a relatively high density of determiners in the penultimate position of English and Spanish utterances, which could account for the penultimate dip in the entropy curves of those two languages. In our final analysis, we explored this possibility directly, analyzing a large set of Wikipedia corpora from diverse languages, and asking whether variability in their entropy curves was related to variability in their syntactic structure.
+Second, the entropy curves of English, Spanish, and Mandarin were not identical. No shape resembled the affine function predicted naively from Uniform Information Density, but also Mandarin was quite different from both English and Spanish. This suggests that the entropy curve can vary from language to language. One possibility is that this variation arises from typological features of languages, such as characteristic word order. We noticed, for instance, a relatively high density of determiners in the penultimate position of English and Spanish utterances, which could account their characteristic penultimate dip. In our final analysis, we explored this possibility directly, analyzing a large set of Wikipedia corpora from diverse languages, and asking whether variability in their entropy curves was related to variability in their syntactic structure.
 
-# Experiment 3
+# Study 3
 
-The UID hypothesis also applies to written communication: we expect people to communicate information at a uniform rate through writing as well. We use Wikipedia as a source for written data, which provides two advantages. One, the quantity of data in Wikipedia is very large for each language, at least several megabytes, and two, there are hundreds of languages with their own Wikipedia corpora. We can therefore run our entropy analysis on a much greater scale than using small spoken CHILDES corpora and directly compare the results of the entropy analysis on each language to one another. We expect to find linguistic features that determine the shape of a language's entropy curve. We treated sentences in the Wikipedia text corpora as equivalent to utterances in the Switchboard and CHILDES corpora. 
+In order to understand how entropy curves are related to linguistic structure, we turned to Wikipedia for a larger and more diverse of set of languages.
 
-## Methods
+## Method 
 
-Using Giuseppe Attardi's Wikiextractor tool \footnote{https://github.com/attardi/wikiextractor}, we extract text corpora from Wikipedia by downloading a stored collection of Wikipedia entries in each langauge and randomly selecting several thousand articles from each Wikipedia language. Each language corpus was cleaned and limited to sentences between six and $50$ words. Similar to our process for the Switchboard and CHILDES spoken corpora, we divided each corpus by sentence length, and then computed our positional entropy measure on each word position within each sentence length.
+### Data and Analysis
 
-We computed two slope treatments of each curve. In the *absolute* treatment, with sentence length denoted as $k$, we computed the slope between positions $1$ and $2$, positions $2$ and $3$, positions $3$ and $k-2$, positions $k-2$ and $k-1$ and positions $k-1$ and $k$. For the short utterances appearing the CHILDES speech corpora, the slopes between the first and second slopes on either end of the distributions appeared to be more characteristic of the distribution as a whole, with a plateau in the middle of the entropy curve for each of the language corpora we examined in CHILDES.
+Wikipedia has two primary advantages: (1) Individual language corpora are generally large, and (2) hundreds of languages are represented. To understand how variability in entropy curves is related to the structure of language, we used features from the World Atlas of Language Structures [WALS, @dryer2013]. WALS is The World Atlas of Language Structures is a curated collection of typological features across the world's languages. However, as the collection includes contributions from many authors studying a heterogeneous set of topic and languages, most features are missing for most languages. For our sample, we sought to balance diversity of languages with coverage in WALS. We selected $45$ languages for which we $8$ WALS features were coded (Figure \ref{fig:clust_tree}). Unfortunately, these features all 
+reflected the order of words in a sentence in each langauge (e.g. whether objects come before verbs, whether adjectives come before nouns). A consistent set of results across these features would be consistent with an effect of order on entropy curves, but unfortunately no other feature types are available for comparison.
 
-However, sentences of length greater than ten in the Wikipedia corpora were significantly more common than in the CHILDES. Therefore we also computed relative slope treatments. In the *relative 5* treatment, we computed the slopes between every $20\%$ of the relative word positions in each sentence length, e.g. the slope between $0\%$ and $20\%$ of sentences of length $10$ is the slope between the position entropies at the sentence-initial word position and the position representing the third word. When computing the word position index to make those cuts, if the slope was not a whole number, then the closest whole number position was used instead for slope calculation. Each comparative slope within each treatment was averaged together between different sentence lengths, for example all of the $0\%$ to $20\%$ slopes over all sentence lengths were averaged together. 
-
-In both the absolute and relative $5$ treatments, each language is embedded in $5$-dimensional space. This permitted us to use cosine similarity for direct comparison between the languages we pulled from Wikipedia. To determine which phonological, morphological and syntactic features affected the embedding of a language in the Wikipedia dataset, we use the linguistic features in World Atlas of Language Structures @dryer2013. We checked the effects of individual features on the embeddings of languages in the different treatments. We computed pairwise cosine similarity between each pair of language vectors within each treatment. For a subset of eight WALS features, we used a generalized linear model to see whether the cosine similarity between languages mattered in predicting if the languages shared the same value for a WALS feature. 
+We computed entropy curves separately for each language as before. In order to understand how these curves varied across languages, we developed a method for compressing the curves into a few representative values. We noticed that curves tended to vary in predictable utterance positions: The majority were flat in the middle of utterances, but had either rising or falling slopes at the beginnings and ends. For each language, for each utterance length $k$ we computed 5 slopes: The change between the 1st and 2nd position, the change between the 2nd and 3rd position, the slope between the 3rd position and the 3rd-to-last position ($k-1$), the slope between the 3rd-to-last and the 2nd-to-last position ($k-1$), and the slope between the 2nd-to-last and final positions. We then averaged these slopes across utterance lengths within a language to estimate a language-typical signature. We performed an additional analysis dividing each utterance into 6ths evenly and computing the slopes between these 6ths. Results from this analysis were qualitatively similar.
 
 ## Results and Analysis
 
-For eight features and $45$ languages we pulled from Wikipedia, we found that the cosine similarity between WALS features. The table below shows the results for the generalized linear model we computed using WALS features and the absolute treatment. 
+We treated these 5 slopes as a vector, allowing us to compute the pairwise similarity between languages with cosine--a standard measure of vector similarity [@landauer1997]. Intuitively, vectors with with a smaller angle between them are more similar. Figure \ref{fig:clust_tree} shows a hierarchical clustering of these 5 dimensional vectors, demonstrating that entropy curve similarity appears to capture typological relatedly, e.g. Slavic languages are similar to each-other. 
 
-```{r }
+```{r load_features}
+features <- read_csv(here("data/wals_features.csv"))
+
+glm_model <- read_csv(here("data/glm.csv")) %>%
+  select(-X1) %>%
+  left_join(features) %>%
+  filter(meaning != "Tea") %>%
+  select(-term, -std.error) %>%
+  mutate(r2 = (statistic^2) / (statistic^2 + 164024))
+
+max_r2 <- glm_model %>% 
+  mutate(r2 = r2 * 100) %>% 
+  pull(r2) %>% 
+  max() %>% 
+  round(2)
+```
+
+We then used asked whether these pairwise similarities are related to overlap in linguistic features. For each of the 8 features we measured, we fit a logistic regression predicting whether two languages would have the same value for it from their pairwise entropy curve similarity. Overlap on all 8 features was reliably predicted by entropy curve similarity (largest $p = .001$), with the amount of variance in feature overlap predicted varying across predictors \ref{tab:tab_features}. Order of object and verb ($83A$) was the strongest predictor, explaining `r max_r2`% of the variance in pairwise entropy curve similarity. 
+
+```{r, eval = F}
 library(tidyverse)
 library(googlesheets)
 library(lingtypology)
@@ -392,31 +411,31 @@ wk_clust_tree <- wkpd %>%
 wk_clust_tree %>% plot(hang = -1)
 ```
 
-```{r tables, results="asis", tab.env = "table"}
-glm_model <- read_csv("glm.csv") %>%
-    select(-X1)
+```{r clust_tree, fig.width = 3.5, fig.align='center', set.cap.width=T, fig.cap = "A dendrogram estimated from hierarchically clustering the slopes of our 45 languages", fig.show='hold', cache = T}
+wk_clust_tree <- readRDS("data/clust_tree.RDS")
 
-tab1 <- xtable::xtable(glm_model)
+ggdendrogram(wk_clust_tree, rotate = F, size = 1) + 
+ theme(axis.text.y = element_blank(),
+       axis.text.x = element_text(size = 7))
+  
+```
+
+```{r tab_features, results="asis", tab.env = "table"}
+tab1 <- glm_model %>%
+  rename(`t-value` = statistic, `p-value` = p.value,
+         `#` = feature) %>%
+  mutate(r2 = round(r2,3)) %>%
+  select(-estimate,-meaning)  %>%
+  xtable(caption = "Capptoin here",
+         label = "tab:tab_features")
+
 print(tab1, type="latex", comment = F, table.placement = "tb",
       include.rownames = F)
 ```
 
-We also used the linear model approach to evaluate the effects of cosine distance in the relative $5$ treatment on the values of the same WALS features and found similar outcomes. 
+# General Discussion 
 
-From these results, we argue that cosine distance played some role in the feature determination. The top four features in determining the WALS feature value all characterize word order, which indicates that for this subset of features and languages that the embeddings in the slope space are related to the WALS features. We argue therefore that typological features play a role in determining the positional entropy values for a language. This indicates that the entropy curves are in some way structured by the syntactic, morphological and phonological features of a language. 
-
-# Discussion 
-In this paper, we have extended and applied a model from @yu2016 and derived from @genzel2002 for distinguishing entropy at each word position within sentences. We have argued that the outcomes of this model are derived from the distribution of information transmission in human communication. Language is not a uniform noisy channel of communication, but each language individually represents a different noisy channel of communication characterized in part by typological features. 
-
-Our work complements the approach of studies such as @aylett2004, where languages are characterized by a single number, representing the rate of semantic information transfer per syllable. This body of work attests to languages possessing different rates of information transfer based on typological features as well. Within the information transfer rate literature, the rate is an overall feature of language that does not vary corpus to corpus. Similarly, in our work we have obtained a characteristic entropy distribution for each language. Both information rate and entropy distribution are characterized by typological features. This indicates that the structure and rate of how people communicate information varies cross-linguistically based on typological features. 
-
-We initially wanted to use several hundred language corpora pulled from Wikipedia and all $144$ linguistic features from WALS. We considered an computing unsupervized clusterings of the $5$-dimensional vectors of our Wikipedia entropy curves, and comparing those clusterings to clusterings of the WALS features directly using a cluster similarity measure such as the Rand index @rand1971. However, the problem then arises of which combination of WALS features and how many features to include in the clustering analysis, with $144!$ different combinations. Two additional problems presented themselves: one, deciding how many clusters to use in an unsupervised clustering analysis is an unsolved problem in machine learning; and two, not all of the languages on Wikipedia have values inputted for their WALS features. As a follow-up, we are considering missing-data imputation on the WALS features in order to run the generalized linear model analysis on a large dataset of languages.  
-
-On a more mechanical level, we expect that our entropy model will have implications for how long people take to read individual words at different positions of a sentence. Eye-tracking research has indicated the effects of surprisal on fixation duration during eye-tracking studies [@demberg2008; @boston2008; @smith2013]; higher surprisal of a word is on average predictive of higher fixation duration. The *wrap-up effect* states that people process sentence-final words more slowly on average then sentence-medial or sentence-initial words when reading, due to integrating information to form a final understanding of the sentence's meaning [@stowe2018; @kuperman2010]. The wrap-up effect is drawn from evidence in languages with a large final increase in their entropy curve from our study, so we hypothesize that the supposed wrap-up effect derives from the same source sentence-final increase in entropy curves observed in English and other Germanic languages. 
-
-# Acknowledgements
-
-[Not here yet.]
+Taken together, the results of our studies yield 3 main findings. First, languages have characteristic entropy curves that can be found in their productions whether written, spoken, or even spoken by children. These curves diverge in reliabile ways from the monotonically increasing functions predicting by a naive Uniform Information Density hypothesis. Second, these characteristic curves vary across languages--some languages like English have increasing curves, but others like Mandarin are characterized by decreasing entropy of the course of an utterance. Finally, these characteristic curves are related to structural properties of those languages, for instance their word orders. This work presents an important rejoinder to models of linguistic productions as optimizing communicative success. While speakers may do their best to structure the information in their productions to minimize spikes in entropy, they operate under coding models they inherit from their native language, and these coding models constrain the choices they make.
 
 # References
 

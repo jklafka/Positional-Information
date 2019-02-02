@@ -132,7 +132,8 @@ models <- wf_pairwise %>%
                                 family = "binomial", data = .)))
 
 models %>%
-  mutate(coeffs = map(model, tidy)) %>%
+  mutate(coeffs = map(model, tidy),
+         rs = map(model, )) %>%
   select(-data, -model) %>%
   unnest() %>%
   filter(term == "cosine") %>%
