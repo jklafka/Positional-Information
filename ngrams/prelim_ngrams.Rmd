@@ -1,0 +1,117 @@
+---
+title: "Eye-tracking"
+author: "Joe Klafka"
+date: "2/8/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(tidytext)
+library(tidyboot)
+library(entropy)
+library(magrittr)
+library(feather)
+library(here)
+
+library(childesr)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r corpora}
+prov_utterances <- get_utterances(corpus = "Providence") #stem or gloss
+
+switchboard <- read_feather(here("../switchboard/switchboard.feather")) %>%
+  rename(words = value)
+```
+
+```{r ngram entropy}
+# takes in a tbl of utterances the column with the actual utterances is 
+# named words, along with an integer target_length and a ngram length N.
+ngram_entropy <- function(utterances, target_length, N) {
+ 
+ tokens <- utterances %>%
+  mutate(length = str_count(words, pattern = "[ +]+") + 1) %>%
+  filter(length == target_length) %>%
+  mutate(utterance_id = 1:n()) %>%
+  unnest_tokens(bigrams, words, token = "ngrams", n = N) %>%
+  group_by(utterance_id) %>%
+  mutate(gram_order = 1:n()) %>%
+  group_by(gram_order, bigrams) %>%
+  filter(gram_order <= target_length - (N-1))
+  
+ tokens %>%
+  summarise(n = n()) %>%
+  tidyboot(summary_function = function(x) x %>% 
+        summarise(entropy = entropy(n, unit = "log2")),
+       statistics_functions = function(x) x %>%
+       summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
+  mutate(length = target_length)
+}
+```
+
+```{r providence}
+prov_utterances %<>% 
+  filter(speaker_role == "Target_Child") %>%
+  mutate(words = stem)
+
+# bigrams
+prov_bigrams <- map(3:10, ~ngram_entropy(prov_utterances, .x, 2)) %>% 
+  bind_rows()
+
+prov_bigrams %>% ggplot(aes(x = gram_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F)
+
+# trigrams
+prov_trigrams <- map(4:10, ~ngram_entropy(prov_utterances, .x, 3)) %>% 
+  bind_rows()
+
+prov_trigrams %>% ggplot(aes(x = gram_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F)
+
+```
+
+```{r switchboard}
+# unigrams to check against previous results
+switchboard_unigrams <- map(2:10, ~ngram_entropy(switchboard, .x, 1)) %>% 
+  bind_rows()
+
+switchboard_unigrams %>% ggplot(aes(x = gram_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F)
+
+# bigrams
+switchboard_bigrams <- map(3:10, ~ngram_entropy(switchboard, .x, 2)) %>% 
+  bind_rows()
+
+switchboard_bigrams %>% ggplot(aes(x = gram_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F)
+
+#trigrams
+switchboard_trigrams <- map(4:10, ~ngram_entropy(switchboard, .x, 3)) %>% 
+  bind_rows()
+
+switchboard_trigrams %>% ggplot(aes(x = gram_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F)
+```
+
+
+
+
+
+
