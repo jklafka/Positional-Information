@@ -20,13 +20,25 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r corpora}
-prov_utterances <- get_utterances(corpus = "Providence") #stem or gloss
+prov_utterances <- get_utterances(corpus = "Providence") %>% 
+  filter(speaker_role == "Target_Child") %>%
+  mutate(words = stem)
+
+okayama_utterances <- get_utterances(corpus = "Okayama")  %>% 
+  filter(speaker_role == "Target_Child") %>%
+  rename(words = gloss)
+
+zhou_utterances <- get_utterances(corpus = "ZhouDinner") %>%
+  filter(speaker_role == "Target_Child") %>%
+  rename(words = stem)
 
 switchboard <- read_feather(here("../switchboard/switchboard.feather")) %>%
   rename(words = value)
 ```
 
 ```{r ngram entropy}
+# unnest_tokens(word, value, token = stringr::str_split, pattern = " +") 
+
 # takes in a tbl of utterances the column with the actual utterances is 
 # named words, along with an integer target_length and a ngram length N.
 ngram_entropy <- function(utterances, target_length, N) {
@@ -35,10 +47,10 @@ ngram_entropy <- function(utterances, target_length, N) {
   mutate(length = str_count(words, pattern = "[ +]+") + 1) %>%
   filter(length == target_length) %>%
   mutate(utterance_id = 1:n()) %>%
-  unnest_tokens(bigrams, words, token = "ngrams", n = N) %>%
+  unnest_tokens(ngrams, words, token = "ngrams", n = N) %>%
   group_by(utterance_id) %>%
   mutate(gram_order = 1:n()) %>%
-  group_by(gram_order, bigrams) %>%
+  group_by(gram_order, ngrams) %>%
   filter(gram_order <= target_length - (N-1))
   
  tokens %>%
@@ -51,10 +63,17 @@ ngram_entropy <- function(utterances, target_length, N) {
 }
 ```
 
-```{r providence}
-prov_utterances %<>% 
-  filter(speaker_role == "Target_Child") %>%
-  mutate(words = stem)
+```{r childes}
+## Providence
+# unigrams
+prov_unigrams <- map(2:10, ~ngram_entropy(prov_utterances, .x, 1)) %>% 
+  bind_rows()
+
+prov_unigrams %>% ggplot(aes(x = gram_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F)
 
 # bigrams
 prov_bigrams <- map(3:10, ~ngram_entropy(prov_utterances, .x, 2)) %>% 
@@ -75,6 +94,83 @@ prov_trigrams %>% ggplot(aes(x = gram_order, y = empirical_entropy,
   facet_wrap(~ length) + 
   geom_pointrange() +
   geom_smooth(se = F)
+
+
+## Zhou
+# unigrams
+zhou_unigrams <- map(2:10, ~ngram_entropy(zhou_utterances, .x, 1)) %>% 
+  bind_rows()
+
+zhou_unigrams %>% ggplot(aes(x = gram_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F)
+
+# bigrams
+zhou_bigrams <- map(3:10, ~ngram_entropy(zhou_utterances, .x, 2)) %>% 
+  bind_rows()
+
+zhou_bigrams %>% ggplot(aes(x = gram_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F)
+
+# trigrams
+zhou_trigrams <- map(4:10, ~ngram_entropy(zhou_utterances, .x, 3)) %>% 
+  bind_rows()
+
+zhou_trigrams %>% ggplot(aes(x = gram_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F)
+
+
+## Okayama
+# bigrams 
+okayama_bigrams <- map(3:10, ~ngram_entropy(okayama_utterances, .x, 2)) %>% 
+  bind_rows()
+
+okayama_bigrams %>% ggplot(aes(x = gram_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F)
+
+# trigrams
+okayama_trigrams <- map(4:10, ~ngram_entropy(okayama_utterances, .x, 3)) %>% 
+  bind_rows()
+
+okayama_trigrams %>% ggplot(aes(x = gram_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F)
+```
+
+```{r zhou and okayama}
+# bigrams
+prov_bigrams <- map(3:10, ~ngram_entropy(prov_utterances, .x, 2)) %>% 
+  bind_rows()
+
+prov_bigrams %>% ggplot(aes(x = gram_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F)
+
+# trigrams
+prov_trigrams <- map(4:10, ~ngram_entropy(prov_utterances, .x, 3)) %>% 
+  bind_rows()
+
+prov_trigrams %>% ggplot(aes(x = gram_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F)
+
 
 ```
 
@@ -109,6 +205,21 @@ switchboard_trigrams %>% ggplot(aes(x = gram_order, y = empirical_entropy,
   geom_pointrange() +
   geom_smooth(se = F)
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
