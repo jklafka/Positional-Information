@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r corpora}
 prov_utterances <- get_utterances(corpus = "Providence") %>% 
-  filter(speaker_role == "Target_Child") %>%
+  filter(speaker_role != "Target_Child") %>%
   mutate(words = stem)
 
 okayama_utterances <- get_utterances(corpus = "Okayama")  %>% 
@@ -29,7 +29,7 @@ okayama_utterances <- get_utterances(corpus = "Okayama")  %>%
   rename(words = gloss)
 
 zhou_utterances <- get_utterances(corpus = "ZhouDinner") %>%
-  filter(speaker_role == "Target_Child") %>%
+  filter(speaker_role != "Target_Child") %>%
   rename(words = stem)
 
 switchboard <- read_feather(here("../switchboard/switchboard.feather")) %>%
@@ -42,18 +42,34 @@ switchboard <- read_feather(here("../switchboard/switchboard.feather")) %>%
 # takes in a tbl of utterances the column with the actual utterances is 
 # named words, along with an integer target_length and a ngram length N.
 ngram_entropy <- function(utterances, target_length, N) {
- 
- tokens <- utterances %>%
-  mutate(length = str_count(words, pattern = "[ +]+") + 1) %>%
-  filter(length == target_length) %>%
-  mutate(utterance_id = 1:n()) %>%
-  unnest_tokens(ngrams, words, token = "ngrams", n = N) %>%
-  group_by(utterance_id) %>%
-  mutate(gram_order = 1:n()) %>%
-  group_by(gram_order, ngrams) %>%
-  filter(gram_order <= target_length - (N-1))
+
   
- tokens %>%
+  tokens <- utterances %>%
+    mutate(length = str_count(words, pattern = "[ +]+") + 1) %>%
+    filter(length == target_length) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, words, token = stringr::str_split, pattern = " +") %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n())
+  
+    
+  lags <- expand.grid(lag_n = 1:(N-1), 
+                      utterance_id = unique(tokens$utterance_id))
+  
+  
+  grams <- tokens %>%
+    left_join(lags, by = "utterance_id") %>%
+    group_by(utterance_id, lag_n) %>%
+    arrange(utterance_id, lag_n, word_order) %>%
+    mutate(lag = lag(word, n = first(lag_n))) %>%
+    group_by(utterance_id, word_order, word) %>%
+    summarise(gram = paste(lag, collapse = " ")) %>%
+    summarise(gram = paste(gram, word, collapse = " ")) %>%
+    filter(word_order >= N) %>%
+    rename(gram_order = word_order) %>%
+    group_by(gram_order, gram)
+
+ grams %>%
   summarise(n = n()) %>%
   tidyboot(summary_function = function(x) x %>% 
         summarise(entropy = entropy(n, unit = "log2")),
