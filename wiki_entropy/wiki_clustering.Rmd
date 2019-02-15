@@ -63,17 +63,98 @@ wk_clusters %>%
   View()
 ```
 
+```{r word order}
+wiki_gs <- gs_title("Wikipedia_relative5")
+wkpd <- gs_read(wiki_gs) 
+LANGUAGES <- wkpd$Language
+
+FEATURES <- c(82:97)
+for (i in c(1:length(FEATURES))) {
+  FEATURES[i] <- paste(FEATURES[i], "A", sep = "")
+} #get all word order WALS features in correct syntax
+
+wf <- wals.feature(FEATURES) 
+
+wo_df <- wf %>% 
+  filter(language %in% LANGUAGES) %>%
+  select(-wals.code, -latitude, -longitude, -glottocode, -`84A`) 
+
+wo_df <- wo_df[rowSums(is.na(new_wf)) < 6,] %>%
+  as_data_frame() %>%
+  group_by(language) %>%
+  slice(1) %>%
+  gather(feature, value, `82A`:`97A`) %>%
+  group_by(feature) %>%
+  mutate(value = factor(value))
+
+
+imputed_wo <- wo_df %>%
+  select(language, feature, value) %>%
+  ungroup() %>% 
+  spread(feature, value) %>% 
+  column_to_rownames("language") %>%
+  sapply(as.factor) %>%
+  as_data_frame() %>%
+  MIMCA(ncp = 3, maxiter = 999)
+
+imputed_wo <- as.data.frame(imputed_result[[1]][[99]])
+
+## convert this to work with imputed_wo
+wf_many_langs <- wf_df %>%
+  group_by(feature) %>%
+  summarise(n = sum(!is.na(value))) %>%
+  filter(n > 60)
+
+wf_sub_langs <- wf_df %>%
+  filter(feature %in% wf_many_langs$feature) %>%
+  group_by(language) %>%
+  summarise(keep = sum(is.na(value)) == 0) %>%
+  filter(keep)
+
+wf_sub <- wf_df %>%
+  filter(feature %in% wf_many_langs$feature,
+         language %in% wf_sub_langs$language) %>%
+  select(language, feature, value) %>%
+  mutate(value = as.numeric(as.factor(value)))
+
+
+wf_pairwise <- expand.grid(language1 = wf_sub$language,
+                           language2 = wf_sub$language) %>%
+  left_join(wf_sub, by = c("language1" = "language")) %>%
+  rename(value1 = value) %>%
+  left_join(wf_sub, by = c("language2" = "language", "feature")) %>%
+  rename(value2 = value) %>%
+  mutate(same = value1 == value2) %>%
+  select(-value1, -value2) %>%
+  left_join(cosines, by = c("language1", "language2"))
+
+
+models <- wf_pairwise %>%
+  group_by(feature) %>%
+  nest() %>%
+  mutate(model = map(data, ~glm(same ~ cosine, 
+                                family = "binomial", data = .)))
+
+models %>%
+  mutate(coeffs = map(model, tidy),
+         rs = map(model, )) %>%
+  select(-data, -model) %>%
+  unnest() %>%
+  filter(term == "cosine") %>%
+  arrange(desc(statistic))
+```
+
 ```{r}
 wiki_gs <- gs_title("Wikipedia_relative5")
 wkpd <- gs_read(wiki_gs) 
 LANGUAGES <- wkpd$Language
 
 FEATURES <- c(1:144)
-for (i in c(1:144)) {
+for (i in c(1:length(FEATURES))) {
   FEATURES[i] <- paste(FEATURES[i], "A", sep = "")
 } #get all WALS features in correct syntax
 
-wf <- wals.feature(FEATURES)
+wf <- wals.feature(FEATURES) 
 
 wf_df <- wf %>%
   as_data_frame() %>%
