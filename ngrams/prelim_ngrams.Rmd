@@ -32,6 +32,10 @@ zhou_utterances <- get_utterances(corpus = "ZhouDinner") %>%
   filter(speaker_role != "Target_Child") %>%
   rename(words = stem)
 
+shiro_utterances <- get_utterances(corpus = "Shiro") #use gloss
+
+wagner_utterances <- get_utterances(corpus = "Wagner") #use gloss
+
 switchboard <- read_feather(here("../switchboard/switchboard.feather")) %>%
   rename(words = value)
 ```
@@ -111,7 +115,7 @@ prov_trigrams %>% ggplot(aes(x = gram_order, y = empirical_entropy,
   geom_pointrange() +
   geom_smooth(se = F)
 
-
+write_feather(feather(prov_unigrams), here("prov/adult_unigrams.feather"))
 ## Zhou
 # unigrams
 zhou_unigrams <- map(2:10, ~ngram_entropy(zhou_utterances, .x, 1)) %>% 
