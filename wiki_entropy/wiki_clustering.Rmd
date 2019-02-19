@@ -22,6 +22,8 @@ library(widyr)
 library(lsa)
 library(magrittr)
 library(broom)
+library(here)
+library(feather)
 
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -75,11 +77,11 @@ for (i in c(1:length(FEATURES))) {
 
 wf <- wals.feature(FEATURES) 
 
-wo_df <- wf %>% 
+wo_wf <- wf %>% 
   filter(language %in% LANGUAGES) %>%
   select(-wals.code, -latitude, -longitude, -glottocode, -`84A`) 
 
-wo_df <- wo_df[rowSums(is.na(new_wf)) < 6,] %>%
+wo_df <- wo_wf[rowSums(is.na(wo_wf)) < 6,] %>%
   as_data_frame() %>%
   group_by(language) %>%
   slice(1) %>%
@@ -87,42 +89,27 @@ wo_df <- wo_df[rowSums(is.na(new_wf)) < 6,] %>%
   group_by(feature) %>%
   mutate(value = factor(value))
 
-
 imputed_wo <- wo_df %>%
   select(language, feature, value) %>%
   ungroup() %>% 
   spread(feature, value) %>% 
   column_to_rownames("language") %>%
   sapply(as.factor) %>%
-  as_data_frame() %>%
-  MIMCA(ncp = 3, maxiter = 999)
+  MIMCA(ncp = 1)
 
-imputed_wo <- as.data.frame(imputed_result[[1]][[99]])
-
-## convert this to work with imputed_wo
-wf_many_langs <- wf_df %>%
+imputed_wo <- as.data.frame(imputed_wo[[1]][[99]]) 
+imputed_wo$language <- unique(wo_df$language)
+wo_sub <- imputed_wo %>% group_by(language) %>%
+  slice(1) %>%
+  gather(feature, value, `82A`:`97A`) %>%
   group_by(feature) %>%
-  summarise(n = sum(!is.na(value))) %>%
-  filter(n > 60)
-
-wf_sub_langs <- wf_df %>%
-  filter(feature %in% wf_many_langs$feature) %>%
-  group_by(language) %>%
-  summarise(keep = sum(is.na(value)) == 0) %>%
-  filter(keep)
-
-wf_sub <- wf_df %>%
-  filter(feature %in% wf_many_langs$feature,
-         language %in% wf_sub_langs$language) %>%
-  select(language, feature, value) %>%
   mutate(value = as.numeric(as.factor(value)))
 
-
-wf_pairwise <- expand.grid(language1 = wf_sub$language,
-                           language2 = wf_sub$language) %>%
-  left_join(wf_sub, by = c("language1" = "language")) %>%
+wf_pairwise <- expand.grid(language1 = wo_sub$language,
+                           language2 = wo_sub$language) %>%
+  left_join(wo_sub, by = c("language1" = "language")) %>%
   rename(value1 = value) %>%
-  left_join(wf_sub, by = c("language2" = "language", "feature")) %>%
+  left_join(wo_sub, by = c("language2" = "language", "feature")) %>%
   rename(value2 = value) %>%
   mutate(same = value1 == value2) %>%
   select(-value1, -value2) %>%
@@ -136,12 +123,12 @@ models <- wf_pairwise %>%
                                 family = "binomial", data = .)))
 
 models %>%
-  mutate(coeffs = map(model, tidy),
-         rs = map(model, )) %>%
+  mutate(coeffs = map(model, tidy)) %>%
   select(-data, -model) %>%
   unnest() %>%
   filter(term == "cosine") %>%
-  arrange(desc(statistic))
+  arrange(desc(statistic)) %>%
+  write_feather(here("word_order_glm.feather"))
 ```
 
 ```{r}
@@ -175,7 +162,7 @@ cosines <- wkpd %>%
 ```
 
 
-```{r}
+```{r cogsci glm subset}
 
 wf_many_langs <- wf_df %>%
   group_by(feature) %>%
@@ -219,27 +206,4 @@ models %>%
   unnest() %>%
   filter(term == "cosine") %>%
   arrange(desc(statistic))
-```
-
-```{r imputation for glm}
-dendro_langs <- wf_sub_langs$language
-
-wk_clust_tree <- wkpd %>% 
-              filter(Language %in% dendro_langs) %>%
-              column_to_rownames(var = "Language") %>%
-              dist() %>%
-              hclust("ward.D2") 
-
-wk_clust_tree %>% plot(hang = -1)
-
-imputed_result <- wf_df %>%
-  select(language, feature, value) %>%
-  ungroup() %>% 
-  spread(feature, value) %>% 
-  column_to_rownames("language") %>%
-  sapply(as.factor) %>%
-  as_data_frame() %>%
-  MIMCA(ncp = 7, maxiter = 999)
-
-imputed_wf <- as.data.frame(imputed_result[[1]][[99]])
 ```
