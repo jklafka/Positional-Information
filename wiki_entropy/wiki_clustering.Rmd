@@ -24,6 +24,7 @@ library(magrittr)
 library(broom)
 library(here)
 library(feather)
+library(FactoMineR)
 
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -31,6 +32,37 @@ opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
                error = FALSE, cache = FALSE, tidy = FALSE)
 
 theme_set(theme_classic(base_size = 16))
+```
+
+```{r imputation and MCA}
+wiki_gs <- gs_title("Wikipedia_absolute")
+wkpd <- gs_read(wiki_gs) 
+LANGUAGES <- wkpd$Language
+
+FEATURES <- c(1:144)
+for (i in c(1:length(FEATURES))) {
+  FEATURES[i] <- paste(FEATURES[i], "A", sep = "")
+} #get all WALS features in correct syntax
+
+wf <- wals.feature(FEATURES) 
+
+# Phonology `1A`:`19A`
+# Morphology `20A`:`29A`
+# Nominal Categories `30A`:`57A`
+# Nominal Syntax `58A`:64A`
+# Verbal syntax `65A`:`80A`
+# Word order `81A`:`97A`, `143A`, `144A`
+# Simple clauses `98A`:`120A`
+# Complex sentences `121A`:`128A`
+# Lexicon `129A`:`138A`
+# Sign languages `139A`:`140A`
+
+phon_wf <- wf %>% 
+  filter(language %in% LANGUAGES) %>%
+  select(-wals.code, -latitude, -longitude, -glottocode) %>%
+  select(`1A`:`19A`, language)
+
+phon_wf <- phon_wf[rowSums(is.na(phon_wf)) < 15,]
 ```
 
 ```{r hierarchical clustering}
