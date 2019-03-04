@@ -25,6 +25,8 @@ library(broom)
 library(here)
 library(feather)
 library(FactoMineR)
+library(feather)
+library(janitor)
 
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -45,6 +47,10 @@ for (i in c(1:length(FEATURES))) {
 } #get all WALS features in correct syntax
 
 wf <- wals.feature(FEATURES) 
+fair_wf <- wf[rowSums(!is.na(wf)) > 50,] %>%
+  filter(language %in% LANGUAGES) %>%
+  select(-wals.code, -latitude, -longitude, -glottocode) %>%
+  as_data_frame()
 
 # Phonology `1A`:`19A`
 # Morphology `20A`:`29A`
@@ -57,12 +63,27 @@ wf <- wals.feature(FEATURES)
 # Lexicon `129A`:`138A`
 # Sign languages `139A`:`140A`
 
-phon_wf <- wf %>% 
+wa <- fair_wf %>% 
   filter(language %in% LANGUAGES) %>%
-  select(-wals.code, -latitude, -longitude, -glottocode) %>%
-  select(`1A`:`19A`, language)
+  select(`1A`:`19A`, language) %>%
+  group_by(language) %>%
+  slice(1) %>%
+  gather(feature, value, `1A`:`19A`) %>%
+  group_by(feature) %>%
+  mutate(value = factor(value)) %>%
+  ungroup() %>% 
+  spread(feature, value) %>% 
+  column_to_rownames("language") %>%
+  as.data.frame(stringsAsFactors = TRUE) %>%
+  clean_names() %>% 
+  lapply(factor) %>%
+  lapply(as.numeric) %>%
+  lapply(factor) %>%
+  as.data.frame() %>% 
+  MIMCA(ncp = 4, maxiter = 100000, threshold = 1e-1)
 
-phon_wf <- phon_wf[rowSums(is.na(phon_wf)) < 15,]
+wa <- as.data.frame(wa[[1]][[99]]) 
+wa$language <- unique(phon_wf$language)
 ```
 
 ```{r hierarchical clustering}
