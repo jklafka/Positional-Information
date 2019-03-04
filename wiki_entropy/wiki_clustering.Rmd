@@ -47,10 +47,12 @@ for (i in c(1:length(FEATURES))) {
 } #get all WALS features in correct syntax
 
 wf <- wals.feature(FEATURES) 
+
 fair_wf <- wf[rowSums(!is.na(wf)) > 50,] %>%
   filter(language %in% LANGUAGES) %>%
   select(-wals.code, -latitude, -longitude, -glottocode) %>%
-  as_data_frame()
+  as_tibble() %>%
+  clean_names()
 
 # Phonology `1A`:`19A`
 # Morphology `20A`:`29A`
@@ -65,21 +67,37 @@ fair_wf <- wf[rowSums(!is.na(wf)) > 50,] %>%
 
 wa <- fair_wf %>% 
   filter(language %in% LANGUAGES) %>%
-  select(`1A`:`19A`, language) %>%
+  select(x1a:x19a, language) %>%
   group_by(language) %>%
-  slice(1) %>%
-  gather(feature, value, `1A`:`19A`) %>%
-  group_by(feature) %>%
-  mutate(value = factor(value)) %>%
-  ungroup() %>% 
-  spread(feature, value) %>% 
-  column_to_rownames("language") %>%
-  sapply(as.factor) %>%
-  as_data_frame() %>%
-  MIMCA(ncp = 1, maxiter = 100000, threshold = 1e-1)
+  slice(1) 
 
-wa <- as.data.frame(wa[[1]][[99]]) 
-wa$language <- unique(phon_wf$language)
+wa_langs <- wa %>%
+  gather(measure, value, -language) %>%
+  group_by(language) %>%
+  summarise(value = mean(!is.na(value))) %>%
+  arrange(desc(value)) %>%
+  filter(value > .6) %>% 
+  pull(language)
+
+
+wa_sub <- wa %>%
+  filter(language %in% wa_langs) %>%
+  column_to_rownames("language")
+ # mutate_each(~as.numeric(as.factor(.x)))
+
+wa_out <- wa_sub %>%
+  select(-x14a:-x17a, -x9a,-x10a) %>%
+  slice(1:5) %>%
+  MIMCA(ncp = 1)
+
+wa_imputed <- wa_out[["res.MI"]] %>%
+  map(~mutate(.x, language = wa_langs)) %>%
+  bind_rows(.id = "boot") %>%
+  group_by(language, boot) %>%
+  gather(measure, value, -language, -boot) %>%
+  group_by(language, measure) %>%
+  summarise(value = mean(value, na.rm = T)) %>%
+  spread(measure, value)
 ```
 
 ```{r word order}
