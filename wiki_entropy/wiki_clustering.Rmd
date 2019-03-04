@@ -38,7 +38,7 @@ theme_set(theme_classic(base_size = 16))
 
 ```{r imputation and MCA}
 wiki_gs <- gs_title("Wikipedia_absolute")
-wkpd <- gs_read(wiki_gs) 
+wkpd <- gs_read(wiki_gs)
 LANGUAGES <- wkpd$Language
 
 FEATURES <- c(1:144)
@@ -74,48 +74,12 @@ wa <- fair_wf %>%
   ungroup() %>% 
   spread(feature, value) %>% 
   column_to_rownames("language") %>%
-  as.data.frame(stringsAsFactors = TRUE) %>%
-  clean_names() %>% 
-  lapply(factor) %>%
-  lapply(as.numeric) %>%
-  lapply(factor) %>%
-  as.data.frame() %>% 
-  MIMCA(ncp = 4, maxiter = 100000, threshold = 1e-1)
+  sapply(as.factor) %>%
+  as_data_frame() %>%
+  MIMCA(ncp = 1, maxiter = 100000, threshold = 1e-1)
 
 wa <- as.data.frame(wa[[1]][[99]]) 
 wa$language <- unique(phon_wf$language)
-```
-
-```{r hierarchical clustering}
-NUM_CLUSTERS <- 10
-
-##read in googlesheet
-wiki_gs <- gs_title("Wikipedia_absolute")
-wkpd <- gs_read(wiki_gs) 
-LANGUAGES <- wkpd$Language
-
-wkpd <- wkpd %>% 
-  as.data.frame() %>%
-  column_to_rownames(var = "Language")
-
-##do clustering
-wk_clust_tree <- wkpd %>% 
-              dist() %>%
-              hclust("ward.D2") 
-
-wk_clust_tree %>% plot(hang = -1)
-wk_clusters <- wk_clust_tree %>%
-              cutree(k = NUM_CLUSTERS)
-
-
-wk_clusters %>% 
-  t() %>%
-  as_data_frame() %>% 
-  t() %>%
-  as_data_frame(rownames = "language") %>%
-  rename(cluster = V1) %>%
-  arrange(cluster) %>% 
-  View()
 ```
 
 ```{r word order}
@@ -132,7 +96,8 @@ wf <- wals.feature(FEATURES)
 
 wo_wf <- wf %>% 
   filter(language %in% LANGUAGES) %>%
-  select(-wals.code, -latitude, -longitude, -glottocode, -`84A`) 
+  select(language, `82A`:`97A`) %>%
+  select(-`84A`)
 
 wo_df <- wo_wf[rowSums(is.na(wo_wf)) < 6,] %>%
   as_data_frame() %>%
@@ -182,6 +147,39 @@ models %>%
   filter(term == "cosine") %>%
   arrange(desc(statistic)) %>%
   write_feather(here("word_order_glm_absolute.feather"))
+```
+
+
+```{r hierarchical clustering}
+NUM_CLUSTERS <- 10
+
+##read in googlesheet
+wiki_gs <- gs_title("Wikipedia_absolute")
+wkpd <- gs_read(wiki_gs) 
+LANGUAGES <- wkpd$Language
+
+wkpd <- wkpd %>% 
+  as.data.frame() %>%
+  column_to_rownames(var = "Language")
+
+##do clustering
+wk_clust_tree <- wkpd %>% 
+              dist() %>%
+              hclust("ward.D2") 
+
+wk_clust_tree %>% plot(hang = -1)
+wk_clusters <- wk_clust_tree %>%
+              cutree(k = NUM_CLUSTERS)
+
+
+wk_clusters %>% 
+  t() %>%
+  as_data_frame() %>% 
+  t() %>%
+  as_data_frame(rownames = "language") %>%
+  rename(cluster = V1) %>%
+  arrange(cluster) %>% 
+  View()
 ```
 
 ```{r}
