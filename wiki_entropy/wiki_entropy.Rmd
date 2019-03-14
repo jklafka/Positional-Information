@@ -82,8 +82,6 @@ estimate_slope_normal <- function(df, first_pos, second_pos) {
 
 relative estimation
 ```{r}
-
-
 df <- read_csv("wiki_df.csv")
 
 df_tokens <- extract_wiki_tokens(6, 50, df)

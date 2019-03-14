@@ -54,6 +54,22 @@ fair_wf <- wf[rowSums(!is.na(wf)) > 50,] %>%
   as_tibble() %>%
   clean_names()
 
+mean_wf <- fair_wf
+
+mean_impute <- function(col) {
+  counts <- col %>%
+    remove_missing() %>%
+    unlist() %>%
+    table() %>%
+    sort(decreasing = T) 
+  col[is.na(col),] <- labels(counts[1])
+  return(col)
+}
+
+for (i in 1:ncol(mean_wf)) {
+  mean_wf[, i] <- mean_impute(mean_wf[, i])
+}
+
 # Phonology `1A`:`19A`
 # Morphology `20A`:`29A`
 # Nominal Categories `30A`:`57A`
@@ -66,8 +82,7 @@ fair_wf <- wf[rowSums(!is.na(wf)) > 50,] %>%
 # Sign languages `139A`:`140A`
 
 wa <- fair_wf %>% 
-  filter(language %in% LANGUAGES) %>%
-  select(x1a:x19a, language) %>%
+  select(x1a:x10a, language) %>%
   group_by(language) %>%
   slice(1) 
 
@@ -82,12 +97,11 @@ wa_langs <- wa %>%
 
 wa_sub <- wa %>%
   filter(language %in% wa_langs) %>%
-  column_to_rownames("language")
+  column_to_rownames("language") %>%
+  ungroup()
  # mutate_each(~as.numeric(as.factor(.x)))
 
 wa_out <- wa_sub %>%
-  select(-x14a:-x17a, -x9a,-x10a) %>%
-  slice(1:5) %>%
   MIMCA(ncp = 1)
 
 wa_imputed <- wa_out[["res.MI"]] %>%
