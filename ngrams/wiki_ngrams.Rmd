@@ -1,0 +1,34 @@
+---
+title: "Wikipedia ngrams Entropy Analysis"
+author: "Josef Klafka and Dan Yurovsky"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: false
+    number_sections: false
+    theme: lumen
+    toc_float: false
+    code_folding: show 
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(tidytext)
+library(googlesheets)
+library(here)
+library(feather)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r getting gsheets}
+wiki_gs <- gs_title("Wikipedia_relative5")
+w1 <- gs_read(wiki_gs) %>% arrange(Language)
+wiki_gs <- gs_title("Wikipedia_relative_2grams")
+w2 <- gs_read(wiki_gs) %>% arrange(Language)
+
+w1 %>% 
+  filter(Language %in% w2$Language) 
+  
+```
