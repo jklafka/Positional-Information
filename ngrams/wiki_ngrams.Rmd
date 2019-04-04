@@ -17,18 +17,62 @@ library(tidytext)
 library(googlesheets)
 library(here)
 library(feather)
+library(magrittr)
+library(reshape2)
 
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
 ```{r getting gsheets}
-wiki_gs <- gs_title("Wikipedia_relative5")
-w1 <- gs_read(wiki_gs) %>% arrange(Language)
-wiki_gs <- gs_title("Wikipedia_relative_2grams")
-w2 <- gs_read(wiki_gs) %>% arrange(Language)
+# wiki_gs <- gs_title("Wikipedia_relative5")
+# w1 <- gs_read(wiki_gs) %>% arrange(Language)
+# wiki_gs <- gs_title("Wikipedia_relative_2grams")
+# w2 <- gs_read(wiki_gs) %>% arrange(Language)
+# wiki_gs <- gs_title("Wikipedia_relative_3grams")
+# w3 <- gs_read(wiki_gs) %>% arrange(Language)
+# wiki_gs <- gs_title("Wikipedia_relative_4grams")
+# w4 <- gs_read(wiki_gs) %>% arrange(Language)
+
+w1 <- read_feather(here("relative_unigrams.feather"))
+w2 <- read_feather(here("relative_bigrams.feather"))
+w3 <- read_feather(here("relative_trigrams.feather"))
+w4 <- read_feather(here("relative_quadgrams.feather"))
+
+get_agg <- function(ws) {
+ ws %>%
+  mutate(agg = abs(Slope1) + abs(Slope2) + abs(Slope3) + abs(Slope4) + abs(Slope5)) %>%
+  select(Language, agg)
+}
+
+w1 %<>% 
+  get_agg() %>%
+  rename(unigram = agg)
+w2 %<>%
+  get_agg() %>%
+  rename(bigram = agg)
+w3 %<>%
+  get_agg() %>%
+  rename(trigram = agg)
+w4 %<>%
+  get_agg() %>%
+  rename(quadgram = agg)
 
 w1 %>% 
-  filter(Language %in% w2$Language) 
-  
+  left_join(w2) %>%
+  left_join(w3) %>%
+  left_join(w4) %>%
+  remove_missing() %>%
+  slice(1:5) %>%
+  melt(id.vars = "Language") %>%
+  ggplot(aes(variable, value, color=Language)) + 
+  geom_point() +
+  geom_line()
+
+
+
+
+
+
+
 ```
