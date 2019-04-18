@@ -23,31 +23,19 @@ library(lme4)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
-```{r set up data}
-w1 %>% 
-  left_join(w2) %>%
-  left_join(w3) %>%
-  left_join(w4) %>%
-  remove_missing() %>%
-  slice(1:5) %>%
-  melt(id.vars = "Language") %>%
-  ggplot(aes(variable, value, color=Language)) + 
-  geom_point() +
-  geom_line()
-```
-
 ```{r Joe's regression}
 # log(sum(abs(s_i))) = language * type * gram + (source | type)
 
 # let's just try log(sum(abs(s_i))) = language + gram since type/source are all the same atm
 ## why would there be an interaction between language and gram?
+## shouldn't the final model be more like
+# log(sum(abs(s_i))) = language * type + gram * type + (source | type)
+
 wn <- read_feather(here("Data/wiki_ngrams.feather"))
 
-simple_glm <- glm(data = wn, formula = s_i ~ gram + Language)
-
+simple_glm <- glm(data = wn, formula = log(s_i) ~ gram + Language)
+summary(simple_glm)
 ```
-
 
 ```{r get data}
 w1 <- read_feather(here("Data/relative_unigrams.feather"))
@@ -82,7 +70,17 @@ wn <- w1 %>%
   melt(id.vars = "Language") %>% 
   rename(gram = variable, s_i = value)
 
-wn %>% write_feather(here("Data/wiki_ngrams.feather"))
+w1 %>% 
+  left_join(w2) %>%
+  left_join(w3) %>%
+  left_join(w4) %>%
+  remove_missing() %>%
+  slice(1:5) %>%
+  melt(id.vars = "Language") %>%
+  ggplot(aes(variable, value, color=Language)) + 
+  geom_point() +
+  geom_line()
+
 ```
 
 

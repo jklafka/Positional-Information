@@ -13,10 +13,32 @@ library(entropy)
 library(magrittr)
 library(feather)
 library(here)
-
+library(ggthemes)
 library(childesr)
 
 knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r plotting for Monday}
+df <- read_feather(here("Data/childes.feather"))
+
+label_data <- data_frame(length = 8, language = "Spanish", gram_order = 6,
+                         speaker_role = c("Adult", "Child"), empirical_entropy = c(9,10.25))
+
+df %>% 
+  filter(language %in% c("English", "Mandarin", "Spanish"), gram == "bigram", length %in% c(4, 6, 8)) %>%
+  ggplot(aes(x = gram_order, y = empirical_entropy, color = speaker_role, label = speaker_role)) + 
+  facet_grid(language ~ length, scales = "free") + 
+  xlab("Gram position") + 
+  ylab("Positional entropy") + 
+  geom_pointrange(size = .25, aes(ymin = ci_lower, ymax = ci_upper)) + 
+  geom_line(size = .25) + 
+  theme_classic(base_size = 10) + 
+  scale_color_ptol() + 
+  theme(legend.position = "nones") + 
+  geom_text(data = label_data)
+
 ```
 
 ```{r corpora}
@@ -344,33 +366,6 @@ ngram_entropy <- function(utterances, target_length, N) {
        summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
   mutate(length = target_length)
 }
-```
-
-```{r childes}
-utterances <- get_utterances(corpus = "Plunkett") %>% 
-  filter(speaker_role != "Target_Child") %>%
-  rename(words = gloss)
-
-# unigrams to check against previous results
-unigrams <- map(2:10, ~ngram_entropy(utterances, .x, 1)) %>% 
-  bind_rows()
-
-# bigrams
-bigrams <- map(3:10, ~ngram_entropy(utterances, .x, 2)) %>% 
-  bind_rows()
-
-# trigrams
-trigrams <- map(4:10, ~ngram_entropy(utterances, .x, 3)) %>% 
-  bind_rows()
-
-# quadgrams
-quadgrams <- map(5:10, ~ngram_entropy(utterances, .x, 4)) %>%
-  bind_rows()
-
-unigrams %>%
-  bind_rows(bigrams, trigrams, quadgrams) %>%
-  mutate(Language = "Danish") %>%
-  write_feather("CHILDES/danish_adult.feather")
 ```
 
 ```{r switchboard}
