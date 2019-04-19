@@ -184,7 +184,7 @@ extract_stem_tokens <- function(role, min_length, max_length, utterances) {
     filter(length >= min_length) %>%
     filter(length <= max_length) %>%
     mutate(utterance_id = 1:n()) %>%
-    unnest_tokens(word, stem, token = stringr::str_split, pattern = " +") %>%
+    unnest_tokens(word, stem, token = stringr::str_split, pattern = "[ +]+") %>%
     group_by(utterance_id) %>%
     mutate(word_order = 1:n()) %>%
     group_by(length, word_order, word) %>%
@@ -209,7 +209,7 @@ extract_gloss_tokens <- function(role,  min_length, max_length,  utterances) {
     filter(length >= min_length) %>%
     filter(length <= max_length) %>%
     mutate(utterance_id = 1:n()) %>%
-    unnest_tokens(word, gloss, token = stringr::str_split, pattern = " +") %>%
+    unnest_tokens(word, gloss, token = stringr::str_split, pattern = "[ +]+") %>%
     group_by(utterance_id) %>%
     mutate(word_order = 1:n()) %>%
     group_by(length, word_order, word) %>%

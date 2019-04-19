@@ -23,11 +23,11 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r plotting for Monday}
 df <- read_feather(here("Data/childes.feather"))
 
-label_data <- data_frame(length = 8, language = "Spanish", gram_order = 6,
-                         speaker_role = c("Adult", "Child"), empirical_entropy = c(9,10.25))
+label_data <- data_frame(length = 9, language = "Spanish", gram_order = 6,
+                         speaker_role = c("Adult", "Child"), empirical_entropy = c(9.25,10.25))
 
 df %>% 
-  filter(language %in% c("English", "Mandarin", "Spanish"), gram == "bigram", length %in% c(4, 6, 8)) %>%
+  filter(language %in% c("English", "Mandarin", "Spanish"), gram == "trigram", length %in% c(5, 7, 9)) %>%
   ggplot(aes(x = gram_order, y = empirical_entropy, color = speaker_role, label = speaker_role)) + 
   facet_grid(language ~ length, scales = "free") + 
   xlab("Gram position") + 

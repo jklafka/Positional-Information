@@ -45,6 +45,32 @@ okayama_utterances <- get_utterances(corpus = "Okayama") #use gloss
 zhou_utterances <- get_utterances(corpus = "ZhouDinner") #use stem, NOT gloss
 ```
 
+```{r make plots for joint lab meeting}
+df <- prov_utterances %>%
+  extract_stem_tokens(role = "adult", min_length = 5, max_length = 9)
+
+prov_child_tokens <- extract_stem_tokens("child", 5, 9, prov_utterances) 
+prov_adult_tokens <- extract_stem_tokens("not child",5, 9, prov_utterances) 
+
+prov_child_entropies <-  map_df(c(5,7,9), ~unigram_entropy(.x, prov_child_tokens)) %>%
+  mutate(language = "English", person = "Child")
+prov_adult_entropies <-  map_df(c(5,7,9), ~unigram_entropy(.x, prov_adult_tokens)) %>%
+  mutate(language = "English", person = "Adult")
+
+prov_entropies <- prov_child_entropies %>%
+  bind_rows(prov_adult_entropies)
+
+prov_entropies %>% ggplot(aes(x = word_order, y = empirical_entropy, color = person, label = person)) + 
+  facet_wrap(~ length) + 
+  xlab("Word position") + 
+  ylab("Positional entropy") + 
+  geom_pointrange(size = .25, aes(ymin = ci_lower, ymax = ci_upper)) + 
+  geom_line(size = .25) + 
+  theme_classic(base_size = 10) + 
+  scale_color_ptol() + 
+  theme(legend.position = "nones") + 
+  geom_dl(aes(label = person), method = "last.points") 
+```
 bootstrap entropy slopes
 ```{r slope bootstrapping}
 
