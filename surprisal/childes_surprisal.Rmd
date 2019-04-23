@@ -1,0 +1,563 @@
+---
+title: Positional entropy, conditional entropy and mutual information in English CHILDES corpora
+author: Josef Klafka and Dan Yurovsky 
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: false
+    number_sections: false
+    theme: lumen
+    toc_float: false
+    code_folding: show 
+---
+
+```{r setup, include = FALSE}
+# load packages
+library(knitr)
+library(tidyverse)
+library(directlabels)
+library(childesr) #data
+library(tidytext)
+library(entropy)
+library(tidyboot)
+library(dplyr)
+library(tokenizers)
+library(gtools)
+library(here)
+
+opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
+               error = FALSE, cache = FALSE, tidy = FALSE)
+
+theme_set(theme_classic(base_size = 16))
+```
+
+Get utterances
+```{r get_utterances}
+prov_utterances <- get_utterances(corpus = "Providence") #stem or gloss
+```
+
+```{r}
+adult_utterances <- prov_utterances %>%
+  filter(speaker_role == "Target_Child") %>% 
+  mutate(length = str_count(gloss, pattern = "[ +]+") + 1) %>%
+  mutate(utterance_id = 1:n()) %>%
+  unnest_tokens(word, gloss) %>%
+  group_by(utterance_id) %>%
+  mutate(word_order = 1:n())
+```
+
+```{r unigrams}
+adult_unigrams <- adult_utterances %>%
+  group_by(word) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(p = n / sum(n))
+  
+adult_surprisals <- adult_utterances %>%
+  left_join(adult_unigrams) %>%
+  mutate(s = -log(p)) %>%
+  group_by(length, word_order) %>%
+  summarise(s = mean(s))
+
+adult_surprisals %>%
+  filter(length %in% c(5, 7, 9, 11, 13, 15)) %>%
+  ggplot(aes(x = word_order, y = s)) + 
+  facet_wrap(~ length) + 
+  geom_point() + 
+  geom_smooth(se = F)
+```
+
+
+```{r bigrams}
+adult_bigrams <- adult_utterances %>%
+  group_by(utterance_id) %>%
+  mutate(lag_word = lag(word)) %>%
+  group_by(lag_word, word) %>%
+  count() %>%
+  filter(!is.na(lag_word)) %>%
+  ungroup() %>%
+  mutate(joint_p = n / sum(n)) %>%
+  select(-n) %>%
+  left_join(adult_unigrams, by = c("lag_word" = "word")) %>%
+  mutate(cond_p = joint_p / p) %>%
+  select(-n, -p)
+
+
+bigram_surprisals_prep <- adult_utterances %>%
+  group_by(utterance_id) %>%
+  mutate(lag_word = lag(word)) %>%
+  left_join(adult_bigrams) 
+
+
+bigram_surprisals <- bigram_surprisals_prep %>%
+  filter(!is.na(lag_word)) %>%
+  mutate(s = -log(cond_p)) %>%
+  group_by(length, word_order) %>%
+  summarise(s = mean(s))
+
+bigram_surprisals_nonnull <- bigram_surprisals_prep %>%
+  filter(!is.na(lag_word)) %>%
+  mutate(s = -log(cond_p)) %>%
+  group_by(length, word_order) %>%
+  summarise(s = mean(s))
+
+bigram_surprisals %>%
+  filter(length %in% c(5, 7, 9, 11, 13, 15)) %>%
+  ggplot(aes(x = word_order, y = s)) + 
+  facet_wrap(~ length) + 
+  geom_point() + 
+  geom_smooth(se = F)
+
+
+```
+
+
+```{r make plots for joint lab meeting}
+df <- prov_utterances %>%
+  extract_stem_tokens(role = "adult", min_length = 5, max_length = 9)
+
+prov_child_tokens <- extract_stem_tokens("child", 5, 9, prov_utterances) 
+prov_adult_tokens <- extract_stem_tokens("not child",5, 9, prov_utterances) 
+
+prov_child_entropies <-  map_df(c(5,7,9), ~unigram_entropy(.x, prov_child_tokens)) %>%
+  mutate(language = "English", person = "Child")
+prov_adult_entropies <-  map_df(c(5,7,9), ~unigram_entropy(.x, prov_adult_tokens)) %>%
+  mutate(language = "English", person = "Adult")
+
+prov_entropies <- prov_child_entropies %>%
+  bind_rows(prov_adult_entropies)
+
+prov_entropies %>% ggplot(aes(x = word_order, y = empirical_entropy, color = person, label = person)) + 
+  facet_wrap(~ length) + 
+  xlab("Word position") + 
+  ylab("Positional entropy") + 
+  geom_pointrange(size = .25, aes(ymin = ci_lower, ymax = ci_upper)) + 
+  geom_line(size = .25) + 
+  theme_classic(base_size = 10) + 
+  scale_color_ptol() + 
+  theme(legend.position = "nones") + 
+  geom_dl(aes(label = person), method = "last.points") 
+```
+bootstrap entropy slopes
+```{r slope bootstrapping}
+
+#extract tokens to be used for slope bootstrapping
+extract_stem_tokens <- function(role, target_length, utterances) {
+  
+  if (role == "child") {
+    sub_utterances <- utterances %>%
+      filter(speaker_role == "Target_Child") %>%
+      mutate(length = str_count(stem, pattern = " +") + 1)
+
+} else {
+    sub_utterances <- utterances %>%
+      filter(speaker_role != "Target_Child") %>%
+      mutate(length = str_count(stem, pattern = " +") + 1)
+}
+  
+  tokens <- sub_utterances %>%
+    filter(length == target_length) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, stem) %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n()) %>%
+    group_by(word_order, word) %>%
+    filter(word_order <= length)
+   
+  tokens %>%
+    summarise(n = n()) %>%
+    tidyboot(summary_function = function(x) x %>% 
+               summarise(entropy = entropy(n, unit = "log2")),
+             statistics_functions = function(x) x %>%
+             summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
+    mutate(role = role, length = target_length)
+}
+
+extract_gloss_tokens <- function(role, target_length, utterances) {
+  
+  if (role == "child") {
+    sub_utterances <- utterances %>%
+      filter(speaker_role == "Target_Child") %>%
+      mutate(length = str_count(gloss, pattern = " +") + 1)
+
+} else {
+    sub_utterances <- utterances %>%
+      filter(speaker_role != "Target_Child") %>%
+      mutate(length = str_count(gloss, pattern = " +") + 1)
+}
+
+  tokens <- sub_utterances %>%
+    filter(length == target_length) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, gloss) %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n()) %>%
+    group_by(word_order, word) %>%
+    filter(word_order <= length)
+   
+  tokens %>%
+    summarise(n = n()) %>%
+    tidyboot(summary_function = function(x) x %>% 
+               summarise(entropy = entropy(n, unit = "log2")),
+             statistics_functions = function(x) x %>%
+             summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
+    mutate(role = role, length = target_length)
+}
+ 
+#compute the unigram entropy measure from the counts of each word in each position
+unigram_entropy <- function(tokens) {
+     
+  tokens %>%
+    group_by(word_order, word) %>%
+    summarise(n = n()) %>%
+    tidyboot(summary_function = function(x) x %>% 
+               summarise(entropy = entropy(n, unit = "log2")),
+             statistics_functions = function(x) x %>%
+             summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
+    mutate(role = role, length = sen_length)
+}
+
+start_slope <- function(df) {
+ 
+ df %>%
+    filter(word_order %in% c(1,2)) %>%
+    sample_frac(1, replace = T) %>%
+    group_by(length, word_order) %>%
+    summarise(entropy = entropy(n, unit = "log2")) %>%
+    spread(word_order, entropy) %>%
+    ungroup() %>%
+    mutate(diff = `2` - `1`) %>%
+    summarise(diff = mean(diff)) %>%
+    pull(diff)
+
+}
+
+second_slope <- function(df) {
+ 
+ df %>%
+    ungroup() %>%
+    mutate(word_order %in% c(2, 3)) %>%
+    filter(word_order > 0) %>%
+    group_by(length, word_order) %>%
+    sample_frac(1, replace = T) %>%
+    group_by(length, word_order) %>%
+    summarise(entropy = entropy(n, unit = "log2")) %>%
+    spread(word_order, entropy) %>%
+    ungroup() %>%
+    mutate(diff = `3` - `2`) %>%
+    summarise(diff = mean(diff)) %>%
+    pull(diff)
+
+}
+
+#note this measurement only makes sense if utterance length is at least 6
+mid_slope <- function(df) {
+ 
+ df %>%
+    ungroup() %>%
+    mutate(word_order = if_else(word_order == length-2, 2,
+                                if_else(word_order == 3, 1,
+                                        0))) %>%
+    filter(word_order > 0) %>%
+    group_by(length, word_order) %>%
+    sample_frac(1, replace = T) %>%
+    group_by(length, word_order) %>%
+    summarise(entropy = entropy(n, unit = "log2")) %>%
+    spread(word_order, entropy) %>%
+    ungroup() %>%
+    mutate(diff = `2` - `1`) %>%
+    summarise(diff = mean(diff)) %>%
+    pull(diff)
+
+}
+
+penult_slope <- function(df) {
+ 
+ df %>%
+    ungroup() %>%
+    mutate(word_order = if_else(word_order == length-1, 2,
+                                if_else(word_order == length -2, 1,
+                                        0))) %>%
+    filter(word_order > 0) %>%
+    group_by(length, word_order) %>%
+    sample_frac(1, replace = T) %>%
+    group_by(length, word_order) %>%
+    summarise(entropy = entropy(n, unit = "log2")) %>%
+    spread(word_order, entropy) %>%
+    ungroup() %>%
+    mutate(diff = `2` - `1`) %>%
+    summarise(diff = mean(diff)) %>%
+    pull(diff)
+
+}
+
+
+
+end_slope <- function(df) {
+ 
+ df %>%
+    ungroup() %>%
+    mutate(word_order = if_else(word_order == length, 2,
+                                if_else(word_order == length -1 , 1,
+                                        0))) %>%
+    filter(word_order > 0) %>%
+    group_by(length, word_order) %>%
+    sample_frac(1, replace = T) %>%
+    group_by(length, word_order) %>%
+    summarise(entropy = entropy(n, unit = "log2")) %>%
+    spread(word_order, entropy) %>%
+    ungroup() %>%
+    mutate(diff = `2` - `1`) %>%
+    summarise(diff = mean(diff)) %>%
+    pull(diff)
+
+}
+
+
+get_slopes <- function(role, target_length, utterances, stemgloss) {
+  
+  if (stemgloss == "stem") {
+    tokens <- extract_stem_tokens(role, target_length, utterances)  
+  } else {
+    tokens <- extract_tokens(role, target_length, target_length, utterances)
+  }
+  
+  start_slopes <- replicate(1000, start_slope(tokens)) %>% 
+    as_data_frame() %>%
+    summarise(mean = mean(value), ci_upper = quantile(value, .975), 
+              ci_lower = quantile(value, .025))
+  
+  second_slopes <- replicate(1000, second_slope(tokens)) %>% 
+    as_data_frame() %>%
+    summarise(mean = mean(value), ci_upper = quantile(value, .975), 
+              ci_lower = quantile(value, .025))
+    
+  mid_slopes <- replicate(1000, mid_slope(tokens)) %>% 
+    as_data_frame() %>%
+    summarise(mean = mean(value), ci_upper = quantile(value, .975), 
+              ci_lower = quantile(value, .025))
+    
+  penult_slopes <- replicate(1000, penult_slope(tokens)) %>% 
+    as_data_frame() %>%
+    summarise(mean = mean(value), ci_upper = quantile(value, .975), 
+              ci_lower = quantile(value, .025))
+    
+  end_slopes <- replicate(1000, end_slope(tokens)) %>% 
+    as_data_frame() %>%
+    summarise(mean = mean(value), ci_upper = quantile(value, .975), 
+              ci_lower = quantile(value, .025))
+  
+  rbind(start_slopes, second_slopes, mid_slopes, penult_slopes, end_slopes)
+}
+```
+
+Compute Providence Corpus Estimates
+```{r calc_pos_entropy}
+tokens <- extract_stem_tokens("not child", 6, 30, prov_utterances)
+
+
+get_counts <- function(role, sen_length, utterances) {
+  
+  if(role == "Target_Child") {
+    sub_utterances <- utterances %>%
+      filter(speaker_role == "Target_Child") %>%
+      mutate(length = str_count(gloss, " ") + 1) # uses stems of words, not original words
+  } else {
+     sub_utterances <- utterances %>%
+      filter(speaker_role != "Target_Child") %>%
+      mutate(length = str_count(gloss, " ") + 1)
+  }
+
+  sub_utterances %>%
+    filter(length == sen_length) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, gloss) %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n()) %>%
+    filter(word_order <= length)
+}
+
+get_mean_lengths <- function(role, sen_length, utterances) {
+  
+  counts <- get_counts(role, sen_length, utterances)
+  
+  lens <- counts %>% 
+    group_by(word_order, word) %>% 
+    mutate(word_len = str_length(word)) 
+  
+  lens$word_len %>% 
+    aggregate(list(lens$word_order), mean)
+}
+
+get_entropies <- function(role, sen_length, utterances) {
+  
+  if(role == "Target_Child") {
+    sub_utterances <- utterances %>%
+      filter(speaker_role == "Target_Child") %>%
+      mutate(length = str_count(gloss, " ") + 1) # uses stems of words, not original words
+  } else {
+     sub_utterances <- utterances %>%
+      filter(speaker_role != "Target_Child") %>%
+      mutate(length = str_count(gloss, " ") + 1)
+  }
+
+  tokens <- sub_utterances %>%
+    filter(length == sen_length) %>%
+    mutate(utterance_id = 1:n()) %>%
+    unnest_tokens(word, gloss) %>%
+    group_by(utterance_id) %>%
+    mutate(word_order = 1:n()) %>%
+    group_by(word_order, word) %>%
+    filter(word_order <= length)
+   
+  tokens %>%
+    summarise(n = n()) %>%
+    tidyboot(summary_function = function(x) x %>% 
+               summarise(entropy = entropy(n, unit = "log2")),
+             statistics_functions = function(x) x %>%
+             summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
+    mutate(role = role, length = sen_length)
+}
+
+tokens %>%
+    filter(word_order %in% c(1,2)) %>%
+    dplyr::group_by(length, word_order) %>%
+    dplyr::summarise(entropy = entropy(n, unit = "log2"), n = n()) %>%
+    spread(word_order, entropy) %>%
+    group_by(length) %>%
+    mutate(diff = `2` - `1`) %>%
+  ggplot(aes(x = length, y = diff)) +
+  geom_point(aes(size = n)) +
+  geom_smooth(se = F) +
+  scale_x_log10() #log length stats
+
+entropies <- map(2:10, ~get_entropies("not child", .x, brown_utterances)) %>%
+  bind_rows()
+
+ggplot(entropies, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F)
+
+
+entropies_child <- map(2:10, ~ get_entropies("Target_Child", .x, prov_utterances)) %>%
+  bind_rows()
+
+ggplot(entropies_child, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper)) +
+  facet_wrap(~ length) + 
+  geom_pointrange() +
+  geom_smooth(se = F)
+
+entropies_all <- bind_rows(entropies, entropies_child)
+
+ggplot(entropies_all, aes(x = word_order, y = empirical_entropy,
+                      ymin = ci_lower, ymax = ci_upper, color = role)) +
+  facet_wrap(~ length) + 
+  geom_pointrange(position = position_dodge(.25)) +
+  geom_smooth(se = F) +
+  ggtitle("Child and Adult Positional Entropy vs. Word Position (Providence corpus)")
+
+```
+
+English Mutual Information
+```{r mutual_information}
+
+#compute the pairwise Mutual Information measure between all pairs of word positions
+all_pairwise_mi <- function(df) {
+  max_len <- max(df$word_order)
+  
+  combs <- combn(1:max_len, 2, simplify = F) 
+  
+  map(combs, ~position_mi(df, .x[1], .x[2])) %>%
+    bind_rows()
+  
+}
+
+#perform the actual Mutual Information computation
+position_mi <- function(df, pos1, pos2) {
+  
+  mi <- df %>%
+    filter(word_order %in% c(pos1, pos2)) %>%
+    mutate(word_order = factor(word_order, labels = c("first", "second"))) %>%
+    spread(word_order, word) %>%
+    group_by(first, second) %>%
+    summarise(n = n()) %>%
+    spread(second, n, fill = 0) %>% 
+    ungroup() %>%
+    select(-first) %>%
+    mi.empirical(., unit = "log2")
+  
+  data_frame(length = max(df$word_order), pos1 = pos1, pos2 = pos2, mi = mi)
+}
+
+counts <- map(2:6, ~get_counts("not child", .x, prov_utterances))
+
+mi <- map(counts, all_pairwise_mi) %>% bind_rows()
+
+ggplot(mi, aes(x = pos2, y = mi, color = as.factor(pos1))) + 
+  facet_wrap(~length) + 
+  geom_point() + 
+  geom_line()
+
+
+ggplot(mi, aes(x = pos1, y = mi, color = as.factor(pos2))) + 
+  facet_wrap(~length) + 
+  geom_point() + 
+  geom_line()
+
+```
+
+English Conditional Entropy
+```{r conditional_entropy}
+#compute all Conditional Entropy from all one-way pairs of word positions
+all_pairwise_ce <- function(df) {
+  max_len <- max(df$word_order)
+
+  perms <- permutations(max_len, 2, 1:max_len, repeats.allowed = F) 
+  combs <-  setNames(split(perms, seq(nrow(perms))), rownames(perms))
+  
+  map(combs, ~conditional_entropy(df, .x[1], .x[2])) %>%
+    bind_rows()
+  
+}
+
+#perform the actual Conditional Entropy calculation
+get_ce <- function(df, X, Y) { #Y is conditioning variable
+  
+  d <- df %>%
+    filter(word_order %in% c(X, Y)) %>%
+    mutate(word_order = factor(word_order, labels = c("first", "second"))) %>%
+    spread(word_order, word) 
+  
+  ent <- d$first %>% table() %>% as.vector() %>% entropy.empirical(unit="log2")
+
+  mi <- d %>% 
+    group_by(first, second) %>%
+    summarise(n = n()) %>%
+    spread(second, n, fill = 0) %>% 
+    ungroup() %>%
+    select(-first) %>%
+    mi.empirical(., unit = "log2")
+
+  data_frame(length = max(df$word_order), X = X, Y = Y, mi = mi, ent = ent, ce = ent - mi)
+}
+
+counts <- map(2:8, ~get_counts("not child", .x, prov_utterances))
+
+ce <- map(counts, all_conditional_entropy) %>% bind_rows()
+
+ggplot(ce, aes(x = X, y = ce, color = as.factor(X))) + 
+  facet_wrap(~ length) + 
+  geom_point() + 
+  geom_line()
+
+
+ggplot(ce, aes(x = X, y = ce, color = as.factor(Y))) + 
+  facet_wrap(~ length) + 
+  geom_point() + 
+  geom_line() + 
+  ggtitle("Conditional entropy vs. conditioned random variable")
+
+```
