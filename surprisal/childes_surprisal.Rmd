@@ -126,32 +126,28 @@ adult_trigrams <- adult_utterances %>%
   select(-n) %>%
   left_join(adult_bigrams, by = c("lag_word2" = "lag_word", "lag_word1" = "word")) %>%
   mutate(tri_cond_p = tri_joint_p / joint_p) %>%
-  select(-cond_p, -joint_p)
+  select(-joint_p, -tri_joint_p) 
 
 
 trigram_surprisals_prep <- adult_utterances %>%
   group_by(utterance_id) %>%
   mutate(lag_word1 = lag(word)) %>%
   mutate(lag_word2 = lag(lag_word1)) %>%
-  left_join(adult_trigrams) %>%
-  left_join(adult_bigrams) %>%
+  left_join(adult_trigrams) %>% #add bigram and trigram conditionals
   left_join(adult_unigrams)
 
 
-trigram_surprisals <- trigram_surprisals_prep %>%
-  filter(!is.na(lag_word)) %>%
-  mutate(s = -log(cond_p)) %>%
-  group_by(length, word_order) %>%
-  summarise(s = mean(s)) %>%
-  filter(word_order <= length)
-
 trigram_surprisals_nonnull <- trigram_surprisals_prep %>%
-  mutate(s = ifelse(is.na(lag_word), -log(p), -log(cond_p))) %>%
+  mutate(s = ifelse(is.na(lag_word1), # check if it's not the first word
+                    ifelse(is.na(lag_word2), # check if not the second word
+                           -log(p), # trigram if third or beyond
+                           -log(cond_p)), # bigram if second word
+                    -log(tri_cond_p))) %>% # unigram if first word
   group_by(length, word_order) %>%
   summarise(s = mean(s)) %>% 
   filter(word_order <= length)
 
-bigram_surprisals_nonnull %>%
+trigram_surprisals_nonnull %>%
   filter(length %in% c(5, 7, 9, 11, 13, 15)) %>%
   ggplot(aes(x = word_order, y = s)) + 
   facet_wrap(~ length) + 
