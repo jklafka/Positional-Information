@@ -8,14 +8,16 @@ library(tidyverse)
 library(stringr)
 library(feather)
 library(here)
+library(tidytext)
 
 NEW_DIR = here("BNC_parsed")
 ```
 
+You want to download the file from (http://ota.ox.ac.uk/desc/2554). Move it to the same directory as this .Rmd file
+
 ```{r parse_bnc, eval = F}  
-files <- list.files(here("BNC/Texts"), "*.xml", full.names = T, recursive = T)
 
-
+files <- list.files(here("bnc/Texts"), "*.xml", full.names = T, recursive = T)
 
 if(!dir.exists(NEW_DIR))
   dir.create(NEW_DIR)
@@ -34,12 +36,10 @@ parse_BNC <- function(file) {
 
   print(file)
   
-  system(paste0("xsltproc BNC/XML/Scripts/justTheWords.xsl ", file, " > ", newname))
+  system(paste0("xsltproc bnc/XML/Scripts/justTheWords.xsl ", file, " > ", newname))
 }
 
 map(files, parse_BNC)
-
-write_feather(txt, "switchboard/switchboard.feather")
 ```
 
 ```{r read_parsed_bnc}
@@ -55,10 +55,10 @@ write_feather(txt, "bnc/bnc.feather")
 ```
 
 ```{r post_process_bnc}
-bnc_tokens <- read_feather(here("../bnc/bnc.feather")) %>%
+bnc_tokens <- read_feather(here("bnc/bnc.feather")) %>%
   mutate(length = str_count(value, pattern = " +") + 1) %>% 
   mutate(utterance_id = 1:n()) %>%
-  unnest_tokens(word, value, token = stringr::str_split, pattern = " +") %>%
+  unnest_tokens(word, value, token = stringr::str_split, pattern = "[ +]+") %>%
   group_by(utterance_id) %>%
   mutate(word_order = 1:n()) 
 
