@@ -24,6 +24,8 @@ library(tokenizers)
 library(gtools)
 library(here)
 library(feather)
+library(gridExtra)
+library(tidyboot)
 
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -48,8 +50,9 @@ switch_unigrams <- switchboard %>%
 switch_surprisals <- switchboard %>%
   left_join(switch_unigrams) %>%
   mutate(s = -log(p)) %>%
-  group_by(length, word_order) %>%
-  summarise(s = mean(s)) 
+  group_by(length, word_order) %>% 
+  summarise(s = mean(s))
+  # tidyboot_mean(s)
 
 switch_surprisals %>%
   filter(length %in% c(3, 5, 7)) %>%
@@ -57,6 +60,40 @@ switch_surprisals %>%
   facet_wrap(~ length) + 
   geom_point() + 
   geom_smooth(se = F)
+```
+
+```{r bootstrapping}
+
+# extract_stem_tokens <- function(role, target_length, utterances) {
+#   
+#   if (role == "child") {
+#     sub_utterances <- utterances %>%
+#       filter(speaker_role == "Target_Child") %>%
+#       mutate(length = str_count(stem, pattern = " +") + 1)
+# 
+# } else {
+#     sub_utterances <- utterances %>%
+#       filter(speaker_role != "Target_Child") %>%
+#       mutate(length = str_count(stem, pattern = " +") + 1)
+# }
+#   
+#   tokens <- sub_utterances %>%
+#     filter(length == target_length) %>%
+#     mutate(utterance_id = 1:n()) %>%
+#     unnest_tokens(word, stem) %>%
+#     group_by(utterance_id) %>%
+#     mutate(word_order = 1:n()) %>%
+#     group_by(word_order, word) %>%
+#     filter(word_order <= length)
+#    
+  # tokens %>%
+  #   summarise(n = n()) %>%
+  #   tidyboot(summary_function = function(x) x %>%
+  #              summarise(entropy = entropy(n, unit = "log2")),
+  #            statistics_functions = function(x) x %>%
+  #            summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
+  #   mutate(role = role, length = target_length)
+# }
 ```
 
 ```{r switchboard bigrams}
@@ -81,20 +118,13 @@ bigram_surprisals_prep <- switchboard %>%
   left_join(switch_unigrams)
 
 
-bigram_surprisals <- bigram_surprisals_prep %>%
-  filter(!is.na(lag_word)) %>%
-  mutate(s = -log(cond_p)) %>%
-  group_by(length, word_order) %>%
-  summarise(s = mean(s)) %>%
-  filter(word_order <= length)
-
-bigram_surprisals_nonnull <- bigram_surprisals_prep %>%
+switch_bigram_surprisals <- bigram_surprisals_prep %>%
   mutate(s = ifelse(is.na(lag_word), -log(p), -log(cond_p))) %>%
   group_by(length, word_order) %>%
   summarise(s = mean(s)) %>% 
   filter(word_order <= length)
 
-bigram_surprisals_nonnull %>%
+switch_bigram_surprisals %>%
   filter(length %in% c(5, 7, 9, 11, 13, 15)) %>%
   ggplot(aes(x = word_order, y = s)) + 
   facet_wrap(~ length) + 
@@ -116,9 +146,6 @@ switch_trigrams <- switchboard %>%
   left_join(switch_bigrams, by = c("lag_word2" = "lag_word", "lag_word1" = "word")) %>%
   mutate(tri_cond_p = tri_joint_p / joint_p) %>%
   select(-joint_p, -tri_joint_p, -cond_p) # %>% 
-  # left_join(adult_bigrams, by = c("lag_word1" = "lag_word", "word" = "word")) %>% 
-  # select(-joint_p) 
-
 
 trigram_surprisals_prep <- switchboard %>%
   group_by(utterance_id) %>%
@@ -129,7 +156,7 @@ trigram_surprisals_prep <- switchboard %>%
   left_join(switch_unigrams)
 
 
-trigram_surprisals_nonnull <- trigram_surprisals_prep %>%
+switch_trigram_surprisals <- trigram_surprisals_prep %>%
   mutate(s = ifelse(is.na(lag_word2), # check if it's not the first word
                     ifelse(is.na(lag_word1), # check if not the second word
                            -log(p), # trigram if third or beyond
@@ -139,7 +166,7 @@ trigram_surprisals_nonnull <- trigram_surprisals_prep %>%
   summarise(s = mean(s)) %>% 
   filter(word_order <= length)
 
-trigram_surprisals_nonnull %>%
+switch_trigram_surprisals %>%
   filter(length %in% c(5, 7, 9, 11, 13, 15)) %>%
   ggplot(aes(x = word_order, y = s)) + 
   facet_wrap(~ length) + 
@@ -196,21 +223,13 @@ bigram_surprisals_prep <- bnc %>%
   left_join(bnc_bigrams) %>%
   left_join(bnc_unigrams)
 
-
-bigram_surprisals <- bigram_surprisals_prep %>%
-  filter(!is.na(lag_word)) %>%
-  mutate(s = -log(cond_p)) %>%
-  group_by(length, word_order) %>%
-  summarise(s = mean(s)) %>%
-  filter(word_order <= length)
-
-bigram_surprisals_nonnull <- bigram_surprisals_prep %>%
+bnc_bigram_surprisals <- bigram_surprisals_prep %>%
   mutate(s = ifelse(is.na(lag_word), -log(p), -log(cond_p))) %>%
   group_by(length, word_order) %>%
   summarise(s = mean(s)) %>% 
   filter(word_order <= length)
 
-bigram_surprisals_nonnull %>%
+bnc_bigram_surprisals %>%
   ggplot(aes(x = word_order, y = s)) + 
   facet_wrap(~ length) + 
   geom_point() + 
@@ -242,7 +261,7 @@ trigram_surprisals_prep <- bnc %>%
   left_join(bnc_unigrams)
 
 
-trigram_surprisals_nonnull <- trigram_surprisals_prep %>%
+bnc_trigram_surprisals <- trigram_surprisals_prep %>%
   mutate(s = ifelse(is.na(lag_word2), # check if it's not the first word
                     ifelse(is.na(lag_word1), # check if not the second word
                            -log(p), # trigram if third or beyond
@@ -252,9 +271,30 @@ trigram_surprisals_nonnull <- trigram_surprisals_prep %>%
   summarise(s = mean(s)) %>% 
   filter(word_order <= length)
 
-trigram_surprisals_nonnull %>%
+bnc_trigram_surprisals %>%
   ggplot(aes(x = word_order, y = s)) + 
   facet_wrap(~ length) + 
   geom_point() + 
   geom_smooth(se = F)
+```
+
+
+```{r plotting}
+bnc_plot <- ggplot(bnc_surprisals, aes(x = word_order, y = s)) +
+  facet_wrap(~ length, scales = "free_x") + 
+  xlab("British National Corpus word position") +
+  ylab("Surprisal") +
+  geom_smooth(se = F) +
+  theme_classic(base_size = 10)
+
+sw_plot <- switch_surprisals %>%
+  filter(length %in% c(5, 7, 9)) %>% 
+  ggplot(aes(x = word_order, y = s)) +
+  facet_wrap(~ length, scales = "free_x") + 
+  xlab("Switchboard word position") +
+  ylab("Surprisal") +
+  geom_smooth(se = F) +
+  theme_classic(base_size = 10)
+
+grid.arrange(bnc_plot, sw_plot, nrow = 2)
 ```
