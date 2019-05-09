@@ -46,54 +46,38 @@ switch_unigrams <- switchboard %>%
   count() %>%
   ungroup() %>%
   mutate(p = n / sum(n))
-  
-switch_surprisals <- switchboard %>%
+
+
+sw <- switchboard %>%
   left_join(switch_unigrams) %>%
   mutate(s = -log(p)) %>%
-  group_by(length, word_order) %>% 
-  summarise(s = mean(s))
-  # tidyboot_mean(s)
+  ungroup() %>%
+  select(length, word_order, s) %>%
+  nest(s)
+
+swc <- sw %>% filter(length %in% c(10, 20, 30))
+switch_surprisals <- map_dfr(1:nrow(swc), 
+        ~bind_cols(select(slice(swc, .x), length, word_order), 
+                               tidyboot_mean(data = unnest(slice(swc, .x)), 
+                                             column = s, nboot = 100)))
+  
+# switch_surprisals <- switchboard %>%
+#   left_join(switch_unigrams) %>%
+#   mutate(s = -log(p)) %>%
+#   ungroup() %>%
+#   select(length, word_order, s) %>%
+#   filter(length %in% c(10, 20, 30)) %>%
+#   group_by(length, word_order) %>% 
+#   tidyboot_mean(s)
 
 switch_surprisals %>%
-  filter(length %in% c(3, 5, 7)) %>%
-  ggplot(aes(x = word_order, y = s)) + 
+  ggplot(aes(x = word_order, y = empirical_stat, #observed mean surprisal
+             ymin = ci_lower, ymax = ci_upper)) + 
   facet_wrap(~ length) + 
-  geom_point() + 
-  geom_smooth(se = F)
-```
-
-```{r bootstrapping}
-
-# extract_stem_tokens <- function(role, target_length, utterances) {
-#   
-#   if (role == "child") {
-#     sub_utterances <- utterances %>%
-#       filter(speaker_role == "Target_Child") %>%
-#       mutate(length = str_count(stem, pattern = " +") + 1)
-# 
-# } else {
-#     sub_utterances <- utterances %>%
-#       filter(speaker_role != "Target_Child") %>%
-#       mutate(length = str_count(stem, pattern = " +") + 1)
-# }
-#   
-#   tokens <- sub_utterances %>%
-#     filter(length == target_length) %>%
-#     mutate(utterance_id = 1:n()) %>%
-#     unnest_tokens(word, stem) %>%
-#     group_by(utterance_id) %>%
-#     mutate(word_order = 1:n()) %>%
-#     group_by(word_order, word) %>%
-#     filter(word_order <= length)
-#    
-  # tokens %>%
-  #   summarise(n = n()) %>%
-  #   tidyboot(summary_function = function(x) x %>%
-  #              summarise(entropy = entropy(n, unit = "log2")),
-  #            statistics_functions = function(x) x %>%
-  #            summarise_at(vars(entropy), funs(ci_upper, ci_lower))) %>%
-  #   mutate(role = role, length = target_length)
-# }
+  ylab("Surprisal") + 
+  xlab("Word Position in Switchboard") + 
+  geom_pointrange(size = .50) + 
+  geom_line(size = .50)
 ```
 
 ```{r switchboard bigrams}
@@ -188,18 +172,44 @@ bnc_unigrams <- bnc %>%
   count() %>%
   ungroup() %>%
   mutate(p = n / sum(n))
-  
-bnc_surprisals <- bnc %>%
+
+
+bnc_surprisals_prep <- bnc %>% 
   left_join(bnc_unigrams) %>%
   mutate(s = -log(p)) %>%
-  group_by(length, word_order) %>%
-  summarise(s = mean(s)) 
+  ungroup() %>%
+  select(length, word_order, s) %>%
+  nest(s)
+
+bnc_surprisals <- map_dfr(1:nrow(bnc_surprisals_prep), 
+        ~bind_cols(select(slice(bnc_surprisals_prep, .x), length, word_order), 
+                               tidyboot_mean(data = unnest(slice(bnc_surprisals_prep, .x)), 
+                                             column = s, nboot = 100)))  
+
+
+# bnc_surprisals <- bnc %>%
+#   left_join(bnc_unigrams) %>%
+#   mutate(s = -log(p)) %>%
+#   select(length, word_order, s) %>%
+#   filter(length == 10) %>%
+#   group_by(length, word_order) %>%
+#   # summarise(s = mean(s)) 
+#   tidyboot_mean(s)
 
 bnc_surprisals %>%
-  ggplot(aes(x = word_order, y = s)) + 
+  ggplot(aes(x = word_order, y = empirical_stat, #observed mean surprisal
+             ymin = ci_lower, ymax = ci_upper)) + 
   facet_wrap(~ length) + 
-  geom_point() + 
-  geom_smooth(se = F)
+  ylab("Surprisal") + 
+  xlab("Word Position in BNC") + 
+  geom_pointrange(size = .50) + 
+  geom_line(size = .50)
+
+# bnc_surprisals %>%
+#   ggplot(aes(x = word_order, y = s)) + 
+#   facet_wrap(~ length) + 
+#   geom_point() + 
+#   geom_smooth(se = F)
 ```
 
 ```{r bnc bigrams}
