@@ -26,6 +26,7 @@ library(dplyr)
 library(tokenizers)
 library(gtools)
 library(here)
+library(ggthemes)
 
 opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
                error = FALSE, cache = FALSE, tidy = FALSE)
@@ -37,19 +38,18 @@ Get utterances
 ```{r get_utterances}
 prov_utterances <- get_utterances(corpus = "Providence") #stem or gloss
 zhou_utterances <- get_utterances(corpus = "ZhouDinner") #stem for pinyin
+shiro_utterances <- get_utterances(corpus = "Shiro")
 ```
 
-```{r}
+```{r old unigrams}
 adult_utterances <- prov_utterances %>%
-  filter(speaker_role == "Target_Child") %>% 
+  filter(speaker_role != "Target_Child") %>% 
   mutate(length = str_count(stem, pattern = "[ +]+") + 1) %>%
   mutate(utterance_id = 1:n()) %>%
   unnest_tokens(word, stem, token = stringr::str_split, pattern = "[ +]+") %>%
   group_by(utterance_id) %>%
   mutate(word_order = 1:n())
-```
 
-```{r unigrams}
 adult_unigrams <- adult_utterances %>%
   group_by(word) %>%
   count() %>%
@@ -63,11 +63,91 @@ adult_surprisals <- adult_utterances %>%
   summarise(s = mean(s))
 
 adult_surprisals %>%
-  filter(length %in% c(5, 7, 9, 11, 13, 15)) %>%
+  filter(length %in% c(5, 7, 9)) %>%
   ggplot(aes(x = word_order, y = s)) + 
   facet_wrap(~ length) + 
   geom_point() + 
   geom_smooth(se = F)
+```
+
+```{r unigrams}
+get_unigrams <- function(utterances, speaker_role, stem_or_gloss) {
+  
+  if (tolower(speaker_role) == "child") {
+    utts <- utterances %>%
+      filter(speaker_role == "Target_Child") 
+  } else {
+    utts <- utterances %>%
+      filter(speaker_role != "Target_Child")   
+  }
+  
+  if (tolower(stem_or_gloss) == "stem") {
+    utts <- utts %>%
+      mutate(length = str_count(stem, pattern = "[ +]+") + 1) %>%
+      mutate(utterance_id = 1:n()) %>%
+      unnest_tokens(word, stem, token = stringr::str_split, pattern = "[ +]+") %>%
+      group_by(utterance_id) %>%
+      mutate(word_order = 1:n())
+    
+  } else {
+    utts <- utts %>%
+      mutate(length = str_count(gloss, pattern = "[ +]+") + 1) %>%
+      mutate(utterance_id = 1:n()) %>%
+      unnest_tokens(word, gloss, token = stringr::str_split, pattern = "[ +]+") %>%
+      group_by(utterance_id) %>%
+      mutate(word_order = 1:n())
+  }
+
+  unigrams <- utts %>%
+    group_by(word) %>%
+    count() %>%
+    ungroup() %>%
+    mutate(p = n / sum(n)) %>%
+    mutate(s = -log(p)) %>%
+    select(word, s)
+  
+  surprisals <- utts %>%
+    left_join(unigrams) %>%
+    group_by(length, word_order) %>%
+    summarise(s = mean(s)) %>%
+    ungroup()
+}
+
+prov_sups <- get_unigrams(prov_utterances, "not child", "stem") %>% 
+  mutate(speaker_role = "adult") %>%
+  bind_rows(mutate(get_unigrams(prov_utterances, "child", "stem"), speaker_role = "child")) %>%
+  mutate(language = "English")
+
+shiro_sups <- get_unigrams(shiro_utterances, "not child", "gloss") %>% 
+  mutate(speaker_role = "adult") %>%
+  bind_rows(mutate(get_unigrams(shiro_utterances, "child", "gloss"), speaker_role = "child")) %>%
+  mutate(language = "Spanish")
+
+zhou_sups <- get_unigrams(zhou_utterances, "not child", "stem") %>% 
+  mutate(speaker_role = "adult") %>%
+  bind_rows(mutate(get_unigrams(zhou_utterances, "child", "stem"), speaker_role = "child")) %>%
+  mutate(language = "Mandarin")
+
+all_sups <- prov_sups %>%
+  bind_rows(shiro_sups, zhou_sups)
+
+label_data <- data_frame(length = 9, language = "Mandarin", word_order = 6,
+                         speaker_role = c("adult", "child"), s = c(7,9.5))
+
+all_sups %>% 
+  filter(length %in% c(5, 7, 9)) %>%
+  ggplot(aes(x = word_order, y = s,
+                        color = speaker_role,
+                        label = speaker_role)) +
+    facet_grid(language ~ length, scales = "free") + 
+    xlab("Word position") +
+    ylab("Mean surprisal") +
+    geom_line(size = .5) +
+    theme_classic(base_size = 10) + 
+    scale_color_ptol() +
+    theme(legend.position = "nones") + 
+    geom_text(data = label_data)
+
 ```
 
 

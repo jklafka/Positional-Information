@@ -59,7 +59,7 @@ swc <- sw %>% filter(length %in% c(10, 20, 30))
 switch_surprisals <- map_dfr(1:nrow(swc), 
         ~bind_cols(select(slice(swc, .x), length, word_order), 
                                tidyboot_mean(data = unnest(slice(swc, .x)), 
-                                             column = s, nboot = 100)))
+                                             column = s, nboot = 1000)))
   
 # switch_surprisals <- switchboard %>%
 #   left_join(switch_unigrams) %>%

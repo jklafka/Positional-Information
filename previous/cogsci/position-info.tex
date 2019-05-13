@@ -68,17 +68,16 @@ Although languages vary widely in their structure, all are vehicles for
 the transmission of information. Consequently, aspects of speakers' word
 choice can be understood through models of optimal communication. One
 prediction of these models is that speakers should keep the density of
-information constant over the duration of an utterance (R. P. Levy \&
-Jaeger, 2007). However, different languages have different structural
-properties that constrain the space of a speaker's choices
-(e.g.~canonical word order). We build on a method developed by Yu, Cong,
-Liang, \& Liu (2016) to analyze the word-level entropy curves of natural
-language productions across a diverse set of languages and in diverse
-written and spoken contexts. We show that languages impose
-characteristic constraints on speaker's choices that predict deviations
-from Uniform Information Density, and that cross-linguistic variability
-in these deviations is predictable in part from syntactic properties of
-those languages.
+information constant over the duration of an utterance (Levy \& Jaeger,
+2007). However, different languages have different structural properties
+that constrain the space of a speaker's choices (e.g.~canonical word
+order). We build on a method developed by Yu, Cong, Liang, \& Liu (2016)
+to analyze the word-level entropy curves of natural language productions
+across a diverse set of languages and in diverse written and spoken
+contexts. We show that languages impose characteristic constraints on
+speaker's choices that predict deviations from Uniform Information
+Density, and that cross-linguistic variability in these deviations is
+predictable in part from syntactic properties of those languages.
 
 \textbf{Keywords:}
 Uniform information density; language structure; corpus analysis
@@ -93,7 +92,7 @@ rational theory of communication (Anderson, 1991). Information theory, a
 mathematical framework developed by Shannon (1948) to describe the
 transmission and decoding of signals, has been a unifying approach for
 the recent development of theories of communication in human and machine
-language processing (Jelinek, 1976; R. P. Levy \& Jaeger, 2007).
+language processing (Jelinek, 1976; Levy \& Jaeger, 2007).
 
 These theories model the process of communication as transmission of
 information over a noisy channel. The producer begins with an intended
@@ -111,26 +110,26 @@ of the information in the sentence, then the communication will have
 failed. Because producers cannot predict which word a speaker will
 mishear, their best strategy is spread the information evenly across all
 of the words in a sentence, i.e.~maintain \emph{Uniform Information
-Density} (Genzel \& Charniak, 2002; R. P. Levy \& Jaeger, 2007).
+Density} (Genzel \& Charniak, 2002; Levy \& Jaeger, 2007).
 
 The evidence in favor of Uniform Information Density has largely focused
 on specific points within sentences, while the hypothesis itself has
 been applied broadly over the past decade. The original evidence in
-favor of Uniform Information Density in R. P. Levy \& Jaeger (2007)
-finds that the insertion of complementizers (e.g. ``that'') in relative
-clauses in English corresponds to where neighboring words have high
-information content. Similarly, A. F. Frank \& Jaeger (2008) argues that
-contractions in English such as ``you're'' do not occur when neighboring
-words are highly informative. Applications of Uniform Information
-Density include determining whether linguistic alignment takes place
-(Jaeger \& Snider, 2013), Zipfian word length distributions (Piantadosi,
-Tily, \& Gibson, 2011), communication efficiency (Mahowald, Fedorenko,
-Piantadosi, \& Gibson, 2013), dialogue and turn-taking (Xu \& Reitter,
-2018) and the significance of ambiguity in language (Piantadosi, Tily,
-\& Gibson, 2012), among other research.
+favor of Uniform Information Density in Levy \& Jaeger (2007) finds that
+the insertion of complementizers (e.g. ``that'') in relative clauses in
+English corresponds to where neighboring words have high information
+content. Similarly, Frank \& Jaeger (2008) argues that contractions in
+English such as ``you're'' do not occur when neighboring words are
+highly informative. Applications of Uniform Information Density include
+determining whether linguistic alignment takes place (Jaeger \& Snider,
+2013), Zipfian word length distributions (Piantadosi, Tily, \& Gibson,
+2011), communication efficiency (Mahowald, Fedorenko, Piantadosi, \&
+Gibson, 2013), dialogue and turn-taking (Xu \& Reitter, 2018) and the
+significance of ambiguity in language (Piantadosi, Tily, \& Gibson,
+2012), among other research.
 
 However, other recent work has contradicted the Uniform Information
-Density hypothesis. Similar to the original work in R. P. Levy \& Jaeger
+Density hypothesis. Similar to the original work in Levy \& Jaeger
 (2007), Zhan \& Levy (2018) focuses on information distribution at
 particular points in sentences. Zhan \& Levy (2018) finds that more
 information-rich classifiers in Mandarin Chinese are produced when
@@ -169,8 +168,9 @@ the Uniform Information Density hypothesis: speakers may structure their
 utterances to optimize information density, but they must do so under
 the predictable constraints of their language.
 
+\hypertarget{calculating-entropy-curves}{%
 \subsection{Calculating entropy
-curves}\label{calculating-entropy-curves}
+curves}\label{calculating-entropy-curves}}
 
 In all of our studies, we used an adaptation of the by-word entropy
 method developed by Yu et al. (2016). Given a text or speech corpus
@@ -196,7 +196,7 @@ absolute positions in each of the sentences. Genzel \& Charniak (2002)
 similarly examine a unigram entropy measure on sentences, and found that
 entropy at the sentence level increases linearly with sentence index
 within a corpus. Uniform Information Density applies this uniformity of
-entropy rate in sentences to all levels of speech (R. P. Levy \& Jaeger,
+entropy rate in sentences to all levels of speech (Levy \& Jaeger,
 2007), and so our method obtained from Yu et al. (2016), which examines
 text at the word level, should find a monotonically increasing affine
 function at the word level.
@@ -210,7 +210,8 @@ information, on average contained by words within that position of
 utterances. This method is thus identical in logic to Genzel \& Charniak
 (2002), but within sentences instead of across sentences.
 
-\section{Study 1}\label{study-1}
+\hypertarget{study-1}{%
+\section{Study 1}\label{study-1}}
 
 We began by replicating Yu et al.'s (2016) analysis, computing entropy
 curves on the British National Corpus--a collection of predominantly
@@ -220,7 +221,8 @@ Switchboard corpus--a collection of spoken English (Godfrey, Holliman,
 function identified by Yu et al. (2016) is a general feature of English,
 or instead a function of their written language corpus.
 
-\subsection{Data and Analysis}\label{data-and-analysis}
+\hypertarget{data-and-analysis}{%
+\subsection{Data and Analysis}\label{data-and-analysis}}
 
 The British National Corpus consists of predominantly (90\%) written
 documents collected in the early 1980s and 1990s across a variety of
@@ -235,7 +237,8 @@ original demonstration of the Uniform Information Density hypothesis.
 For each corpus, we computed entropy curves using the method described
 above for all sentences from length 4 to 30.
 
-\subsection{Results}\label{results}
+\hypertarget{results}{%
+\subsection{Results}\label{results}}
 
 The entropy curves computed in both the British National Corpus and
 Switchboard were remarkably consistent both across corpora and across
@@ -265,7 +268,8 @@ characteristic of the English language. We next asked whether this shape
 is a feature even of children's speech, and also whether it varies
 cross-linguistically.
 
-\section{Study 2}\label{study-2}
+\hypertarget{study-2}{%
+\section{Study 2}\label{study-2}}
 
 To understand how robust this entropy curve is, we turned to
 conversational speech from parent-child interactions. If we find the
@@ -275,7 +279,8 @@ of English. We thus used the Child Language Data Exchange System
 (CHILDES), a collection of transcripts of parent-child interactions
 (MacWhinney, 2014).
 
-\subsection{Data and Analysis}\label{data-and-analysis-1}
+\hypertarget{data-and-analysis-1}{%
+\subsection{Data and Analysis}\label{data-and-analysis-1}}
 
 We analyzed three separate corpora in CHILDES: The Providence Corpus
 (Demuth, Culbertson, \& Alter, 2006), The Shiro corpus (Shiro, 2000),
@@ -303,7 +308,8 @@ words apart, and for normal Chinese writing spaces between word
 boundaries are unnatural and such spaces can be difficult to determine
 (Bai, Yan, Liversedge, Zang, \& Rayner, 2008).
 
-\subsection{Results}\label{results-1}
+\hypertarget{results-1}{%
+\subsection{Results}\label{results-1}}
 
 \begin{CodeChunk}
 \begin{figure*}[tb]
@@ -351,13 +357,15 @@ large set of Wikipedia corpora from diverse languages, and asking
 whether variability in their entropy curves was related to variability
 in their syntactic structure.
 
-\section{Study 3}\label{study-3}
+\hypertarget{study-3}{%
+\section{Study 3}\label{study-3}}
 
 In order to understand how entropy curves are related to linguistic
 structure, we turned to Wikipedia for a larger and more diverse of set
 of languages.
 
-\subsection{Data and Analysis}\label{data-and-analysis-2}
+\hypertarget{data-and-analysis-2}{%
+\subsection{Data and Analysis}\label{data-and-analysis-2}}
 
 Wikipedia has two primary advantages: (1) Individual language corpora
 are generally large, and (2) hundreds of languages are represented. To
@@ -394,7 +402,8 @@ additional analysis dividing each sentence into fifths evenly and
 computing the slopes between these fifths. Results from this second
 analysis were qualitatively similar.
 
-\subsection{Results}\label{results-2}
+\hypertarget{results-2}{%
+\subsection{Results}\label{results-2}}
 
 We treated these five slopes as a vector, allowing us to compute the
 pairwise similarity between languages with cosine--a standard measure of
@@ -447,7 +456,8 @@ pairwise entropy curve similarity.
 \label{tab:tab_features}
 \end{table}
 
-\section{General Discussion}\label{general-discussion}
+\hypertarget{general-discussion}{%
+\section{General Discussion}\label{general-discussion}}
 
 Taken together, the results of our studies yield 3 main findings. First,
 languages have characteristic entropy curves that can be found in their
@@ -494,162 +504,166 @@ curve analysis can be carried out on any language across a wide variety
 of text corpora, making it a powerful tool for analyzing the information
 structure of both spoken and written utterances in a language.
 
-\section{References}\label{references}
+\hypertarget{references}{%
+\section{References}\label{references}}
 
-\setlength{\parindent}{-0.1in} \setlength{\leftskip}{0.125in} \noindent
+\setlength{\parindent}{-0.1in} 
+\setlength{\leftskip}{0.125in}
+
+\noindent
 
 \hypertarget{refs}{}
-\hypertarget{ref-anderson1991}{}
+\leavevmode\hypertarget{ref-anderson1991}{}%
 Anderson, J. R. (1991). The adaptive nature of human categorization.
 \emph{Psychological Review}, \emph{98}(3), 409.
 
-\hypertarget{ref-aylett2004}{}
+\leavevmode\hypertarget{ref-aylett2004}{}%
 Aylett, M., \& Turk, A. (2004). The smooth signal redundancy hypothesis:
 A functional explanation for relationships between redundancy, prosodic
 prominence, and duration in spontaneous speech. \emph{Language and
 Speech}, \emph{47}(1), 31--56.
 
-\hypertarget{ref-bai2008}{}
+\leavevmode\hypertarget{ref-bai2008}{}%
 Bai, X., Yan, G., Liversedge, S. P., Zang, C., \& Rayner, K. (2008).
 Reading spaced and unspaced chinese text: Evidence from eye movements.
 \emph{Journal of Experimental Psychology: Human Perception and
 Performance}, \emph{34}(5), 1277.
 
-\hypertarget{ref-clear1993}{}
+\leavevmode\hypertarget{ref-clear1993}{}%
 Clear, J. H. (1993). The british national corpus. \emph{The Digital
 World}, 163--187.
 
-\hypertarget{ref-demuth2006}{}
+\leavevmode\hypertarget{ref-demuth2006}{}%
 Demuth, K., Culbertson, J., \& Alter, J. (2006). Word-minimality,
 epenthesis and coda licensing in the early acquisition of english.
 \emph{Language and Speech}, \emph{49}(2), 137--173.
 
-\hypertarget{ref-dryer2013}{}
+\leavevmode\hypertarget{ref-dryer2013}{}%
 Dryer, M. S., \& Haspelmath, M. (2013). \emph{The world atlas of
 language structures online}. Max Planck Institute for Evolutionary
 Anthropology.
 
-\hypertarget{ref-ferrer-i-cancho2013}{}
+\leavevmode\hypertarget{ref-ferrer-i-cancho2013}{}%
 Ferrer-i-Cancho, R., Debowski, L., \& Prado Martin, F. M. del. (2013).
 Constant conditional entropy and related hypotheses. \emph{Journal of
 Statistical Mechanics: Theory and Experiment}, \emph{2013}(07), L07001.
 
-\hypertarget{ref-frank2008}{}
+\leavevmode\hypertarget{ref-frank2008}{}%
 Frank, A. F., \& Jaeger, T. F. (2008). Speaking rationally: Uniform
 information density as an optimal strategy for language production. In
 \emph{Proceedings of the annual meeting of the cognitive science
 society} (Vol. 30).
 
-\hypertarget{ref-genzel2002}{}
+\leavevmode\hypertarget{ref-genzel2002}{}%
 Genzel, D., \& Charniak, E. (2002). Entropy rate constancy in text. In
 \emph{Proceedings of the 40th annual meeting on association for
 computational linguistics} (pp. 199--206). Association for Computational
 Linguistics.
 
-\hypertarget{ref-godfrey1992}{}
+\leavevmode\hypertarget{ref-godfrey1992}{}%
 Godfrey, J. J., Holliman, E. C., \& McDaniel, J. (1992). SWITCHBOARD:
 Telephone speech corpus for research and development. In
-\emph{Acoustics, speech, and signal processing, 1992. icassp-92., 1992
+\emph{Acoustics, speech, and signal processing, 1992. ICASSP-92., 1992
 ieee international conference on} (Vol. 1, pp. 517--520). IEEE.
 
-\hypertarget{ref-jaeger2013}{}
+\leavevmode\hypertarget{ref-jaeger2013}{}%
 Jaeger, T. F., \& Snider, N. E. (2013). Alignment as a consequence of
 expectation adaptation: Syntactic priming is affected by the prime's
 prediction error given both prior and recent experience.
 \emph{Cognition}, \emph{127}(1), 57--83.
 
-\hypertarget{ref-jain2018}{}
+\leavevmode\hypertarget{ref-jain2018}{}%
 Jain, A., Singh, V., Ranjan, S., Rajkumar, R., \& Agarwal, S. (2018).
 Uniform information density effects on syntactic choice in hindi. In
 \emph{Proceedings of the workshop on linguistic complexity and natural
 language processing} (pp. 38--48).
 
-\hypertarget{ref-jelinek1976}{}
+\leavevmode\hypertarget{ref-jelinek1976}{}%
 Jelinek, F. (1976). Continuous speech recognition by statistical
 methods. \emph{Proceedings of the IEEE}, \emph{64}(4), 532--556.
 
-\hypertarget{ref-kuperman2010}{}
+\leavevmode\hypertarget{ref-kuperman2010}{}%
 Kuperman, V., Dambacher, M., Nuthmann, A., \& Kliegl, R. (2010). The
 effect of word position on eye-movements in sentence and paragraph
 reading. \emph{The Quarterly Journal of Experimental Psychology},
 \emph{63}(9), 1838--1857.
 
-\hypertarget{ref-landauer1997}{}
+\leavevmode\hypertarget{ref-landauer1997}{}%
 Landauer, T. K., \& Dumais, S. T. (1997). A solution to plato's problem:
 The latent semantic analysis theory of acquisition, induction, and
 representation of knowledge. \emph{Psychological Review}, \emph{104}(2),
 211.
 
-\hypertarget{ref-levy2007}{}
+\leavevmode\hypertarget{ref-levy2007}{}%
 Levy, R. P., \& Jaeger, T. F. (2007). Speakers optimize information
 density through syntactic reduction. In \emph{Advances in neural
 information processing systems} (pp. 849--856).
 
-\hypertarget{ref-li2015}{}
+\leavevmode\hypertarget{ref-li2015}{}%
 Li, H., \& Zhou, J. (2015). \emph{Study on dinner table talk of
 preschool children family in shanghai} (Master's thesis). East China
 Normal University.
 
-\hypertarget{ref-macwhinney2014}{}
+\leavevmode\hypertarget{ref-macwhinney2014}{}%
 MacWhinney, B. (2014). \emph{The childes project: Tools for analyzing
 talk, volume ii: The database}. Psychology Press.
 
-\hypertarget{ref-mahowald2013}{}
+\leavevmode\hypertarget{ref-mahowald2013}{}%
 Mahowald, K., Fedorenko, E., Piantadosi, S. T., \& Gibson, E. (2013).
 Info/information theory: Speakers choose shorter words in predictive
 contexts. \emph{Cognition}, \emph{126}(2), 313--318.
 
-\hypertarget{ref-piantadosi2011}{}
+\leavevmode\hypertarget{ref-piantadosi2011}{}%
 Piantadosi, S. T., Tily, H., \& Gibson, E. (2011). Word lengths are
 optimized for efficient communication. \emph{Proceedings of the National
 Academy of Sciences}, \emph{108}(9), 3526--3529.
 
-\hypertarget{ref-piantadosi2012}{}
+\leavevmode\hypertarget{ref-piantadosi2012}{}%
 Piantadosi, S. T., Tily, H., \& Gibson, E. (2012). The communicative
 function of ambiguity in language. \emph{Cognition}, \emph{122}(3),
 280--291.
 
-\hypertarget{ref-sanchez2019}{}
+\leavevmode\hypertarget{ref-sanchez2019}{}%
 Sanchez, A., Meylan, S. C., Braginsky, M., MacDonald, K. E., Yurovsky,
 D., \& Frank, M. (in press). Childes-db: A flexible and reproducible
 interface to the child language data exchange system. \emph{Behavior
-Research Methods}. in press.
+Research Methods}.
 
-\hypertarget{ref-shannon1948}{}
+\leavevmode\hypertarget{ref-shannon1948}{}%
 Shannon, C. E. (1948). A mathematical theory of communication.
 \emph{Bell System Technical Journal}, \emph{27}(3), 379--423.
 
-\hypertarget{ref-shiro2000}{}
-Shiro, M. (2000). Diferencias sociales en la construcción del`` yo'' y
-del`` otro'': Expresiones evaluativas en la narrativa de niños
-caraqueños en edad escolar. In \emph{Lengua, discurso, texto: I simposio
+\leavevmode\hypertarget{ref-shiro2000}{}%
+Shiro, M. (2000). Diferencias sociales en la construcción del" yo" y
+del" otro": Expresiones evaluativas en la narrativa de niños caraqueños
+en edad escolar. In \emph{Lengua, discurso, texto: I simposio
 internacional de análisis del discurso} (pp. 1303--1318). Visor.
 
-\hypertarget{ref-simons2018}{}
+\leavevmode\hypertarget{ref-simons2018}{}%
 Simons, G. F., \& Fenning, C. D. (Eds.). (2018). \emph{Ethnologue:
 Languages of the world, 21st edition}. Dallas, Texas: SIL International.
 
-\hypertarget{ref-stivers2009universals}{}
+\leavevmode\hypertarget{ref-stivers2009universals}{}%
 Stivers, T., Enfield, N. J., Brown, P., Englert, C., Hayashi, M.,
 Heinemann, T., \ldots{} others. (2009). Universals and cultural
 variation in turn-taking in conversation. \emph{Proceedings of the
 National Academy of Sciences}, pnas--0903616106.
 
-\hypertarget{ref-stowe2018}{}
+\leavevmode\hypertarget{ref-stowe2018}{}%
 Stowe, L. A., Kaan, E., Sabourin, L., \& Taylor, R. C. (2018). The
 sentence wrap-up dogma. \emph{Cognition}, \emph{176}, 232--247.
 
-\hypertarget{ref-xu2018}{}
+\leavevmode\hypertarget{ref-xu2018}{}%
 Xu, Y., \& Reitter, D. (2018). Information density converges in
 dialogue: Towards an information-theoretic model. \emph{Cognition},
 \emph{170}, 147--163.
 
-\hypertarget{ref-yu2016}{}
+\leavevmode\hypertarget{ref-yu2016}{}%
 Yu, S., Cong, J., Liang, J., \& Liu, H. (2016). The distribution of
 information content in english sentences. \emph{arXiv Preprint
 arXiv:1609.07681}.
 
-\hypertarget{ref-zhan2018}{}
+\leavevmode\hypertarget{ref-zhan2018}{}%
 Zhan, M., \& Levy, R. (2018). Comparing theories of speaker choice using
 a model of classifier production in mandarin chinese. In
 \emph{Proceedings of the 2018 conference of the north american chapter
