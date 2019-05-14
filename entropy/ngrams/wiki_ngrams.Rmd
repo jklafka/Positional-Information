@@ -1,0 +1,93 @@
+---
+title: "Wikipedia ngrams Entropy Analysis"
+author: "Josef Klafka and Dan Yurovsky"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: false
+    number_sections: false
+    theme: lumen
+    toc_float: false
+    code_folding: show 
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(tidytext)
+library(here)
+library(feather)
+library(magrittr)
+library(reshape2)
+library(lme4)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Joe's regression}
+# log(sum(abs(s_i))) = language * type * gram + (source | type)
+
+# let's just try log(sum(abs(s_i))) = language + gram since type/source are all the same atm
+## why would there be an interaction between language and gram?
+## shouldn't the final model be more like
+# log(sum(abs(s_i))) = language * type + gram * type + (source | type)
+
+wn <- read_feather(here("Data/wiki_ngrams.feather"))
+
+simple_glm <- glm(data = wn, formula = log(s_i) ~ gram + Language)
+summary(simple_glm)
+```
+
+```{r get data}
+w1 <- read_feather(here("Data/relative_unigrams.feather"))
+w2 <- read_feather(here("Data/relative_bigrams.feather"))
+w3 <- read_feather(here("Data/relative_trigrams.feather"))
+w4 <- read_feather(here("Data/relative_quadgrams.feather"))
+
+get_agg <- function(ws) {
+ ws %>%
+  mutate(agg = abs(Slope1) + abs(Slope2) + abs(Slope3) + abs(Slope4) + abs(Slope5)) %>%
+  select(Language, agg)
+}
+
+w1 %<>% 
+  get_agg() %>%
+  rename(unigram = agg)
+w2 %<>%
+  get_agg() %>%
+  rename(bigram = agg)
+w3 %<>%
+  get_agg() %>%
+  rename(trigram = agg)
+w4 %<>%
+  get_agg() %>%
+  rename(quadgram = agg)
+
+wn <- w1 %>% 
+  left_join(w2) %>%
+  left_join(w3) %>%
+  left_join(w4) %>%
+  remove_missing() %>%
+  melt(id.vars = "Language") %>% 
+  rename(gram = variable, s_i = value)
+
+w1 %>% 
+  left_join(w2) %>%
+  left_join(w3) %>%
+  left_join(w4) %>%
+  remove_missing() %>%
+  slice(1:5) %>%
+  melt(id.vars = "Language") %>%
+  ggplot(aes(variable, value, color=Language)) + 
+  geom_point() +
+  geom_line()
+
+```
+
+
+
+
+
+
+
+
+

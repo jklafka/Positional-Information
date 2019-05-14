@@ -1,17 +1,14 @@
 #!/bin/bash
 
-declare -a arr=("Basque" "Dutch" "Alemannic" "Wolof" "Bosnian" "Hindi" "Danish"
-	"Russian" "Urdu" "German" "Swedish" "Afrikaans" "Anglo-Saxon" "Icelandic"
-	"Belarusian" "Bulgarian" "Croatian" "Macedonian" "Serbo-Croatian" "Ukrainian"
-	"Vietnamese" "Pangasinan" "Kapampangan" "Khmer" "Japanese" "Javanese"
-	"Indonesian" "Polish" "Malay" "Sundanese" "Hakka" "Turkish" "Kazakh"
-	"Kirghiz" "Turkmen" "Hebrew" "Persian" "Arabic" "Tajik" "Latin" "French"
-	"Galician" "Romanian" "Norman" "Corsican" "Maori" "Nepali" "Mongolian"
-	"Estonian" "Finnish" "Hungarian" "Bengali" "Waray" "Welsh" "Armenian"
-	"Korean" "Greek" "Catalan" "Walloon" "Yiddish" "Maltese" "Romansh"
-	"Banyumasan" "Võro" "Samogitian" "Chavacano")
+declare -a arr=("Amharic" "Armenian" "Bashkir" "Bhojpuri" "Breton" "Burmese"
+	"Catalan" "Chuvash" "Czech" "Danish" "Estonian" "Finnish" "French" "Georgian"
+	"German" "Gujarati" "Hausa" "Hungarian" "Indonesian" "Irish" "Japanese" "Kabyle"
+	"Kannada" "Karachay-Balkar" "Korean" "Lao" "Latvian" "Lezgian" "Lithuanian"
+	"Maithili" "Malayalam" "Maori" "Marathi" "Ossetian" "Polish" "Romanian"
+	"Romansh" "Sakha" "Samoan" "Somali" "Sundanese" "Swahili" "Tajik" "Tamil"
+	"Tatar" "Telugu" "Tetum" "Thai" "Tulu" "Turkish" "Turkmen" "Welsh" "Yoruba")
 
-declare -a newarr=("Basque" "Dutch" "Alemannic" "Wolof" "Bosnian" "Hindi"
+declare -a fullarr=("Basque" "Dutch" "Alemannic" "Wolof" "Bosnian" "Hindi"
 	"Danish" "Russian" "Urdu" "German" "Swedish" "Afrikaans" "Anglo-Saxon"
 	"Icelandic" "Belarusian" "Bulgarian" "Croatian" "Macedonian" "Serbo-Croatian"
 	"Ukrainian" "Vietnamese" "Pangasinan" "Kapampangan" "Khmer" "Japanese"
@@ -36,7 +33,7 @@ declare -a newarr=("Basque" "Dutch" "Alemannic" "Wolof" "Bosnian" "Hindi"
 	"Tongan" "Nahuatl" "Somali" "Aymara" "Guarani" "Kabyle" "Hausa" "Tetum"
 	"Tulu" "Kabiye")
 
-for i in "${newarr[@]}"
+for i in "${arr[@]}"
 do
-  Rscript wiki_surprisal.R "$i" $1
+  Rscript wiki_relative_surprisal.R "$i" $1
 done
