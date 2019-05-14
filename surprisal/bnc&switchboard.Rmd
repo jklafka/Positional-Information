@@ -46,6 +46,12 @@ switch_unigrams <- switchboard %>%
   count() %>%
   ungroup() %>%
   mutate(p = n / sum(n))
+  
+switch_surprisals <- switchboard %>%
+  left_join(switch_unigrams) %>%
+  mutate(s = -log(p)) %>%
+  group_by(length, word_order) %>%
+  summarise(s = mean(s))
 
 
 sw <- switchboard %>%
@@ -172,6 +178,13 @@ bnc_unigrams <- bnc %>%
   count() %>%
   ungroup() %>%
   mutate(p = n / sum(n))
+  
+bnc_surprisals <- bnc %>%
+  left_join(bnc_unigrams) %>%
+  mutate(s = -log(p)) %>%
+  group_by(length, word_order) %>%
+  summarise(s = mean(s))
+
 
 
 bnc_surprisals_prep <- bnc %>% 
@@ -293,17 +306,19 @@ bnc_trigram_surprisals %>%
 bnc_plot <- ggplot(bnc_surprisals, aes(x = word_order, y = s)) +
   facet_wrap(~ length, scales = "free_x") + 
   xlab("British National Corpus word position") +
-  ylab("Surprisal") +
-  geom_smooth(se = F) +
+  ylab("Mean surprisal") +
+  geom_line() + 
+  geom_point() + 
   theme_classic(base_size = 10)
 
 sw_plot <- switch_surprisals %>%
-  filter(length %in% c(5, 7, 9)) %>% 
+  filter(length %in% c(10, 20, 30)) %>% 
   ggplot(aes(x = word_order, y = s)) +
   facet_wrap(~ length, scales = "free_x") + 
   xlab("Switchboard word position") +
-  ylab("Surprisal") +
-  geom_smooth(se = F) +
+  ylab("Mean surprisal") +
+  geom_line() +
+  geom_point() +
   theme_classic(base_size = 10)
 
 grid.arrange(bnc_plot, sw_plot, nrow = 2)

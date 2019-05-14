@@ -42,11 +42,11 @@ shiro_utterances <- get_utterances(corpus = "Shiro")
 ```
 
 ```{r old unigrams}
-adult_utterances <- prov_utterances %>%
-  filter(speaker_role != "Target_Child") %>% 
-  mutate(length = str_count(stem, pattern = "[ +]+") + 1) %>%
+adult_utterances <- shiro_utterances %>%
+  filter(speaker_role == "Target_Child") %>% 
+  mutate(length = str_count(gloss, pattern = "[ +]+") + 1) %>%
   mutate(utterance_id = 1:n()) %>%
-  unnest_tokens(word, stem, token = stringr::str_split, pattern = "[ +]+") %>%
+  unnest_tokens(word, gloss, token = stringr::str_split, pattern = "[ +]+") %>%
   group_by(utterance_id) %>%
   mutate(word_order = 1:n())
 
@@ -131,18 +131,19 @@ zhou_sups <- get_unigrams(zhou_utterances, "not child", "stem") %>%
 all_sups <- prov_sups %>%
   bind_rows(shiro_sups, zhou_sups)
 
-label_data <- data_frame(length = 9, language = "Mandarin", word_order = 6,
-                         speaker_role = c("adult", "child"), s = c(7,9.5))
+label_data <- data_frame(length = 9, Language = "Spanish", word_order = 3,
+                         speaker_role = c("Adult", "Child"), s = c(1.25,3.5))
 
-all_sups %>% 
+all_trigrams %>% 
   filter(length %in% c(5, 7, 9)) %>%
   ggplot(aes(x = word_order, y = s,
                         color = speaker_role,
                         label = speaker_role)) +
-    facet_grid(language ~ length, scales = "free") + 
+    facet_grid(Language ~ length, scales = "free") + 
     xlab("Word position") +
     ylab("Mean surprisal") +
-    geom_line(size = .5) +
+    geom_line(size = 1) +
+    geom_point() + 
     theme_classic(base_size = 10) + 
     scale_color_ptol() +
     theme(legend.position = "nones") + 
@@ -172,19 +173,16 @@ bigram_surprisals_prep <- adult_utterances %>%
   left_join(adult_bigrams) %>%
   left_join(adult_unigrams)
 
-
-bigram_surprisals <- bigram_surprisals_prep %>%
-  filter(!is.na(lag_word)) %>%
-  mutate(s = -log(cond_p)) %>%
-  group_by(length, word_order) %>%
-  summarise(s = mean(s)) %>%
-  filter(word_order <= length)
-
 bigram_surprisals_nonnull <- bigram_surprisals_prep %>%
   mutate(s = ifelse(is.na(lag_word), -log(p), -log(cond_p))) %>%
   group_by(length, word_order) %>%
   summarise(s = mean(s)) %>% 
   filter(word_order <= length)
+
+all_bigrams <- all_bigrams %>% 
+  bind_rows(mutate(bigram_surprisals_nonnull, speaker_role = "Child", Language = "Spanish"))
+
+
 
 bigram_surprisals_nonnull %>%
   filter(length %in% c(5, 7, 9, 11, 13, 15)) %>%
@@ -208,8 +206,6 @@ adult_trigrams <- adult_utterances %>%
   left_join(adult_bigrams, by = c("lag_word2" = "lag_word", "lag_word1" = "word")) %>%
   mutate(tri_cond_p = tri_joint_p / joint_p) %>%
   select(-joint_p, -tri_joint_p, -cond_p) # %>% 
-  # left_join(adult_bigrams, by = c("lag_word1" = "lag_word", "word" = "word")) %>% 
-  # select(-joint_p) 
 
 
 trigram_surprisals_prep <- adult_utterances %>%
@@ -230,6 +226,13 @@ trigram_surprisals_nonnull <- trigram_surprisals_prep %>%
   group_by(length, word_order) %>%
   summarise(s = mean(s)) %>% 
   filter(word_order <= length)
+
+all_trigrams <- all_trigrams %>% 
+  bind_rows(mutate(trigram_surprisals_nonnull, speaker_role = "Child", Language = "Spanish"))
+
+
+
+
 
 trigram_surprisals_nonnull %>%
   filter(length %in% c(5, 7, 9, 11, 13, 15)) %>%

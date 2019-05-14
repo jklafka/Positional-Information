@@ -1,7 +1,7 @@
 library(tidyverse)
 library(tidytext)
 library(directlabels)
-library(googlesheets)
+# library(googlesheets)
 
 extract_wiki_tokens <- function(min_length, max_length, utterances) {
   
@@ -18,7 +18,7 @@ extract_wiki_tokens <- function(min_length, max_length, utterances) {
     summarise(n = n()) %>%
     ungroup()
   
-  sups <- tokens %>% 
+  sups <- tokens %>%
     mutate(p = n/sum(n)) %>%
     mutate(s = -log(p)) %>%
     select(word, s)
@@ -73,15 +73,15 @@ relative_slopes <- function(df_tokens, pos_list) {
 
 NUM_SECTIONS = 5
 
-LANGUAGE <- commandArgs(trailingOnly=TRUE)[1]
+LANGUAGE <- "Alemannic" #commandArgs(trailingOnly=TRUE)[1]
 
 system(paste("python3 get_wiki_df.py", LANGUAGE, sep = " "))
 
-for_gs <- gs_title("wiki_surprisal_relative")
+# for_gs <- gs_title("wiki_surprisal_relative")
 
 df <- read_csv("wiki_df.csv")
 
-df_tokens <- extract_wiki_tokens(6, 50, df) 
+df_tokens <- extract_wiki_tokens(6, 50, df)
 
 pos_list <- df_tokens %>%
   group_by(length) %>%
@@ -92,9 +92,20 @@ pos_list <- df_tokens %>%
   mutate(length = as.numeric(length))
 
 slopes <- relative_slopes(df_tokens, pos_list)
-wkpd <- gs_read(for_gs)
-nr <- nrow(wkpd)
 
-lang_slopes <- c(LANGUAGE, slopes$estimate)
-gs_edit_cells(for_gs, ws = "Sheet1", anchor = paste("A", nr + 2, sep=""), input = lang_slopes, byrow = TRUE)
-#system("rm wiki_df.csv")
+lang_slopes <- c(LANGUAGE, slopes$estimate) %>% 
+  t() %>%
+  data.frame()
+
+all_data <- read.csv(file = "relative_unigrams.csv") %>%
+  select(-X)
+names(lang_slopes) <- names(all_data)
+all_data <- all_data %>%
+  rbind(lang_slopes)
+write.csv(all_data, file = "relative_unigrams.csv")
+# wkpd <- gs_read(for_gs)
+# nr <- nrow(wkpd)
+
+# lang_slopes <- c(LANGUAGE, slopes$estimate)
+# gs_edit_cells(for_gs, ws = "Sheet1", anchor = paste("A", nr + 2, sep=""), input = lang_slopes, byrow = TRUE)
+system("rm wiki_df.csv")
