@@ -42,8 +42,8 @@ shiro_utterances <- get_utterances(corpus = "Shiro")
 ```
 
 ```{r old unigrams}
-adult_utterances <- shiro_utterances %>%
-  filter(speaker_role == "Target_Child") %>% 
+adult_utterances <- prov_utterances %>%
+  filter(speaker_role != "Target_Child") %>% 
   mutate(length = str_count(gloss, pattern = "[ +]+") + 1) %>%
   mutate(utterance_id = 1:n()) %>%
   unnest_tokens(word, gloss, token = stringr::str_split, pattern = "[ +]+") %>%
@@ -68,6 +68,38 @@ adult_surprisals %>%
   facet_wrap(~ length) + 
   geom_point() + 
   geom_smooth(se = F)
+```
+
+
+```{r redoing bigrams}
+adult_bigrams_prep <- adult_utterances %>% 
+  group_by(utterance_id) %>%
+  mutate(lag_word = lag(word)) %>%
+  group_by(lag_word, word) %>%
+  count() %>%
+  filter(!is.na(lag_word)) %>%
+  ungroup() %>%
+  left_join(adult_unigrams, by = c("lag_word" = "word")) %>%
+  mutate(cond_p = n.x / n.y) %>%
+  select(lag_word, word, cond_p)
+
+adult_bigrams <- adult_utterances %>%
+  group_by(utterance_id) %>%
+  mutate(lag_word = lag(word)) %>%
+  ungroup() %>%
+  left_join(adult_unigrams) %>%
+  left_join(adult_bigrams_prep) %>%
+  mutate(s = ifelse(is.na(lag_word), -log(p), -log(cond_p))) %>%
+  group_by(length, word_order) %>%
+  summarise(mean_s = mean(s)) 
+
+adult_bigrams %>% 
+  filter(length %in% c(5, 7, 9)) %>% 
+  ggplot(aes(x = word_order, y = mean_s)) + 
+  facet_wrap(~length) + 
+  geom_point() + 
+  geom_line()
+
 ```
 
 ```{r unigrams}

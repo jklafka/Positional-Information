@@ -37,8 +37,7 @@ theme_set(theme_classic(base_size = 16))
 ```
 
 ```{r word order}
-wiki_gs <- gs_title("Wikipedia_absolute")
-wkpd <- gs_read(wiki_gs) 
+wkpd <- read.csv(here("relative_unigrams.csv"))
 LANGUAGES <- wkpd$Language
 
 
@@ -78,6 +77,13 @@ wo_sub <- imputed_wo %>% group_by(language) %>%
   group_by(feature) %>%
   mutate(value = as.numeric(as.factor(value)))
 
+cosines <- wkpd %>%
+  column_to_rownames("Language") %>%
+  t() %>%
+  cosine() %>%
+  as_data_frame(rownames = "language1") %>%
+  gather(language2, cosine, -language1)
+
 wf_pairwise <- expand.grid(language1 = wo_sub$language,
                            language2 = wo_sub$language) %>%
   left_join(wo_sub, by = c("language1" = "language")) %>%
@@ -88,25 +94,19 @@ wf_pairwise <- expand.grid(language1 = wo_sub$language,
   select(-value1, -value2) %>%
   left_join(cosines, by = c("language1", "language2"))
 
-
-cosines <- wkpd %>%
-  column_to_rownames("Language") %>%
-  t() %>%
-  cosine() %>%
-  as_data_frame(rownames = "language1") %>%
-  gather(language2, cosine, -language1)
-
 models <- wf_pairwise %>%
   group_by(feature) %>%
   nest() %>%
   mutate(model = map(data, ~glm(same ~ cosine, 
                                 family = "binomial", data = .)))
 
-models %>%
+feature_names <- read_feather(here("feature_names.feather"))
+
+model_df <- models %>%
   mutate(coeffs = map(model, tidy)) %>%
   select(-data, -model) %>%
   unnest() %>%
   filter(term == "cosine") %>%
   arrange(desc(statistic)) %>%
-  write_feather(here("word_order_glm_absolute.feather"))
+  left_join(feature_names)
 ```
