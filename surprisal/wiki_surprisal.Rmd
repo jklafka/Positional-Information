@@ -36,6 +36,19 @@ opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
 theme_set(theme_classic(base_size = 16))
 ```
 
+```{r make dendrogram}
+wiki <- read.csv(here("relative_unigrams.csv")) %>%
+  select(-X) %>% 
+  column_to_rownames("Language")
+
+wiki %>% 
+  dist() %>% 
+  hclust() %>% 
+  plot(hang = -1, 
+       main = "Dendrogram of slope embeddings")
+
+```
+
 ```{r word order}
 wkpd <- read.csv(here("relative_unigrams.csv"))
 LANGUAGES <- wkpd$Language
