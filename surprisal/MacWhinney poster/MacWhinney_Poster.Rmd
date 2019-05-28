@@ -10,7 +10,7 @@ font_size: "30pt" #please see github.com/brentthorne/posterdown for compatible o
 #---TITLE BOX OPTIONS---#
 #ESSENTIALS
 title: '\fontfamily{phv}\selectfont Parents and children in diverse languages structure their utterances to support efficient communication'
-author: "Josef Klafka^1^ Daniel Yurovsky^1^"
+author: "Josef Klafka Daniel Yurovsky"
 affiliation: "^1^Department of Psychology, University of Chicago"
 #STYLE & FORMATTING
 titlebox_bgcol: "008080"  #Colour of the Title Box background

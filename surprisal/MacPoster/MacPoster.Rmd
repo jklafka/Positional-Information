@@ -1,0 +1,106 @@
+---
+# PLEASE SEE THE README for in depth description github.com/brentthorne/posterdown
+poster_height: "48in"
+poster_width: "36in"
+font_family: 'Rasa'
+#ESSENTIALS
+title: '**Parents and children structure their utterances for efficient communication**'
+author:
+  - name: '**Josef Klafka**'
+    affil: 1,*
+    main: true
+    orcid: '0000-0002-1099-3857'
+    twitter: josefklafka
+    email: jklafka@uchicago.edu
+  - name: Daniel Yurovsky
+    affil: 1
+    main: false
+    email: 'dyurovsky@uchicago.edu'
+affiliation:
+  - num: 1
+    address: Department of Psychology, University of Chicago
+#STYLE & FORMATTING
+title_textsize: "125pt"
+author_textsize: "1.17em"
+authorextra_textsize: "35px"
+affiliation_textsize: "25px"
+affiliation_textcol: '#00000080'
+caption_fontsize: "20pt"
+#Middle of the poster
+middle_fontfamily: "Special Elite"
+middle_textcol: "#FFFFFF"
+middle:textalpha: 90
+middle_fontsize: "150px"
+main_findings:
+  - "Information language children parents incremental-processing"
+logoleft_name: "Figures/callab_logo.png"
+logocenter_name: "Figures/qr-code-black.png"
+logoright_name: "Figures/logo.rgb.maroon.jpg"
+#---POSTER BODY OPTIONS---#
+primary_colour: '#0b4545'
+secondary_colour: '#008080'
+accent_colour: "#cc0000"
+body_bgcol: "#ffffff"
+body_textsize: "45px"
+body_textcol: "#000000"
+reference_textsize: "23px"
+column_numbers: 1
+columnline_col: "black"
+columnline_style: "solid"
+column_margins: "10px"
+#--Standard Options--#
+output: 
+  posterdown::posterdown_betterport:
+    self_contained: false
+    pandoc_args: --mathjax
+    highlight: espresso
+    number_sections: true
+bibliography: MyBib.bib
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  results = 'asis',
+  echo = FALSE,
+  comment = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  fig.align = 'center'
+)
+```
+
+# Introduction
+
+Welcome to `posterdown` ! This is my attempt to provide a semi-smooth workflow for those who wish to take their R Markdown skills to the conference world. Most features from R Markdown are available in this package such as Markdown section notation, figure captioning, and even citations like this one [@rmarkdown]. The rest of this example poster will show how you can insert typical conference poster features into your own document. 
+
+## Objectives
+
+1. Easy to use reproducible poster design. 
+2. Integration with R Markdown.
+3. Easy transition from `posterdown` to `thesisdown` or `rticles` [@rticles; @thesisdown].
+
+# Methods
+
+This package uses the same workflow approach as the R Markdown you know and love. Basically it goes from RMarkdown > Knitr > Markdown > Pandoc > HTML/CSS > PDF. You can even use the bibliography the same way [@turnerControlsWaterBalance2014].
+
+# Results
+
+Usually you want to have a nice table displaying some important results that you have calculated. In `posterdown` this is as easy as using the `kable` table formatting you are probably use to as per typical R Markdown formatting.
+
+I suggesting checking out the `kableExtra` package and its in depth documentation on customizing these tables found [here](https://haozhu233.github.io/kableExtra/awesome_table_in_pdf.pdf) [@kableExtra2019]. You can reference tables like so: Table \@ref(tab:mytable). Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam placerat augue at velit tincidunt semper. Donec elementum porta posuere. Nullam interdum, odio at tincidunt feugiat, turpis nisi blandit eros, eu posuere risus felis non quam. Nam eget lorem odio. Duis et aliquet orci. Phasellus nec viverra est.
+
+```{r standard-plot, out.width='80%', fig.align='center', fig.cap='Great figure!', fig.height=10}
+plot(mtcars[1:2])
+```
+
+
+
+
+# Next Steps: More random text
+
+Aliquam sed faucibus risus, quis efficitur erat. Vestibulum semper mauris quis tempus eleifend. Aliquam sagittis dictum ipsum, quis viverra ligula eleifend ut. Curabitur sagittis vitae arcu eget faucibus. In non elementum felis. Duis et aliquam nunc. Nunc pulvinar sapien nunc, vel pretium nisi efficitur in. Fusce fringilla maximus leo et maximus. Fusce at ligula laoreet, iaculis mi at, auctor odio. Praesent sed elementum justo. Aenean consectetur risus rhoncus tincidunt efficitur. Praesent dictum mauris at diam maximus maximus [@thorneposterdown2019].
+
+# Conclusion
+
+Try `posterdown` out! Hopefully you like it!
+
+# References
