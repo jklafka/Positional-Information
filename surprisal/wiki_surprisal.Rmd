@@ -50,7 +50,7 @@ wiki %>%
 ```
 
 ```{r word order}
-wkpd <- read.csv(here("relative_unigrams.csv"))
+wkpd <- read.csv(here("Data/relative_unigrams.csv"))
 LANGUAGES <- wkpd$Language
 
 
@@ -113,7 +113,7 @@ models <- wf_pairwise %>%
   mutate(model = map(data, ~glm(same ~ cosine, 
                                 family = "binomial", data = .)))
 
-feature_names <- read_feather(here("feature_names.feather"))
+feature_names <- read_feather(here("Wikipedia/feature_names.feather"))
 
 model_df <- models %>%
   mutate(coeffs = map(model, tidy)) %>%
