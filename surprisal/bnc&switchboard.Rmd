@@ -53,37 +53,20 @@ switch_surprisals <- switchboard %>%
   group_by(length, word_order) %>%
   summarise(s = mean(s))
 
-
-sw <- switchboard %>%
-  left_join(switch_unigrams) %>%
-  mutate(s = -log(p)) %>%
-  ungroup() %>%
-  select(length, word_order, s) %>%
-  nest(s)
-
-swc <- sw %>% filter(length %in% c(10, 20, 30))
-switch_surprisals <- map_dfr(1:nrow(swc), 
-        ~bind_cols(select(slice(swc, .x), length, word_order), 
-                               tidyboot_mean(data = unnest(slice(swc, .x)), 
-                                             column = s, nboot = 1000)))
-  
-# switch_surprisals <- switchboard %>%
+# 
+# sw <- switchboard %>%
 #   left_join(switch_unigrams) %>%
 #   mutate(s = -log(p)) %>%
 #   ungroup() %>%
 #   select(length, word_order, s) %>%
-#   filter(length %in% c(10, 20, 30)) %>%
-#   group_by(length, word_order) %>% 
-#   tidyboot_mean(s)
+#   nest(s)
+# 
+# swc <- sw %>% filter(length %in% c(10, 20, 30))
+# switch_surprisals <- map_dfr(1:nrow(swc), 
+#         ~bind_cols(select(slice(swc, .x), length, word_order), 
+#                                tidyboot_mean(data = unnest(slice(swc, .x)), 
+#                                              column = s, nboot = 1000)))
 
-switch_surprisals %>%
-  ggplot(aes(x = word_order, y = empirical_stat, #observed mean surprisal
-             ymin = ci_lower, ymax = ci_upper)) + 
-  facet_wrap(~ length) + 
-  ylab("Surprisal") + 
-  xlab("Word Position in Switchboard") + 
-  geom_pointrange(size = .50) + 
-  geom_line(size = .50)
 ```
 
 ```{r switchboard bigrams}
@@ -94,11 +77,10 @@ switch_bigrams <- switchboard %>%
   count() %>%
   filter(!is.na(lag_word)) %>%
   ungroup() %>%
-  mutate(joint_p = n / sum(n)) %>%
-  select(-n) %>%
   left_join(switch_unigrams, by = c("lag_word" = "word")) %>%
-  mutate(cond_p = joint_p / p) %>%
-  select(-n, -p)
+  mutate(cond_p = n.x / n.y) %>%
+  select(-n.y, -p) %>%
+  rename(n = n.x)
 
 
 bigram_surprisals_prep <- switchboard %>%
@@ -114,12 +96,6 @@ switch_bigram_surprisals <- bigram_surprisals_prep %>%
   summarise(s = mean(s)) %>% 
   filter(word_order <= length)
 
-switch_bigram_surprisals %>%
-  filter(length %in% c(5, 7, 9, 11, 13, 15)) %>%
-  ggplot(aes(x = word_order, y = s)) + 
-  facet_wrap(~ length) + 
-  geom_point() + 
-  geom_smooth(se = F)
 ```
 
 ```{r switchboard trigrams}
@@ -131,19 +107,17 @@ switch_trigrams <- switchboard %>%
   count() %>%
   filter(!is.na(lag_word1), !is.na(lag_word2)) %>%
   ungroup() %>%
-  mutate(tri_joint_p = n / sum(n)) %>%
-  select(-n) %>%
   left_join(switch_bigrams, by = c("lag_word2" = "lag_word", "lag_word1" = "word")) %>%
-  mutate(tri_cond_p = tri_joint_p / joint_p) %>%
-  select(-joint_p, -tri_joint_p, -cond_p) # %>% 
+  mutate(tri_cond_p = n.x / n.y) %>%
+  select(-n.x, -n.y, -cond_p) 
 
 trigram_surprisals_prep <- switchboard %>%
   group_by(utterance_id) %>%
   mutate(lag_word1 = lag(word)) %>%
   mutate(lag_word2 = lag(lag_word1)) %>%
   left_join(switch_trigrams) %>% 
-  left_join(select(switch_bigrams, -joint_p), by = c("lag_word1" = "lag_word", "word" = "word")) %>% 
-  left_join(switch_unigrams)
+  left_join(switch_bigrams, by = c("lag_word1" = "lag_word", "word" = "word")) %>% 
+  left_join(switch_unigrams, by = c("word" = "word"))
 
 
 switch_trigram_surprisals <- trigram_surprisals_prep %>%
@@ -156,12 +130,6 @@ switch_trigram_surprisals <- trigram_surprisals_prep %>%
   summarise(s = mean(s)) %>% 
   filter(word_order <= length)
 
-switch_trigram_surprisals %>%
-  filter(length %in% c(5, 7, 9, 11, 13, 15)) %>%
-  ggplot(aes(x = word_order, y = s)) + 
-  facet_wrap(~ length) + 
-  geom_point() + 
-  geom_smooth(se = F)
 ```
 
 A pre-requisite for the next section is that you run the "process_bnc.Rmd" pipeline for preprocessing the British National Corpus (bnc). The files are too large to store in the GitHub repository. 
@@ -209,20 +177,6 @@ bnc_surprisals <- map_dfr(1:nrow(bnc_surprisals_prep),
 #   # summarise(s = mean(s)) 
 #   tidyboot_mean(s)
 
-bnc_surprisals %>%
-  ggplot(aes(x = word_order, y = empirical_stat, #observed mean surprisal
-             ymin = ci_lower, ymax = ci_upper)) + 
-  facet_wrap(~ length) + 
-  ylab("Surprisal") + 
-  xlab("Word Position in BNC") + 
-  geom_pointrange(size = .50) + 
-  geom_line(size = .50)
-
-# bnc_surprisals %>%
-#   ggplot(aes(x = word_order, y = s)) + 
-#   facet_wrap(~ length) + 
-#   geom_point() + 
-#   geom_smooth(se = F)
 ```
 
 ```{r bnc bigrams}
@@ -251,12 +205,6 @@ bnc_bigram_surprisals <- bigram_surprisals_prep %>%
   group_by(length, word_order) %>%
   summarise(s = mean(s)) %>% 
   filter(word_order <= length)
-
-bnc_bigram_surprisals %>%
-  ggplot(aes(x = word_order, y = s)) + 
-  facet_wrap(~ length) + 
-  geom_point() + 
-  geom_smooth(se = F)
 ```
 
 ```{r bnc trigrams}
