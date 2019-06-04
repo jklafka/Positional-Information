@@ -81,7 +81,7 @@ system(paste("python3 get_wiki_df.py", LANGUAGE, sep = " "))
 
 df <- read_csv("wiki_df.csv")
 
-df_tokens <- extract_wiki_tokens(6, 50, df)
+df_tokens <- extract_wiki_tokens(6, 10, df)
 
 pos_list <- df_tokens %>%
   group_by(length) %>%
@@ -110,3 +110,10 @@ write.csv(all_data, file = "relative_unigrams.csv")
 # lang_slopes <- c(LANGUAGE, slopes$estimate)
 # gs_edit_cells(for_gs, ws = "Sheet1", anchor = paste("A", nr + 2, sep=""), input = lang_slopes, byrow = TRUE)
 system("rm wiki_df.csv")
+
+slopes %>%
+  mutate(lower = estimate - 1.96 * std.error,
+         upper = estimate + 1.96 * std.error) %>%
+  ggplot(aes(x = cut, y = estimate, group = 1)) + 
+  geom_pointrange(aes(ymin = lower, ymax = upper)) + 
+  geom_line()

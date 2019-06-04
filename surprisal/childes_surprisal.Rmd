@@ -73,8 +73,10 @@ get_unigrams <- function(utterances, speaker_role, name) {
   
   surprisals <- utts %>%
     left_join(unigrams) %>%
-    group_by(length, word_order) %>%
-    summarise(s = mean(s)) %>%
+     group_by(length, word_order) %>%
+    summarise(mean = mean(log(s)),
+              median = median(log(s)),
+              se = sd(s)/sqrt(length(s))) %>%
     ungroup()
 }
 
@@ -83,6 +85,11 @@ prov_sups <- get_unigrams(prov_utterances, "not child", "stem") %>%
   bind_rows(mutate(get_unigrams(prov_utterances, "child", "stem"), speaker_role = "child")) %>%
   mutate(language = "English")
 
+
+prov_sups %>%
+  filter(speaker_role == "child", length == 6, word_order == 3) %>%
+  ggplot(aes(x = log(s))) + 
+  geom_histogram()
 ```
 
 Sample code for plotting your surprisal results. 
@@ -91,21 +98,19 @@ Sample code for plotting your surprisal results.
 label_data <- data_frame(length = 7, Language = "Japanese", word_order = 2,
                          speaker_role = c("Adult", "Child"), s = c(2,4))
   
-surprises %>%  
-  filter(length == 7, Language == "Japanese") %>%
-  ggplot(aes(x = word_order, y = s,
-                        color = speaker_role,
-                        label = speaker_role)) +
+child_surprisals %>%  
+  filter(length == 12) %>%
+  ggplot(aes(x = word_order, y = median)) +
     # facet_grid(Language ~ length, scales = "free") + 
     xlab("Word position") +
     ylab("Mean surprisal") +
     scale_x_continuous(breaks = 1:7) + 
     geom_line(size = 1) +
-    geom_point() + 
+    geom_pointrange(aes(ymin = mean - 1.96 * se, ymax = mean + 1.96 * se)) + 
     theme_classic(base_size = 10) + 
     scale_color_ptol() +
-    theme(legend.position = "nones") + 
-    geom_text(data = label_data)
+    theme(legend.position = "nones") #+ 
+   # geom_text(data = label_data)
 ```
 
 Down here is the old code. You can run it, but you have to change the corpus name and whether you're using stem or gloss by hand. 
@@ -129,7 +134,9 @@ child_surprisals <- child_utterances %>%
   left_join(child_unigrams) %>%
   mutate(s = -log(p)) %>%
   group_by(length, word_order) %>%
-  summarise(s = mean(s))
+  summarise(mean = mean(s),
+            median = median(s),
+            se = sd(s)/sqrt(n()))
 
 adult_utterances <- prov_utterances %>%
   filter(speaker_role != "Target_Child") %>% 
@@ -149,7 +156,9 @@ adult_surprisals <- adult_utterances %>%
   left_join(adult_unigrams) %>%
   mutate(s = -log(p)) %>%
   group_by(length, word_order) %>%
-  summarise(s = mean(s))
+  summarise(mean = mean(s),
+            se = sd(s)/sqrt(n()))
+
 
 ```
 
