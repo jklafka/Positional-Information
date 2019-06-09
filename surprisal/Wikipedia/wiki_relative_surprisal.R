@@ -16,9 +16,11 @@ extract_wiki_tokens <- function(min_length, max_length, utterances) {
     mutate(word_order = 1:n()) %>%
     group_by(length, word_order, word) %>%
     summarise(n = n()) %>%
-    ungroup()
+    ungroup() %>%
+    mutate(word = as.numeric(as.factor(word)))
 
   sups <- tokens %>%
+    count(word) %>% 
     mutate(p = n/sum(n)) %>%
     mutate(s = -log(p)) %>%
     select(word, s)
@@ -73,13 +75,20 @@ relative_slopes <- function(df_tokens, pos_list) {
 
 NUM_SECTIONS = 5
 
+NUM_SENTENCES <- 500000
+
 LANGUAGE <- commandArgs(trailingOnly=TRUE)[1]
 
 system(paste("python3 get_wiki_df.py", LANGUAGE, sep = " "))
 
 # for_gs <- gs_title("wiki_surprisal_relative")
 
-df <- read_csv("wiki_df.csv")
+df <- read_csv("wiki_df.csv") 
+
+if (nrow(df) > NUM_SENTENCES) {
+  df <- df %>% 
+    sample_n(NUM_SENTENCES)
+}
 
 df_tokens <- extract_wiki_tokens(6, 10, df)
 
@@ -111,9 +120,9 @@ write.csv(all_data, file = "relative_unigrams.csv")
 # gs_edit_cells(for_gs, ws = "Sheet1", anchor = paste("A", nr + 2, sep=""), input = lang_slopes, byrow = TRUE)
 system("rm wiki_df.csv")
 
-slopes %>%
-  mutate(lower = estimate - 1.96 * std.error,
-         upper = estimate + 1.96 * std.error) %>%
-  ggplot(aes(x = cut, y = estimate, group = 1)) + 
-  geom_pointrange(aes(ymin = lower, ymax = upper)) + 
-  geom_line()
+# slopes %>%
+#   mutate(lower = estimate - 1.96 * std.error,
+#          upper = estimate + 1.96 * std.error) %>%
+#   ggplot(aes(x = cut, y = estimate, group = 1)) + 
+#   geom_pointrange(aes(ymin = lower, ymax = upper)) + 
+#   geom_line()

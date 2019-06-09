@@ -71,20 +71,25 @@ def main(lang_name):
 	and stores the dataframe in a csv in the working directory.
 	'''
 	lang_prefix = LANG_DICT[lang_name]
-	url = "https://dumps.wikimedia.org/other/cirrussearch/20190318/" \
-		+ lang_prefix + "wiki-20190318-cirrussearch-content.json.gz"
+	url = "https://dumps.wikimedia.org/other/cirrussearch/20190520/" + \
+		lang_prefix + "wiki-20190520-cirrussearch-content.json.gz"
 	urllib.request.urlretrieve(url, "datafile")
 	subprocess.call(["wiki_extract/cirrus_extract.py", "datafile"])
 
+	all_dfs = pd.DataFrame(columns = ["gloss", "length"])
 	# find the number of article files we want to combine
-	directory = subprocess.check_output(["ls", "text/AA"]).decode("utf-8")
-	highest_filenum = max(int(max(re.findall("\d\d", directory))), 1)
-	upper_bound = min(highest_filenum, 50)
+	directory_names = subprocess.check_output(["ls", "text"]).decode("utf-8").split('\n')[:-1]
+	for name in directory_names:
+		directory = subprocess.check_output(["ls", "text/" + name]).decode("utf-8")
+		highest_filenum = max(int(max(re.findall("\d\d", directory))), 1)
+		upper_bound = min(highest_filenum, 99)
 
-	# construct the df
-	text = extract_texts(upper_bound)
-	df = get_sen_df(text)
-	df.to_csv("wiki_df.csv", index = False)
+		# construct the df
+		text = extract_texts(upper_bound)
+		df = get_sen_df(text)
+		all_dfs = pd.concat([all_dfs, df])
+
+	all_dfs.to_csv("wiki_df.csv", index = False)
 
 	# delete the text files and datafile
 	# may be several gigabytes large

@@ -103,7 +103,7 @@ class OutputSplitter(object):
     def write(self, data):
         #print(data)
         self.reserve(len(data))
-        self.file.write(data.encode('utf-8'))
+        self.file.write(data)
 
     def close(self):
         self.file.close()

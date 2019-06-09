@@ -27,6 +27,7 @@ library(feather)
 library(FactoMineR)
 library(feather)
 library(janitor)
+library(ggdendro)
 
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -37,13 +38,16 @@ theme_set(theme_classic(base_size = 16))
 ```
 
 ```{r make dendrogram}
-wiki <- read.csv(here("Data/relative_unigrams.csv")) %>%
+wiki <- read.csv(here("Data/wikipedia_0context.csv")) %>%
   select(-X) %>% 
   column_to_rownames("Language")
 
 wiki %>% 
   dist() %>% 
   hclust() %>% 
+  ggdendrogram(rotate = FALSE, size = .1) + 
+  ylim(0, .10)
+
   plot(hang = -1, 
        main = "Dendrogram of slope embeddings")
 
