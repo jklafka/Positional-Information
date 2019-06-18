@@ -1,0 +1,102 @@
+---
+title: "Phoneme surprisal"
+author: "Josef Klafka & Dan Yurovsky"
+date: "6/13/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(tidytext)
+library(tidyverse)
+library(childesr)
+library(glue)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r espeak pipeline}
+# all thanks to Mika Braginsky and Dan Yurovsky
+lang_codes <- list(
+  "Croatian" = "hr",
+  "Danish" = "da",
+  "English (American)" = "en-us",
+  "French (Quebec)" = "fr",
+  "Italian" = "it",
+  "Norwegian" = "no",
+  "Russian" = "ru",
+  "Spanish (Mexican)" = "es",
+  "Swedish" = "sv",
+  "Turkish" = "tr", 
+  "Mandarin" = "cmn"
+)
+
+
+get_ipa <- function(word) {
+  system2("espeak", args = c("--ipa=3", "-v", "en", "-q", glue("'{word}'")),
+          stdout = TRUE) %>%
+    gsub("^ ", "", .) %>%
+    gsub("[ˈˌ]", "", .)
+}
+```
+
+```{r phonemes}
+prov_utterances <- get_utterances(corpus = "Providence") #stem or gloss
+
+adult_utterances <- prov_utterances %>%
+  filter(speaker_role != "Target_Child") %>% 
+  mutate(utterance_id = 1:n()) %>% 
+  unnest_tokens(word, stem, token = stringr::str_split, pattern = "[ +]+") 
+
+words <- adult_utterances$word %>% 
+  unique() 
+
+ipa <- words %>%
+  lapply(get_ipa)
+
+
+adult_utterances %<>%
+  left_join(ipa) %>%
+  unnest_tokens(phon, word, token = stringr::str_split, pattern = "", drop = F) %>%
+  group_by(utterance_id, word) %>%
+  mutate(phon_order = 1:n()) %>%
+  mutate(word_length = max(phon_order)) %>%
+  ungroup()
+  
+phon_probs <- adult_utterances %>% 
+  count(phon) %>%
+  ungroup() %>%
+  mutate(p = n/sum(n))
+
+letter_unigrams <- adult_utterances %>% 
+  left_join(letter_probs) %>%
+  mutate(s = -log(p)) %>%
+  group_by(word_length, letter_order) %>%
+  summarise(mean_s = mean(s))
+
+
+
+letter_unigrams %>%
+  filter(word_length %in% 3:11) %>%
+  ggplot(aes(x = letter_order, y = mean_s)) + 
+    facet_wrap(~word_length) + 
+    geom_point() +
+    geom_line() + 
+    xlab("Letter Position") + 
+    ylab("Mean surprisal")
+```
+
+
+```{r providence}
+prov_utterances <- get_utterances(corpus = "Providence") #stem or gloss
+
+child_utterances <- prov_utterances %>%
+  filter(speaker_role == "Target_Child") %>% 
+  mutate(length = str_count(gloss, pattern = "[ +]+") + 1) %>%
+  mutate(utterance_id = 1:n()) %>%
+  unnest_tokens(word, gloss, token = stringr::str_split, pattern = "[ +]+") %>%
+  group_by(utterance_id) %>%
+  mutate(word_order = 1:n()) %>%
+  mutate(ipa = get_ipa(word, "en-us"))
+
+
+```
