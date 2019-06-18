@@ -15,24 +15,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r espeak pipeline}
-# all thanks to Mika Braginsky and Dan Yurovsky
-lang_codes <- list(
-  "Croatian" = "hr",
-  "Danish" = "da",
-  "English (American)" = "en-us",
-  "French (Quebec)" = "fr",
-  "Italian" = "it",
-  "Norwegian" = "no",
-  "Russian" = "ru",
-  "Spanish (Mexican)" = "es",
-  "Swedish" = "sv",
-  "Turkish" = "tr", 
-  "Mandarin" = "cmn"
-)
-
-
 get_ipa <- function(word) {
-  system2("espeak", args = c("--ipa=3", "-v", "en", "-q", glue("'{word}'")),
+  system2("espeak", args = c("--ipa=3", "-v", "en-us", "-q", glue('"{word}"')),
           stdout = TRUE) %>%
     gsub("^ ", "", .) %>%
     gsub("[ˈˌ]", "", .)
@@ -47,16 +31,24 @@ adult_utterances <- prov_utterances %>%
   mutate(utterance_id = 1:n()) %>% 
   unnest_tokens(word, stem, token = stringr::str_split, pattern = "[ +]+") 
 
-words <- adult_utterances$word %>% 
-  unique() 
+adult_utterances %>%
+  distinct(word) %>%
+  # rowwise() %>%
+  # mutate(ipa = get_ipa(word)) 
+  pull(word) %>%
+  write_lines("words.txt")
 
-ipa <- words %>%
-  lapply(get_ipa)
+phones <- read_lines("phones.txt") %>%
+  str_split(" ", simplify = F) %>%
+  unlist() %>%
+  unlist() %>%
+  enframe(name = NULL) %>%
+  filter(nchar(value) > 0)
 
 
-adult_utterances %<>%
+adult_phonemes <- adult_utterances %>%
   left_join(ipa) %>%
-  unnest_tokens(phon, word, token = stringr::str_split, pattern = "", drop = F) %>%
+  unnest_tokens(ipa, word, token = stringr::str_split, pattern = "_", drop = F) %>%
   group_by(utterance_id, word) %>%
   mutate(phon_order = 1:n()) %>%
   mutate(word_length = max(phon_order)) %>%
