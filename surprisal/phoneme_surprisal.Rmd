@@ -40,29 +40,34 @@ adult_utterances <- prov_utterances %>%
   mutate(utterance_id = 1:n()) %>% 
   unnest_tokens(word, stem, token = stringr::str_split, pattern = "[ +]|[_+]+") 
 
-system("rm words.txt phones.txt")
+system("rm words.txt phones.txt splitphones.txt joined.csv")
 adult_utterances %>%
   distinct(word) %>%
-  slice(1:10) %>%
-  # filter(word != "", word != "tʃutʃutʃu", word != "ɛː") %>%
+  filter(word != "", word != "tʃutʃutʃu", word != "ɛː", word != "ˈɛ_s") %>%
   # rowwise() %>%
   # mutate(ipa = get_ipa(word)) 
   pull(word) %>%
   write_lines("words.txt")
 
-system('espeak -f words.txt --ipa=3 -v en-us -q --phonout="phones.txt"')
-system("paste -d , words.txt phones.txt > joined.txt")
+system("espeak -f words.txt --ipa=3 -v en-us -q --phonout='phones.txt'") #get the ipa of each word
+system("cat phones.txt | sed -E 's/ /|/g' | tr '|' '\n' | tail -n +2 > splitphones.txt") #put each ipa word onto its own line in a file called splitphones.txt
+system("rm phones.txt")
+system("sed '/^$/d' splitphones.txt > phones.txt") #remove empty lines in splitphones
+system("paste -d , words.txt phones.txt > joined.csv") #make csv with words and their ipa paired
 
-phones <- read_lines("joined.txt") %>%
-  str_split(" ", simplify = F) %>%
-  unlist() %>%
-  unlist() %>%
-  enframe(name = NULL) %>%
-  filter(nchar(value) > 0)
-phones
+
+phones <- read.csv("joined.csv", 
+                   header = F, 
+                   col.names = c("words", "ipa"))
+# phones <- read_lines("joined.txt") %>%
+#   str_split(" ", simplify = F) %>%
+#   unlist() %>%
+#   unlist() %>%
+#   enframe(name = NULL) %>%
+#   filter(nchar(value) > 0)
 
 adult_phonemes <- adult_utterances %>%
-  left_join(ipa) %>%
+  left_join(phones) %>%
   unnest_tokens(ipa, word, token = stringr::str_split, pattern = "_", drop = F) %>%
   group_by(utterance_id, word) %>%
   mutate(ipa_order = 1:n()) %>%

@@ -1,10 +1,10 @@
-where, w_ˌɛɹ d_ˈuː j_uː w_ˈɑː_n_t m_ˌiː t_ə ɡ_ˌoʊ ˈɛ_n_ɪ_w_ˌɛɹ f_ˈiː_l k_ˈʌ_m_f_ɚ_t
-do,
-you,
-want,
-me,
-to,
-go,
-anywhere,
-feel,
-comfort,
+where,w_ˌɛɹ
+do,d_ˈuː
+you,j_uː
+want,w_ˈɑː_n_t
+me,m_ˌiː
+to,t_ə
+go,ɡ_ˌoʊ
+anywhere,ˈɛ_n_ɪ_w_ˌɛɹ
+feel,f_ˈiː_l
+comfort,k_ˈʌ_m_f_ɚ_t
