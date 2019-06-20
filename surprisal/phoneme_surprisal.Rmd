@@ -19,6 +19,8 @@ library(tidytext)
 library(tidyverse)
 library(childesr)
 library(glue)
+library(feather)
+library(here)
 
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -32,7 +34,7 @@ get_ipa <- function(word) {
 }
 ```
 
-```{r phonemes}
+```{r prov phonemes}
 prov_utterances <- get_utterances(corpus = "Providence") #stem or gloss
 
 adult_utterances <- prov_utterances %>%
@@ -43,10 +45,70 @@ adult_utterances <- prov_utterances %>%
 system("rm words.txt phones.txt splitphones.txt joined.csv")
 adult_utterances %>%
   distinct(word) %>%
-  filter(word != "", word != "tʃutʃutʃu", word != "ɛː", word != "ˈɛ_s") %>%
+  filter(word != "", word != "tʃutʃutʃu", word != "ɛː", word != "lunchroom", word != "dryad's", word != "vi") %>%
   # rowwise() %>%
   # mutate(ipa = get_ipa(word)) 
   pull(word) %>%
+  write_lines("words.txt")
+
+system("espeak -f words.txt --ipa=3 -v en-us -q --phonout='phones.txt'") #get the ipa of each word
+system("cat phones.txt | sed -E 's/ /|/g' | tr '|' '\n' | tail -n +2 > splitphones.txt") #put each ipa word onto its own line in a file called splitphones.txt
+system("rm phones.txt")
+system("sed '/^$/d' splitphones.txt > phones.txt") #remove empty lines in splitphones
+system("paste -d , words.txt phones.txt > joined.csv") #make csv with words and their ipa paired
+
+phones <- read.csv("joined.csv", 
+                   header = F, 
+                   col.names = c("word", "ipa"))
+# phones <- read_lines("joined.txt") %>%
+#   str_split(" ", simplify = F) %>%
+#   unlist() %>%
+#   unlist() %>%
+#   enframe(name = NULL) %>%
+#   filter(nchar(value) > 0)
+
+adult_phonemes <- adult_utterances %>%
+  left_join(phones) %>%
+  filter(!is.na(ipa)) %>%
+  unnest_tokens(phone, ipa, token = stringr::str_split, pattern = "_", drop = F) %>%
+  group_by(utterance_id, word) %>%
+  mutate(phone_order = 1:n()) %>%
+  mutate(word_length = max(phone_order)) %>%
+  ungroup() %>%
+  select(utterance_id, word, ipa, phone, phone_order, word_length)
+  
+phone_probs <- adult_phonemes %>% 
+  count(phone) %>%
+  ungroup() %>%
+  mutate(p = n/sum(n))
+
+ipa_unigrams <- adult_phonemes %>% 
+  left_join(phone_probs) %>%
+  mutate(s = -log(p)) %>%
+  group_by(word_length, phone_order) %>%
+  summarise(mean_s = mean(s))
+
+
+
+ipa_unigrams %>%
+  filter(word_length %in% 4:9) %>%
+  ggplot(aes(x = phone_order, y = mean_s)) + 
+    facet_wrap(~word_length) + 
+    geom_point() +
+    geom_line() + 
+    xlab("Letter Position") + 
+    ylab("Mean surprisal") 
+```
+
+```{r bnc}
+bnc <- read_feather(here("../bnc/bnc10.feather"))
+
+system("rm words.txt phones.txt splitphones.txt joined.csv")
+bnc %>%
+  distinct(word) %>%
+  filter(word != "") %>%
+  pull(word) %>%
+  grep(pattern = "[0-9]+", value = T, invert = T) %>% 
   write_lines("words.txt")
 
 system("espeak -f words.txt --ipa=3 -v en-us -q --phonout='phones.txt'") #get the ipa of each word
@@ -59,14 +121,9 @@ system("paste -d , words.txt phones.txt > joined.csv") #make csv with words and 
 phones <- read.csv("joined.csv", 
                    header = F, 
                    col.names = c("words", "ipa"))
-# phones <- read_lines("joined.txt") %>%
-#   str_split(" ", simplify = F) %>%
-#   unlist() %>%
-#   unlist() %>%
-#   enframe(name = NULL) %>%
-#   filter(nchar(value) > 0)
+phones
 
-adult_phonemes <- adult_utterances %>%
+bnc_phonemes <- bnc %>%
   left_join(phones) %>%
   unnest_tokens(ipa, word, token = stringr::str_split, pattern = "_", drop = F) %>%
   group_by(utterance_id, word) %>%
@@ -96,7 +153,6 @@ ipa_unigrams %>%
     xlab("Letter Position") + 
     ylab("Mean surprisal")
 ```
-
 
 ```{r providence}
 prov_utterances <- get_utterances(corpus = "Providence") #stem or gloss

@@ -1,5 +1,5 @@
 ---
-title: Positional surprisal (1-3grams) in CHILDES corpora
+title: Positional surprisal (1-3grams) in adultES corpora
 author: Josef Klafka and Dan Yurovsky 
 date: "`r Sys.Date()`"
 output: 
@@ -25,35 +25,36 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r pos unigrams}
 prov_utterances <- get_utterances(corpus = "Providence") #stem or gloss
-shiro_utterances <- get_utterances(corpus = "Shiro")
+zhou_utterances <- get_utterances(corpus = "ZhouDinner")
+okayama_utterances <- get_utterances(corpus = "Okayama")
 
-child_utterances <- prov_utterances %>%
-  filter(speaker_role == "Target_Child") %>% 
+adult_utterances <- prov_utterances %>%
+  filter(speaker_role != "Target_adult") %>% 
   mutate(length = str_count(part_of_speech, pattern = "[ +]+") + 1) %>%
   mutate(utterance_id = 1:n()) %>%
   unnest_tokens(word, part_of_speech, token = stringr::str_split, pattern = "[ +]+") %>%
   group_by(utterance_id) %>%
   mutate(word_order = 1:n())
 
-child_unigrams <- child_utterances %>%
+adult_unigrams <- adult_utterances %>%
   group_by(word) %>%
   count() %>%
   ungroup() %>%
   mutate(p = n / sum(n))
   
-child_surprisals <- child_utterances %>%
-  left_join(child_unigrams) %>%
+adult_surprisals <- adult_utterances %>%
+  left_join(adult_unigrams) %>%
   mutate(s = -log(p)) %>%
   group_by(length, word_order) %>%
   summarise(mean = mean(s),
             median = median(s),
             se = sd(s)/sqrt(n()))
 
-child_surprisals %>%  
+adult_surprisals %>%  
   filter(length %in% 4:9) %>%
   ggplot(aes(x = word_order, y = mean)) +
     facet_wrap(~length, scales = "free") + 
-    ggtitle("Unigram POS surprisals") + 
+    ggtitle("Adult unigram POS surprisals") + 
     xlab("Word position") +
     ylab("Mean surprisal") +
     # scale_x_continuous(breaks = 1:7) + 
@@ -65,33 +66,33 @@ child_surprisals %>%
 ```
 
 ```{r pos bigrams}
-child_bigrams_prep <- child_utterances %>% 
+adult_bigrams_prep <- adult_utterances %>% 
   group_by(utterance_id) %>%
   mutate(lag_word = lag(word)) %>%
   group_by(lag_word, word) %>%
   count() %>%
   filter(!is.na(lag_word)) %>%
   ungroup() %>%
-  left_join(child_unigrams, by = c("lag_word" = "word")) %>%
+  left_join(adult_unigrams, by = c("lag_word" = "word")) %>%
   mutate(cond_p = n.x / n.y) %>%
   select(lag_word, word, cond_p, n.x) %>%
   rename(n = n.x)
 
-child_bigrams <- child_utterances %>%
+adult_bigrams <- adult_utterances %>%
   group_by(utterance_id) %>%
   mutate(lag_word = lag(word)) %>%
   ungroup() %>%
-  left_join(child_unigrams) %>%
-  left_join(child_bigrams_prep) %>%
+  left_join(adult_unigrams) %>%
+  left_join(select(adult_bigrams_prep, -n), by = c("lag_word" = "lag_word", "word" = "word")) %>%
   mutate(s = ifelse(is.na(lag_word), -log(p), -log(cond_p))) %>%
   group_by(length, word_order) %>%
   summarise(mean_s = mean(s))
 
-child_bigrams %>%  
+adult_bigrams %>%  
   filter(length %in% 4:9) %>%
   ggplot(aes(x = word_order, y = mean_s)) +
     facet_wrap(~length, scales = "free") + 
-    ggtitle("Bigram POS surprisals") + 
+    ggtitle("Adult bigram POS surprisals") + 
     xlab("Word position") +
     ylab("Mean surprisal") +
     # scale_x_continuous(breaks = 1:7) + 
@@ -103,9 +104,8 @@ child_bigrams %>%
     theme(legend.position = "nones")
 ```
 
-
 ```{r pos trigrams}
-child_trigrams <- child_utterances %>%
+adult_trigrams <- adult_utterances %>%
   group_by(utterance_id) %>%
   mutate(lag_word1 = lag(word)) %>%
   mutate(lag_word2 = lag(lag_word1)) %>%
@@ -113,18 +113,18 @@ child_trigrams <- child_utterances %>%
   count() %>%
   filter(!is.na(lag_word1), !is.na(lag_word2)) %>%
   ungroup() %>%
-  left_join(child_bigrams_prep, by = c("lag_word2" = "lag_word", "lag_word1" = "word")) %>%
+  left_join(adult_bigrams_prep, by = c("lag_word2" = "lag_word", "lag_word1" = "word")) %>%
   mutate(tri_cond_p = n.x / n.y) %>%
   select(lag_word2, lag_word1, word, tri_cond_p)
 
 
-trigram_surprisals_prep <- child_utterances %>%
+trigram_surprisals_prep <- adult_utterances %>%
   group_by(utterance_id) %>%
   mutate(lag_word1 = lag(word)) %>%
   mutate(lag_word2 = lag(lag_word1)) %>%
-  left_join(child_trigrams) %>% 
-  left_join(select(child_bigrams_prep, lag_word, word, cond_p), by = c("lag_word1" = "lag_word", "word" = "word")) %>% 
-  left_join(child_unigrams)
+  left_join(adult_trigrams) %>% 
+  left_join(select(adult_bigrams_prep, lag_word, word, cond_p), by = c("lag_word1" = "lag_word", "word" = "word")) %>% 
+  left_join(adult_unigrams)
 
 
 trigram_surprisals <- trigram_surprisals_prep %>%
@@ -141,7 +141,7 @@ trigram_surprisals %>%
   filter(length %in% 4:9) %>%
   ggplot(aes(x = word_order, y = mean_s)) +
     facet_wrap(~length, scales = "free") +
-    ggtitle("Trigram POS surprisals") + 
+    ggtitle("Adult trigram POS surprisals") + 
     xlab("Word position") +
     ylab("Mean surprisal") +
     # scale_x_continuous(breaks = 1:7) + 
