@@ -34,13 +34,15 @@ get_ipa <- function(word) {
 }
 ```
 
-```{r prov phonemes}
+```{r prov phonemes, eval = F}
 prov_utterances <- get_utterances(corpus = "Providence") #stem or gloss
 
 adult_utterances <- prov_utterances %>%
   filter(speaker_role != "Target_Child") %>% 
   mutate(utterance_id = 1:n()) %>% 
-  unnest_tokens(word, stem, token = stringr::str_split, pattern = "[ +]|[_+]+") 
+  unnest_tokens(word, stem, token = stringr::str_split, pattern = "[ +]|[_+]+") %>%
+  group_by(utterance_id) %>%
+  mutate(word_id = 1:n())
 
 system("rm words.txt phones.txt splitphones.txt joined.csv")
 adult_utterances %>%
@@ -56,27 +58,35 @@ system("cat phones.txt | sed -E 's/ /|/g' | tr '|' '\n' | tail -n +2 > splitphon
 system("rm phones.txt")
 system("sed '/^$/d' splitphones.txt > phones.txt") #remove empty lines in splitphones
 system("paste -d , words.txt phones.txt > joined.csv") #make csv with words and their ipa paired
-
-phones <- read.csv("joined.csv", 
-                   header = F, 
-                   col.names = c("word", "ipa"))
 # phones <- read_lines("joined.txt") %>%
 #   str_split(" ", simplify = F) %>%
 #   unlist() %>%
 #   unlist() %>%
 #   enframe(name = NULL) %>%
 #   filter(nchar(value) > 0)
+```
+
+```{r read_phonemes}
+phones <- read_csv("joined.csv",
+                   col_names = c("word", "ipa"))
 
 adult_phonemes <- adult_utterances %>%
   left_join(phones) %>%
   filter(!is.na(ipa)) %>%
-  unnest_tokens(phone, ipa, token = stringr::str_split, pattern = "_", drop = F) %>%
-  group_by(utterance_id, word) %>%
+  unnest_tokens(phone, ipa, token = stringr::str_split, 
+                pattern = "_+", drop = F) %>%
+  group_by(utterance_id, word_id) %>%
   mutate(phone_order = 1:n()) %>%
   mutate(word_length = max(phone_order)) %>%
   ungroup() %>%
-  select(utterance_id, word, ipa, phone, phone_order, word_length)
-  
+  select(utterance_id, word_id, word, ipa, phone, phone_order, word_length)
+
+adult_phonemes %>%
+  filter(phone_order == 1) %>%
+  ggplot(aes(x = word_length)) + 
+  geom_histogram(fill = "white", color = "black") + 
+  theme_classic()
+
 phone_probs <- adult_phonemes %>% 
   count(phone) %>%
   ungroup() %>%
@@ -91,13 +101,41 @@ ipa_unigrams <- adult_phonemes %>%
 
 
 ipa_unigrams %>%
-  filter(word_length %in% 4:9) %>%
+  filter(word_length %in% 1:5) %>%
   ggplot(aes(x = phone_order, y = mean_s)) + 
     facet_wrap(~word_length) + 
     geom_point() +
     geom_line() + 
     xlab("Letter Position") + 
     ylab("Mean surprisal") 
+```
+
+```{r}
+four_lengths <- adult_phonemes %>%
+  filter(word_length == 3) %>%
+  group_by(utterance_id, word_id, phone_order) 
+
+four_words <- four_lengths %>%
+  ungroup() %>%
+  distinct(word, phone_order, phone) %>%
+  group_by(word) %>%
+  nest()
+
+word1 <- four_words %>%
+  slice(1) %>%
+  unnest() %>%
+  slice(c(2,3)) %>%
+  select(-word) 
+
+
+word1 %>%
+  spread(phone_order, phone) %>%
+  left_join(four_lengths %>%
+  spread(phone_order, phone)) %>%
+  distinct(utterance_id, word_id, word) %>%
+  group_by(word) %>%
+  summarise(n = n())
+
 ```
 
 ```{r bnc}
