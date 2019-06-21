@@ -21,6 +21,10 @@ library(childesr)
 library(glue)
 library(feather)
 library(here)
+library(entropy)
+library(tidyboot)
+library(janitor)
+library(arrangements)
 
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -75,6 +79,7 @@ adult_phonemes <- adult_utterances %>%
   filter(!is.na(ipa)) %>%
   unnest_tokens(phone, ipa, token = stringr::str_split, 
                 pattern = "_+", drop = F) %>%
+  filter(phone != "") %>%
   group_by(utterance_id, word_id) %>%
   mutate(phone_order = 1:n()) %>%
   mutate(word_length = max(phone_order)) %>%
@@ -84,7 +89,7 @@ adult_phonemes <- adult_utterances %>%
 adult_phonemes %>%
   filter(phone_order == 1) %>%
   ggplot(aes(x = word_length)) + 
-  geom_histogram(fill = "white", color = "black") + 
+  geom_histogram(fill = "white", color = "black", binwidth = 1) + 
   theme_classic()
 
 phone_probs <- adult_phonemes %>% 
@@ -110,32 +115,52 @@ ipa_unigrams %>%
     ylab("Mean surprisal") 
 ```
 
-```{r}
-four_lengths <- adult_phonemes %>%
-  filter(word_length == 3) %>%
-  group_by(utterance_id, word_id, phone_order) 
+```{r leave-out-surprisal}
+hold_out_entropy <- function(df) {
+  spread_df <- df %>%
+    spread(phone_order, phone) %>%
+    clean_names()
+  
+  phone_length <- max(df$phone_order)
+  
+  lens <- paste0("x", 1:phone_length)
+  
+  boot_entropy <- function(group) {
+    spread_df %>%
+      group_by_at(group) %>%
+      summarise(n = n()) %>%
+      summarise(entropy = entropy(n)) %>%
+      ungroup() %>%
+      tidyboot_mean(entropy)
+  }
+  
+  
+  groupings <- combinations(lens, phone_length -1, 
+                            layout = "list") 
+  
+  groupings <- map(seq(length(lens),1,-1),
+                   function(x) c(groupings[[x]], lens[x]))
+  
+  map_df(groupings, boot_entropy) %>%
+    mutate(phone_order = seq(phone_length, 1, -1))
+  
+}
 
-four_words <- four_lengths %>%
-  ungroup() %>%
-  distinct(word, phone_order, phone) %>%
-  group_by(word) %>%
-  nest()
+split_lengths <- adult_phonemes %>%
+  group_by(word_length) %>%
+  nest() %>%
+  filter(word_length > 1) %>%
+  filter(word_length %in% 1:6 ) %>%
+  mutate(entropy = map(data, hold_out_entropy))
 
-word1 <- four_words %>%
-  slice(1) %>%
+split_lengths %>%
+  select(-data) %>%
   unnest() %>%
-  slice(c(2,3)) %>%
-  select(-word) 
-
-
-word1 %>%
-  spread(phone_order, phone) %>%
-  left_join(four_lengths %>%
-  spread(phone_order, phone)) %>%
-  distinct(utterance_id, word_id, word) %>%
-  group_by(word) %>%
-  summarise(n = n())
-
+  ggplot(aes(x = phone_order, y = empirical_stat)) + 
+  facet_wrap(~ word_length, scales = "free") +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) + 
+  theme_classic() + 
+  geom_line()
 ```
 
 ```{r bnc}
