@@ -29,16 +29,23 @@ library(arrangements)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r espeak pipeline}
-get_ipa <- function(word) {
-  system2("espeak", args = c("--ipa=3", "-v", "en-us", "-q", glue('"{word}"')),
-          stdout = TRUE) %>%
-    gsub("^ ", "", .) %>%
-    gsub("[ˈˌ]", "", .)
-}
+```{r prov phonemes, eval = F, include = F}
+system("rm words.txt phones.txt splitphones.txt joined.csv")
+adult_utterances %>%
+  distinct(word) %>%
+  filter(word != "", word != "tʃutʃutʃu", word != "ɛː", word != "lunchroom", word != "dryad's", word != "vi") %>%
+  pull(word) %>%
+  write_lines("words.txt")
+
+system("espeak -f words.txt --ipa=3 -v en-us -q --phonout='phones.txt'") #get the ipa of each word
+system("cat phones.txt | sed -E 's/ /|/g' | tr '|' '\n' | tail -n +2 > splitphones.txt") #put each ipa word onto its own line in a file called splitphones.txt
+system("rm phones.txt")
+system("sed '/^$/d' splitphones.txt > phones.txt") #remove empty lines in splitphones
+system("paste -d , words.txt phones.txt > joined.csv") #make csv with words and their ipa paired
+
 ```
 
-```{r prov phonemes, eval = F}
+```{r read_phonemes, include = F}
 prov_utterances <- get_utterances(corpus = "Providence") #stem or gloss
 
 adult_utterances <- prov_utterances %>%
@@ -48,29 +55,6 @@ adult_utterances <- prov_utterances %>%
   group_by(utterance_id) %>%
   mutate(word_id = 1:n())
 
-system("rm words.txt phones.txt splitphones.txt joined.csv")
-adult_utterances %>%
-  distinct(word) %>%
-  filter(word != "", word != "tʃutʃutʃu", word != "ɛː", word != "lunchroom", word != "dryad's", word != "vi") %>%
-  # rowwise() %>%
-  # mutate(ipa = get_ipa(word)) 
-  pull(word) %>%
-  write_lines("words.txt")
-
-system("espeak -f words.txt --ipa=3 -v en-us -q --phonout='phones.txt'") #get the ipa of each word
-system("cat phones.txt | sed -E 's/ /|/g' | tr '|' '\n' | tail -n +2 > splitphones.txt") #put each ipa word onto its own line in a file called splitphones.txt
-system("rm phones.txt")
-system("sed '/^$/d' splitphones.txt > phones.txt") #remove empty lines in splitphones
-system("paste -d , words.txt phones.txt > joined.csv") #make csv with words and their ipa paired
-# phones <- read_lines("joined.txt") %>%
-#   str_split(" ", simplify = F) %>%
-#   unlist() %>%
-#   unlist() %>%
-#   enframe(name = NULL) %>%
-#   filter(nchar(value) > 0)
-```
-
-```{r read_phonemes}
 phones <- read_csv("joined.csv",
                    col_names = c("word", "ipa"))
 
@@ -102,20 +86,26 @@ ipa_unigrams <- adult_phonemes %>%
   mutate(s = -log(p)) %>%
   group_by(word_length, phone_order) %>%
   summarise(mean_s = mean(s))
-
-
-
-ipa_unigrams %>%
-  filter(word_length %in% 1:5) %>%
-  ggplot(aes(x = phone_order, y = mean_s)) + 
-    facet_wrap(~word_length) + 
-    geom_point() +
-    geom_line() + 
-    xlab("Letter Position") + 
-    ylab("Mean surprisal") 
 ```
 
-```{r leave-out-surprisal}
+Briefly, what we're doing is splitting each word in the Providence corpus from CHILDES up into its constituent phones, i.e. the sounds that make up the word. We then calculate how common each phone is across the entire corpus. From this frequency measure, we compute the surprisal of each phone, which is inversely proportional to the frequency of the phone. The less common a phone is, the more difficult it is to process the phone. 
+
+We split up the words in the corpus by their length in number of phones--for example, the word "food" has three phones: one for the "f", one for the long "oo", and one for the "d". We would take all words like this that have three phones. For each phone position  within the words of that length, we calculate the average surprisal/information in that position. For example, looking at all of the words with three phones, we take all of the first phones and calculate how much information is in that position on average. In other words, how difficult is it to process the first sound in a word, compared to the other sounds in a word?  
+
+```{r plot unigrams}
+ipa_unigrams %>%
+  filter(word_length %in% 2:6) %>%
+  ggplot(aes(x = phone_order, y = mean_s)) +
+    facet_wrap(~word_length) +
+    geom_point() +
+    geom_line() +
+    xlab("Phone Position") +
+    ylab("Mean surprisal")
+```
+
+In the plot above
+
+```{r leave-out-surprisal, include = F}
 hold_out_entropy <- function(df) {
   spread_df <- df %>%
     spread(phone_order, phone) %>%
@@ -145,7 +135,11 @@ hold_out_entropy <- function(df) {
     mutate(phone_order = seq(phone_length, 1, -1))
   
 }
+```
 
+For this next analysis, we took all words with 2, 3, 4, 5 or 6 phones. For each word length, we held out the phones in one phone position. For example, in all words with 4 phones, we held out the first phone. We then computed the entropy, or amount of variation, in the remaining words. The higher the entropy when holding out phones in a given position, the more information is contained in that phone on average. 
+
+```{r show leave-out-surprisal}
 split_lengths <- adult_phonemes %>%
   group_by(word_length) %>%
   nest() %>%
@@ -160,74 +154,9 @@ split_lengths %>%
   facet_wrap(~ word_length, scales = "free") +
   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) + 
   theme_classic() + 
-  geom_line()
+  geom_line() + 
+  xlab("Phone position") + 
+  ylab("Entropy")
 ```
 
-```{r bnc}
-bnc <- read_feather(here("../bnc/bnc10.feather"))
-
-system("rm words.txt phones.txt splitphones.txt joined.csv")
-bnc %>%
-  distinct(word) %>%
-  filter(word != "") %>%
-  pull(word) %>%
-  grep(pattern = "[0-9]+", value = T, invert = T) %>% 
-  write_lines("words.txt")
-
-system("espeak -f words.txt --ipa=3 -v en-us -q --phonout='phones.txt'") #get the ipa of each word
-system("cat phones.txt | sed -E 's/ /|/g' | tr '|' '\n' | tail -n +2 > splitphones.txt") #put each ipa word onto its own line in a file called splitphones.txt
-system("rm phones.txt")
-system("sed '/^$/d' splitphones.txt > phones.txt") #remove empty lines in splitphones
-system("paste -d , words.txt phones.txt > joined.csv") #make csv with words and their ipa paired
-
-
-phones <- read.csv("joined.csv", 
-                   header = F, 
-                   col.names = c("words", "ipa"))
-phones
-
-bnc_phonemes <- bnc %>%
-  left_join(phones) %>%
-  unnest_tokens(ipa, word, token = stringr::str_split, pattern = "_", drop = F) %>%
-  group_by(utterance_id, word) %>%
-  mutate(ipa_order = 1:n()) %>%
-  mutate(word_length = max(ipa_order)) %>%
-  ungroup()
-  
-ipa_probs <- adult_phonemes %>% 
-  count(ipa) %>%
-  ungroup() %>%
-  mutate(p = n/sum(n))
-
-ipa_unigrams <- adult_utterances %>% 
-  left_join(ipa_probs) %>%
-  mutate(s = -log(p)) %>%
-  group_by(word_length, ipa_order) %>%
-  summarise(mean_s = mean(s))
-
-
-
-ipa_unigrams %>%
-  filter(word_length %in% 3:11) %>%
-  ggplot(aes(x = ipa_order, y = mean_s)) + 
-    facet_wrap(~word_length) + 
-    geom_point() +
-    geom_line() + 
-    xlab("Letter Position") + 
-    ylab("Mean surprisal")
-```
-
-```{r providence}
-prov_utterances <- get_utterances(corpus = "Providence") #stem or gloss
-
-child_utterances <- prov_utterances %>%
-  filter(speaker_role == "Target_Child") %>% 
-  mutate(length = str_count(gloss, pattern = "[ +]+") + 1) %>%
-  mutate(utterance_id = 1:n()) %>%
-  unnest_tokens(word, gloss, token = stringr::str_split, pattern = "[ +]+") %>%
-  group_by(utterance_id) %>%
-  mutate(word_order = 1:n()) %>%
-  mutate(ipa = get_ipa(word, "en-us"))
-
-
-```
+We see that word-initial phones tend to have more information in them than word-medial or word-final phones, so less is lost by dropping the final sounds in a word than in dropping the initial sounds. 
