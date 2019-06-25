@@ -54,27 +54,37 @@ wiki %>%
 ```
 
 ```{r word order}
-wkpd <- read.csv(here("Data/relative_unigrams.csv"))
+wkpd <- read.csv(here("Data/wikipedia_0context.csv"))
 LANGUAGES <- wkpd$Language
 
 
-FEATURES <- c(82:97)
+FEATURES <- c(1:144)
 for (i in c(1:length(FEATURES))) {
   FEATURES[i] <- paste(FEATURES[i], "A", sep = "")
 } #get all word order WALS features in correct syntax
 
 wf <- wals.feature(FEATURES) 
 
-wo_wf <- wf %>% 
-  filter(language %in% LANGUAGES) %>%
-  select(language, `82A`:`97A`) %>%
-  select(-`84A`)
+# word order
+# wo_wf <- wf %>% 
+#   filter(language %in% LANGUAGES) %>%
+#   select(language, `82A`:`97A`) %>%
+#   select(-`84A`)
 
-wo_df <- wo_wf[rowSums(is.na(wo_wf)) < 6,] %>%
+# nominal categories
+wo_wf <- wf %>%
+  filter(language %in% LANGUAGES) %>%
+  select(language, `30A`:`57A`) #%>%
+wo_wf$non <- rowSums(is.na(wo_wf))
+wo_wf %<>%
+  filter(non < 12) %>%
+  select(-non)
+
+wo_df <- wo_wf %>%
   as_data_frame() %>%
   group_by(language) %>%
   slice(1) %>%
-  gather(feature, value, `82A`:`97A`) %>%
+  gather(feature, value, `30A`:`57A`) %>%
   group_by(feature) %>%
   mutate(value = factor(value))
 
@@ -87,10 +97,10 @@ imputed_wo <- wo_df %>%
   MIMCA(ncp = 1)
 
 imputed_wo <- as.data.frame(imputed_wo[[1]][[99]]) 
-imputed_wo$language <- unique(wo_df$language)
+
 wo_sub <- imputed_wo %>% group_by(language) %>%
   slice(1) %>%
-  gather(feature, value, `82A`:`97A`) %>%
+  gather(feature, value, `30A`:`57A`) %>%
   group_by(feature) %>%
   mutate(value = as.numeric(as.factor(value)))
 
