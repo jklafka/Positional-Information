@@ -88,6 +88,76 @@ ipa_unigrams <- adult_phonemes %>%
   summarise(mean_s = mean(s))
 ```
 
+```{r childes unigrams}
+phone_probs <- adult_phonemes %>% 
+  count(phone) %>%
+  ungroup() %>%
+  mutate(p = n/sum(n))
+
+phone_unigrams <- adult_phonemes %>% 
+  left_join(phone_probs) %>%
+  mutate(s = -log(p)) %>%
+  group_by(word_length, phone_order) %>%
+  summarise(mean_s = mean(s))
+```
+
+```{r childes bigrams}
+bigram_probs <- adult_phonemes %>% 
+  group_by(utterance_id) %>%
+  mutate(lag_phone = lag(phone)) %>%
+  group_by(lag_phone, phone) %>%
+  count() %>%
+  filter(!is.na(lag_phone)) %>%
+  ungroup() %>%
+  left_join(phone_probs, by = c("lag_phone" = "phone")) %>%
+  mutate(cond_p = n.x / n.y) %>%
+  select(lag_phone, phone, cond_p, n.x) %>%
+  rename(n = n.x)
+
+phone_bigrams <- adult_phonemes %>%
+  group_by(utterance_id, word_id) %>%
+  mutate(lag_phone = lag(phone)) %>%
+  ungroup() %>%
+  left_join(bigram_probs, by = c("lag_phone" = "lag_phone", "phone" = "phone")) %>%
+  left_join(phone_probs, by = c("phone" = "phone")) %>%
+  mutate(s = ifelse(is.na(lag_phone), -log(p), -log(cond_p))) %>%
+  group_by(word_length, phone_order) %>%
+  summarise(mean_s = mean(s)) 
+```
+
+```{r childes trigrams}
+trigram_probs <- adult_phonemes %>%
+  group_by(utterance_id, word_id) %>%
+  mutate(lag_phone1 = lag(phone)) %>%
+  mutate(lag_phone2 = lag(lag_phone1)) %>%
+  group_by(lag_phone2, lag_phone1, phone) %>%
+  count() %>%
+  filter(!is.na(lag_phone1), !is.na(lag_phone2)) %>%
+  ungroup() %>%
+  left_join(bigram_probs, by = c("lag_phone2" = "lag_phone", "lag_phone1" = "phone")) %>%
+  mutate(tri_cond_p = n.x / n.y) %>%
+  select(-cond_p, -n.y) %>%
+  rename(n = n.x)
+
+
+phone_trigrams <- adult_phonemes %>%
+  group_by(utterance_id, word_id) %>%
+  mutate(lag_phone1 = lag(phone)) %>%
+  mutate(lag_phone2 = lag(lag_phone1)) %>%
+  left_join(trigram_probs, by = c("lag_phone2" = "lag_phone2", "lag_phone1" = "lag_phone1", "phone" = "phone")) %>% 
+  left_join(bigram_probs, by = c("lag_phone1" = "lag_phone", "phone" = "phone")) %>% 
+  left_join(phone_probs, by = c("phone" = "phone")) %>%
+  mutate(s = ifelse(is.na(lag_phone2), # check if it's not the first word
+                    ifelse(is.na(lag_phone1), # check if not the second word
+                           -log(p), # trigram if third or beyond
+                           -log(cond_p)), # bigram if second word
+                    -log(tri_cond_p))) %>% # unigram if first word
+  group_by(word_length, phone_order) %>%
+  summarise(mean_s = mean(s)) %>% 
+  filter(phone_order <= word_length)
+```
+
+
 Briefly, what we're doing is splitting each word in the Providence corpus from CHILDES up into its constituent phones, i.e. the sounds that make up the word. We then calculate how common each phone is across the entire corpus. From this frequency measure, we compute the surprisal of each phone, which is inversely proportional to the frequency of the phone. The less common a phone is, the more difficult it is to process the phone. 
 
 We split up the words in the corpus by their length in number of phones--for example, the word "food" has three phones: one for the "f", one for the long "oo", and one for the "d". We would take all words like this that have three phones. For each phone position  within the words of that length, we calculate the average surprisal/information in that position. For example, looking at all of the words with three phones, we take all of the first phones and calculate how much information is in that position on average. In other words, how difficult is it to process the first sound in a word, compared to the other sounds in a word?  
@@ -139,7 +209,7 @@ hold_out_entropy <- function(df) {
 
 For this next analysis, we took all words with 2, 3, 4, 5 or 6 phones. For each word length, we held out the phones in one phone position. For example, in all words with 4 phones, we held out the first phone. We then computed the entropy, or amount of variation, in the remaining words. The higher the entropy when holding out phones in a given position, the more information is contained in that phone on average. 
 
-```{r show leave-out-surprisal}
+```{r show leave-out-entropy}
 split_lengths <- adult_phonemes %>%
   group_by(word_length) %>%
   nest() %>%

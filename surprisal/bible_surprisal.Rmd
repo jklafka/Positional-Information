@@ -1,0 +1,21 @@
+---
+title: "Cross-linguistic Bible Corpus Surprisal Curves"
+author: "Josef Klafka and Dan Yurovsky"
+date: "6/25/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(tidytext)
+library(here)
+library(feather)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r read bible corpora}
+bible_filenames <- system("ls" + here("../../bible-corpus/unpacked/"), intern = T)
+
+map(bible_filenames, read_csv(here("../../bible-corpus/unpacked/")) + .x)
+```

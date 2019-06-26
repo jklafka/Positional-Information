@@ -15,13 +15,15 @@ output:
 library(tidyverse)
 library(tidytext)
 library(childesr)
+library(here)
+library(feather)
 
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
 ```{r set up corpus}
-prov_utterances <- get_utterances(corpus = "Providence")
+prov_utterances <- get_utterances(corpus = "Palasis")
 
 adult_utterances <- prov_utterances %>%
   filter(speaker_role != "Target_Child") %>% 
@@ -107,6 +109,11 @@ letter_trigrams <- adult_utterances %>%
 ```
 
 ```{r plot results}
+letter_unigrams <- letter_unigrams %>% mutate(gram = "Unigram") 
+letter_bigrams <- letter_bigrams %>% mutate(gram = "Bigram") 
+letter_trigrams <- letter_trigrams %>% mutate(gram = "Trigram") 
+letter_unigrams %>% bind_rows(letter_bigrams, letter_trigrams) %>% write_feather(here("Data/palasis_letters.feather"))
+
 letter_unigrams %>%
   filter(word_length %in% 3:11) %>%
   ggplot(aes(x = letter_order, y = mean_s)) + 
