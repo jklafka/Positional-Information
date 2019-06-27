@@ -37,7 +37,7 @@ adult_utterances %>%
   pull(word) %>%
   write_lines("words.txt")
 
-system("espeak -f words.txt --ipa=3 -v en-us -q --phonout='phones.txt'") #get the ipa of each word
+system("espeak -f words.txt --ipa=3 -v fr -q --phonout='phones.txt'") #get the ipa of each word
 system("cat phones.txt | sed -E 's/ /|/g' | tr '|' '\n' | tail -n +2 > splitphones.txt") #put each ipa word onto its own line in a file called splitphones.txt
 system("rm phones.txt")
 system("sed '/^$/d' splitphones.txt > phones.txt") #remove empty lines in splitphones
@@ -55,6 +55,19 @@ adult_utterances <- prov_utterances %>%
   group_by(utterance_id) %>%
   mutate(word_id = 1:n())
 
+system("rm words.txt phones.txt splitphones.txt joined.csv")
+adult_utterances %>%
+  filter(word != "", word != "tʃutʃutʃu", word != "ɛː", word != "lunchroom", word != "dryad's", word != "vi") %>%
+  pull(word) %>%
+  unique() %>%
+  write_lines("words.txt")
+
+system("espeak -f words.txt --ipa=3 -v en-us -q --phonout='phones.txt'") #get the ipa of each word
+system("cat phones.txt | sed -E 's/ /|/g' | tr '|' '\n' | tail -n +2 > splitphones.txt") #put each ipa word onto its own line in a file called splitphones.txt
+system("rm phones.txt")
+system("sed '/^$/d' splitphones.txt > phones.txt") #remove empty lines in splitphones
+system("paste -d , words.txt phones.txt > joined.csv") #make csv with words and their ipa paired
+
 phones <- read_csv("joined.csv",
                    col_names = c("word", "ipa"))
 
@@ -69,6 +82,8 @@ adult_phonemes <- adult_utterances %>%
   mutate(word_length = max(phone_order)) %>%
   ungroup() %>%
   select(utterance_id, word_id, word, ipa, phone, phone_order, word_length)
+
+adult_phonemes %>% write_feather(here("Data/adult_phonemes.feather"))
 
 adult_phonemes %>%
   filter(phone_order == 1) %>%
@@ -155,12 +170,12 @@ phone_trigrams <- adult_phonemes %>%
   group_by(word_length, phone_order) %>%
   summarise(mean_s = mean(s)) %>% 
   filter(phone_order <= word_length)
+
+phone_unigrams <- phone_unigrams %>% mutate(gram = "Unigram") 
+phone_bigrams <- phone_bigrams %>% mutate(gram = "Bigram") 
+phone_trigrams <- phone_trigrams %>% mutate(gram = "Trigram") 
+phone_unigrams %>% bind_rows(phone_bigrams, phone_trigrams) %>% write_feather(here("Data/palasis_phones.feather"))
 ```
-
-
-Briefly, what we're doing is splitting each word in the Providence corpus from CHILDES up into its constituent phones, i.e. the sounds that make up the word. We then calculate how common each phone is across the entire corpus. From this frequency measure, we compute the surprisal of each phone, which is inversely proportional to the frequency of the phone. The less common a phone is, the more difficult it is to process the phone. 
-
-We split up the words in the corpus by their length in number of phones--for example, the word "food" has three phones: one for the "f", one for the long "oo", and one for the "d". We would take all words like this that have three phones. For each phone position  within the words of that length, we calculate the average surprisal/information in that position. For example, looking at all of the words with three phones, we take all of the first phones and calculate how much information is in that position on average. In other words, how difficult is it to process the first sound in a word, compared to the other sounds in a word?  
 
 ```{r plot unigrams}
 ipa_unigrams %>%
@@ -172,8 +187,6 @@ ipa_unigrams %>%
     xlab("Phone Position") +
     ylab("Mean surprisal")
 ```
-
-In the plot above
 
 ```{r leave-out-surprisal, include = F}
 hold_out_entropy <- function(df) {
@@ -207,7 +220,6 @@ hold_out_entropy <- function(df) {
 }
 ```
 
-For this next analysis, we took all words with 2, 3, 4, 5 or 6 phones. For each word length, we held out the phones in one phone position. For example, in all words with 4 phones, we held out the first phone. We then computed the entropy, or amount of variation, in the remaining words. The higher the entropy when holding out phones in a given position, the more information is contained in that phone on average. 
 
 ```{r show leave-out-entropy}
 split_lengths <- adult_phonemes %>%
@@ -228,5 +240,3 @@ split_lengths %>%
   xlab("Phone position") + 
   ylab("Entropy")
 ```
-
-We see that word-initial phones tend to have more information in them than word-medial or word-final phones, so less is lost by dropping the final sounds in a word than in dropping the initial sounds. 
