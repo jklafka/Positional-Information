@@ -13,7 +13,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r setup, include=FALSE}
+```{r load-libraries, library, message=F, results='hide', warning=FALSE}
 library(tidytext)
 library(tidyverse)
 library(childesr)
@@ -24,67 +24,85 @@ library(entropy)
 library(tidyboot)
 library(janitor)
 library(arrangements)
+library(stringr)
 
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, cache = T, warning = F, 
+                      fig.width = 8, fig.height = 4)
+
+theme_set(theme_classic(base_size = 16))
 ```
 
-We're going to discuss the amount of information across letters in English, then information in English phones (sounds), then the hold-out entropy in English and finally the information in letters in French and German. We are interested in French because when many French words are pronounced, the final letters are not pronounced in any way (e.g. "ils sauraient"="they would know", the final "ent" in "sauraient" is not pronounced at all). We are interested in German because German has a much richer case system than English or French, and case markings in German are suffixes (at the ends of words). So in German, the ends of words may be much more important than in French or English. 
+Where is the information in English words? A salient feature of African American Enlgish Vernacular is the reduction of final consonants and consonant clusters. Why must this happen? One possibility is that the information important for identifying a word is not uniformly distributed across it's characters or sounds but instead concentrated at the beginnings or middles of words. In these cases, reducing final sounds might reduce the articulatory complexity of words without much cost for the listener in processing these words and inferring their intended meaning.
 
-```{r read data}
-prov_letters <- read_feather(here("Data/providence_letters.feather"))
-prov_phones <- read_feather(here("Data/providence_phonemes.feather"))
+In a series of initial analyses we tackle three ways:
+1. Computing the surprisal of characters in English words either from baserates of character production (unigram) or conditioning on the prior charaters in each word (bigram and trigram). This analyses roughly captures the difficulty that a listener might have in predicting each character.
+2. Repeating this analysis at the level of phonemes rather than characters, arguably a better proxy for the speaker's and listener's representations
+3. Computing hold-out entropy for individual phonemes in English words. This is roughly equivalent to asking "if you knew every other sound in a word, how much trouble would you have predicting what sounds appears in position X"
+4. Comparing English to French and German which have different expected information profiles (more below).
+
+SOME KIND OF PREVIEW OF RESULTS HERE?
+
+```{r read-data}
+prov_letters <- read_feather(here("Data/providence_letters.feather")) %>%
+  mutate(rep = "letter", language = "English") %>%
+  rename(order = letter_order)
+
+prov_phones <- read_feather(here("Data/providence_phonemes.feather")) %>%
+  mutate(rep = "phone", language = "English") %>%
+  rename(order = phone_order)
+
 adult_phonemes <- read_feather(here("Data/adult_phonemes.feather"))
-french_letters <- read_feather(here("Data/palasis_letters.feather"))
-german_letters <- read_feather(here("Data/wagner_letters.feather"))
+
+french_letters <- read_feather(here("Data/palasis_letters.feather")) %>%
+  mutate(rep = "letter", language = "French") %>%
+  rename(order = letter_order)
+  
+german_letters <- read_feather(here("Data/wagner_letters.feather")) %>%
+  mutate(rep = "letter", language = "German") %>%
+  rename(order = letter_order)
+
+all_data <- bind_rows(prov_letters, prov_phones, french_letters, german_letters)
 ```
 
 # English Letters
 
-How much information is in each letter in English words? We use the Providence corpus from CHILDES. In the plots below, each plot represents the information in each letter in words of different lengths by number of letters--we show the length above each plot. 
+We use for our English corpus the Providence corpus from CHILDES. In the plots below, each plot represents the information in each letter in words of different lengths by number of letters--we show the length above each plot. 
 
 We see a distinctive shape for information at the level of individual letters in English. The first letter has relatively high information, the second letter has less information and the third letter has high infomration, and the final letter (if the word has more than 3 letters) has less information. 
 
-```{r plot prov letter unigrams}
-prov_letters %>%
-  filter(gram == "Unigram") %>%
-  filter(word_length %in% 2:6) %>%
-  ggplot(aes(x = letter_order, y = mean_s)) +
-    facet_wrap(~word_length) +
+```{r plot-helper}
+plot_curves <- function(select_language = "English", select_rep = "letter", 
+                        select_gram = "Unigram") {
+  all_data %>%
+    filter(language == select_language, rep == select_rep,
+           gram == select_gram) %>%
+    filter(word_length %in% 2:6) %>%
+    ggplot(aes(x = order, y = mean_s)) +
+    facet_grid(. ~ word_length, 
+               labeller = as_labeller(function(x) paste0("Length ", x))) +
     geom_point() +
     geom_line() +
-    xlab("Phone Position") +
-    ylab("Average Information") + 
-    ggtitle("Information in English letters by letter position - unigrams")
+    xlab(paste0(str_to_sentence(select_rep), " Position")) +
+    ylab("Surprisal") + 
+    ggtitle(paste0("Information in ", select_language, " ", 
+                   select_rep, "s by ",select_rep, " position - ", select_gram))
+}
 ```
 
-Now we ask: if you know the last letter, how much information is in the next letter in English? There is relatively less information in each letter knowing the previous letter, but we see the same general information trajectory across letters. 
+```{r prov-letter-unigrams}
+plot_curves()
+```
 
-```{r plot prov letter bigrams}
-prov_letters %>%
-  filter(gram == "Bigram") %>%
-  filter(word_length %in% 2:6) %>%
-  ggplot(aes(x = letter_order, y = mean_s)) +
-    facet_wrap(~word_length) +
-    geom_point() +
-    geom_line() +
-    xlab("Phone Position") +
-    ylab("Average Information") + 
-    ggtitle("Information in English letters by letter position - bigrams")
+Now we ask: if you know the previous letter, how much information is in the next letter in English? There is relatively less information in each letter knowing the previous letter, but we see the same general information trajectory across letters. 
+
+```{r prov-letter-bigrams}
+plot_curves(select_gram = "Bigram")
 ```
 
 What about if you know the last two letters and are trying to predict the next letter? We see decreasing information within words as you move left-to-right. 
 
-```{r plot prov letter trigrams}
-prov_letters %>%
-  filter(gram == "Trigram") %>%
-  filter(word_length %in% 2:6) %>%
-  ggplot(aes(x = letter_order, y = mean_s)) +
-    facet_wrap(~word_length) +
-    geom_point() +
-    geom_line() +
-    xlab("Phone Position") +
-    ylab("Average Information") + 
-    ggtitle("Information in English letters by letter position - trigrams")
+```{r prov-letter-trigrams}
+plot_curves(select_gram = "Trigram")
 ```
 
 # English Phonemes
@@ -97,45 +115,18 @@ We split up the words in the corpus by their length in number of phones--for exa
 
 Unlike with letters, there isn't as much of a consistent shape to the information distribution for phones considered without context. For the most part, the first phone has relatively little information while the second phone has a lot of information. 
 
-```{r plot prov phone unigrams}
-prov_phones %>%
-  filter(gram == "Unigram") %>%
-  filter(word_length %in% 2:6) %>%
-  ggplot(aes(x = phone_order, y = mean_s)) +
-    facet_wrap(~word_length) +
-    geom_point() +
-    geom_line() +
-    xlab("Phone Position") +
-    ylab("Average Information") + 
-    ggtitle("Information in English phones by phone position - unigrams")
+```{r prov-phone-unigrams}
+plot_curves(select_rep = "phone")
 ```
 
 With bigrams and trigrams for English phones, the next phone is very predictable if you know the phone or two that came before it. Especially if you know the preceding two phones, then each phone past the first two is predictable and carries relatively little information in English. 
 
-```{r plot prov phone bigrams}
-prov_phones %>%
-  filter(gram == "Bigram") %>%
-  filter(word_length %in% 2:6) %>%
-  ggplot(aes(x = phone_order, y = mean_s)) +
-    facet_wrap(~word_length) +
-    geom_point() +
-    geom_line() +
-    xlab("Phone Position") +
-    ylab("Average Information") + 
-    ggtitle("Information in English phones by phone position - bigrams")
+```{r prov-phone-bigrams}
+plot_curves(select_rep = "phone", select_gram = "Bigram")
 ```
 
-```{r plot prov phone trigrams}
-prov_phones %>%
-  filter(gram == "Trigram") %>%
-  filter(word_length %in% 2:6) %>%
-  ggplot(aes(x = phone_order, y = mean_s)) +
-    facet_wrap(~word_length) +
-    geom_point() +
-    geom_line() +
-    xlab("Phone Position") +
-    ylab("Average Information") + 
-    ggtitle("Information in English phones by phone position - trigrams")
+```{r prov-phone-trigrams}
+plot_curves(select_rep = "phone", select_gram = "Trigram")
 ```
 
 ## Hold-out entropy
@@ -174,7 +165,7 @@ hold_out_entropy <- function(df) {
 }
 ```
 
-```{r show leave-out-entropy}
+```{r show-leave-out-entropy}
 split_lengths <- adult_phonemes %>%
   group_by(word_length) %>%
   nest() %>%
@@ -186,7 +177,9 @@ split_lengths %>%
   select(-data) %>%
   unnest() %>%
   ggplot(aes(x = phone_order, y = empirical_stat)) + 
-  facet_wrap(~ word_length, scales = "free") +
+  facet_wrap(~ word_length, 
+               labeller = as_labeller(function(x) paste0("Length ", x)),
+               scales = "free") +
   geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper)) + 
   theme_classic() + 
   geom_line() + 
@@ -196,47 +189,23 @@ split_lengths %>%
 
 We see that word-initial phones tend to have more information in them than word-medial or word-final phones, so less is lost by dropping the final sounds in a word than in dropping the initial sounds. 
 
+We are interested in French because when many French words are pronounced, the final letters are not pronounced in any way (e.g. "ils sauraient"="they would know", the final "ent" in "sauraient" is not pronounced at all). We are interested in German because German has a much richer case system than English or French, and case markings in German are suffixes (at the ends of words). So in German, the ends of words may be much more important than in French or English. 
+
+
 # French letters
 
 In French, the final letters in a lot of words are dropped when those words are spoken aloud. We expect that the final letters in French words will on average contain little information, and that is what we see. In particular, if you know the two letters that came before, then each letter beyond the first in French has little information. Even if you don't know which letters came before, then the final letters of French words have relatively little information in them. 
 
 ```{r plot french letter unigrams}
-french_letters %>%
-  filter(gram == "Unigram") %>%
-  filter(word_length %in% 2:6) %>%
-  ggplot(aes(x = letter_order, y = mean_s)) +
-    facet_wrap(~word_length) +
-    geom_point() +
-    geom_line() +
-    xlab("Phone Position") +
-    ylab("Average Information") + 
-    ggtitle("Information in French letters by letter position - unigrams")
+plot_curves(select_language = "French")
 ```
 
 ```{r plot french letter bigrams}
-french_letters %>%
-  filter(gram == "Bigram") %>%
-  filter(word_length %in% 2:6) %>%
-  ggplot(aes(x = letter_order, y = mean_s)) +
-    facet_wrap(~word_length) +
-    geom_point() +
-    geom_line() +
-    xlab("Phone Position") +
-    ylab("Average Information") + 
-    ggtitle("Information in French letters by letter position - bigrams")
+plot_curves(select_language = "French", select_gram = "Bigram")
 ```
 
-```{r plot french letter trigrams}
-french_letters %>%
-  filter(gram == "Trigram") %>%
-  filter(word_length %in% 2:6) %>%
-  ggplot(aes(x = letter_order, y = mean_s)) +
-    facet_wrap(~word_length) +
-    geom_point() +
-    geom_line() +
-    xlab("Phone Position") +
-    ylab("Average Information") + 
-    ggtitle("Information in French letters by letter position - trigrams")
+```{r french-letter-trigrams}
+plot_curves(select_language = "French", select_gram = "Trigram")
 ```
 
 # German letters
@@ -244,40 +213,13 @@ french_letters %>%
 We expect that German, as a language with a case system which gets shown through affixation on nouns, will have relatively higher information in the final letters of words compared to English or French. We don't observe this, even in unigrams. The final letters of German words hold little information compared to the first letter of German words, which is even more noticeable when you have two letters of predictive context for each word. 
 
 ```{r plot german letter unigrams}
-german_letters %>%
-  filter(gram == "Unigram") %>%
-  filter(word_length %in% 2:6) %>%
-  ggplot(aes(x = letter_order, y = mean_s)) +
-    facet_wrap(~word_length) +
-    geom_point() +
-    geom_line() +
-    xlab("Phone Position") +
-    ylab("Average Information") + 
-    ggtitle("Information in German letters by letter position - unigrams")
+plot_curves(select_language = "German")
 ```
 
 ```{r plot german letter bigrams}
-german_letters %>%
-  filter(gram == "Bigram") %>%
-  filter(word_length %in% 2:6) %>%
-  ggplot(aes(x = letter_order, y = mean_s)) +
-    facet_wrap(~word_length) +
-    geom_point() +
-    geom_line() +
-    xlab("Phone Position") +
-    ylab("Average Information") + 
-    ggtitle("Information in German letters by letter position - bigrams")
+plot_curves(select_language = "German", select_gram = "Bigram")
 ```
 
 ```{r plot german letter trigrams}
-german_letters %>%
-  filter(gram == "Trigram") %>%
-  filter(word_length %in% 2:6) %>%
-  ggplot(aes(x = letter_order, y = mean_s)) +
-    facet_wrap(~word_length) +
-    geom_point() +
-    geom_line() +
-    xlab("Phone Position") +
-    ylab("Average Information") + 
-    ggtitle("Information in German letters by letter position - trigrams")
+plot_curves(select_language = "German", select_gram = "Trigram")
 ```
