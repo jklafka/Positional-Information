@@ -83,8 +83,6 @@ adult_phonemes <- adult_utterances %>%
   ungroup() %>%
   select(utterance_id, word_id, word, ipa, phone, phone_order, word_length)
 
-adult_phonemes %>% write_feather(here("Data/adult_phonemes.feather"))
-
 adult_phonemes %>%
   filter(phone_order == 1) %>%
   ggplot(aes(x = word_length)) + 

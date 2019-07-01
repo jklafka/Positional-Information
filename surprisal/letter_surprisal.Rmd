@@ -25,7 +25,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r set up corpus}
 prov_utterances <- get_utterances(corpus = "Palasis")
 
-adult_utterances <- prov_utterances %>%
+french_utterances <- prov_utterances %>%
   filter(speaker_role != "Target_Child") %>% 
   mutate(utterance_id = 1:n()) %>% 
   unnest_tokens(word, gloss, token = stringr::str_split, pattern = "[ +]+") %>%
@@ -37,6 +37,12 @@ adult_utterances <- prov_utterances %>%
   mutate(letter_order = 1:n()) %>%
   mutate(word_length = max(letter_order)) %>%
   ungroup()
+
+phone_counts <- adult_phonemes %>% 
+  group_by(utterance_id, word_id) %>% 
+  summarise(length = max(word_length)) %>% 
+  ungroup() %>% 
+  count(length)
 ```
 
 ```{r unigrams}
