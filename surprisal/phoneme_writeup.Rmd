@@ -33,7 +33,7 @@ theme_set(theme_classic(base_size = 16))
 ```
 
 ```{r read-data}
-all_data <- read_feather(here("Data/all_phonemes.feather"))
+all_data <- read_feather(here("Data/all_data.feather"))
 ```
 
 How is information spread among the sounds in English words? A salient feature of African American English Vernacular is the reduction of final consonants and consonant clusters. Why hasn't this created communication problems, namely identifying and disambiguating words? One possibility is that the information important for identifying a word is not uniformly distributed across all of its characters or sounds, but instead concentrated at the beginnings or middles of words. In these cases, reducing final sounds might reduce the articulatory complexity of words without much cost for the listener in processing these words and inferring their intended meaning. By the time the listener hears only the first sounds of a word, they may already have identified which word they are hearing. 
