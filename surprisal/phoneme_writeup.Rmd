@@ -39,6 +39,7 @@ all_data <- read_feather(here("Data/all_data.feather"))
 How is information spread among the sounds in English words? A salient feature of African American English Vernacular is the reduction of final consonants and consonant clusters. Why hasn't this created communication problems, namely identifying and disambiguating words? One possibility is that the information important for identifying a word is not uniformly distributed across all of its characters or sounds, but instead concentrated at the beginnings or middles of words. In these cases, reducing final sounds might reduce the articulatory complexity of words without much cost for the listener in processing these words and inferring their intended meaning. By the time the listener hears only the first sounds of a word, they may already have identified which word they are hearing. 
 
 Through a series of exploratory analyses we tackle this problem in three ways:
+
 1. Computing the surprisal of characters in English words from baserates of character production (unigram) and then conditioning on the prior charaters in each word (bigram and trigram). This analyses roughly captures the difficulty that a listener might have in predicting each character.
 2. Repeating this analysis at the level of phonemes rather than characters, arguably a better proxy for the speaker's and listener's representations of spoken English. 
 3. Computing hold-out entropy for individual phonemes in English words. This is roughly equivalent to asking "if you knew every other sound in a word, how much trouble would you have predicting what sounds appears in position $X$". 
@@ -48,11 +49,32 @@ Across all of our analyses, we find that the letters and sounds at the end of wo
 
 # English Letters
 
-We use the Providence corpus from CHILDES as data for English. In the plots below, each plot represents the information in each letter, divided by words of different lengths. Word lengths are given by number of letters--we show the length above each plot. 
+
+```{r plot-hist-helper}
+plot_hists <- function(select_language = "English", select_rep = "letter") {
+
+    all_data %>%
+    filter(language == select_language, rep == select_rep) %>%
+    distinct(word_length, n, rep) %>%
+    ggplot(aes(x = word_length, y = n)) +
+    geom_col(fill = "white", color = "black") +
+    xlab(paste0(str_to_sentence(select_rep), " Length")) +
+    ylab("Frequency")
+}
+```
+
+We use the Providence corpus from CHILDES as data for English. In the plots below, each plot represents the information in each letter, divided by words of different lengths. Word lengths are given by number of letters.
+
+
+```{r plot-english-letter-hist}
+plot_hists()
+```
 
 We see a distinctive shape for information at the level of individual letters in English. The first letter has relatively high information, the second letter has less information and the third letter has high infomration, and the final letter has less information (if the word has more than $3$ letters). 
 
-```{r plot-helper}
+
+
+```{r plot-curve-helper}
 plot_curves <- function(select_language = "English", select_rep = "letter", 
                         select_gram = "Unigram") {
   all_data %>%
@@ -61,13 +83,7 @@ plot_curves <- function(select_language = "English", select_rep = "letter",
     filter(word_length %in% 2:6) %>%
     ggplot(aes(x = order, y = mean_s)) +
     facet_grid(. ~ word_length, 
-               labeller = as_labeller(function(x) paste0("Length ", x, " \n n = ", 
-                                                         all_data %>% 
-                                                           filter(language == select_language,
-                                                                  rep == select_rep, 
-                                                                  length == x) %>%
-                                                           pull(length) %>%
-                                                           unique()))) +
+               labeller = as_labeller(function(x) paste0("Length ", x))) +
     geom_point() +
     geom_line() +
     xlab(paste0(str_to_sentence(select_rep), " Position")) +
@@ -96,6 +112,10 @@ plot_curves(select_gram = "Trigram")
 # English Phonemes
 
 Briefly, what we're doing is splitting each word in the Providence corpus from CHILDES up into its constituent phones--the sounds that make up the word. We split up the words in the corpus by their length in number of phones--for example, the word "food" has three phones: one for the "f", one for the long "oo", and one for the "d". We would take all words like this that have three phones. For each phone position  within the words of that length, we calculate the average information in that position. 
+
+```{r plot-english-phone-hist}
+plot_hists(select_rep = "phone")
+```
 
 Unlike with letters, there isn't as much of a consistent shape to the information distribution for phones in the unigram condition. If anything, the first phone has relatively little information while the second phone has a lot of information. 
 
@@ -182,6 +202,10 @@ For our final analysis, we're going to look at how the information within words 
 
 In French, the final letters in a lot of words are dropped when those words are spoken aloud. We expect that the final letters in French words will on average contain little information, and that is what we see. In particular, if you know the two letters that came before, then each letter beyond the first in French has little information. Even if you don't know which letters came before, then the final letters of French words have relatively little information in them. 
 
+```{r plot-french-hist}
+plot_hists(select_language = "French")
+```
+
 ```{r plot french letter unigrams}
 plot_curves(select_language = "French")
 ```
@@ -197,6 +221,11 @@ plot_curves(select_language = "French", select_gram = "Trigram")
 ## German letters
 
 We expect that German, as a language with a case system which gets shown through affixation on nouns, will have relatively higher information in the final letters of words compared to English or French. We don't observe this, even in unigrams. The final letters of German words hold little information compared to the first letter of German words, which is even more noticeable when you have two letters of predictive context for each word. 
+
+```{r plot-german-hist}
+plot_hists(select_language = "German")
+```
+
 
 ```{r plot german letter unigrams}
 plot_curves(select_language = "German")

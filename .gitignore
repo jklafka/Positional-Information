@@ -44,3 +44,4 @@ cogsci/position-info.log
 switchboard/*.txt
 
 cogsci/position-info_cache/*
+*cache*
