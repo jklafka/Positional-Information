@@ -8,7 +8,7 @@ output:
     number_sections: true
     theme: lumen
     toc_float: false
-    code_folding: hide 
+    code_folding: hide
 editor_options: 
   chunk_output_type: console
 ---
@@ -65,7 +65,7 @@ plot_hists <- function(select_language = "English", select_rep = "letter") {
 
 ```
 
-We use the Providence corpus from CHILDES as data for English. In the plots below, each plot represents the information in each letter, divided by words of different lengths. Word lengths are given by number of letters. See below a histogram of the distribution of word lengths in the Providence corpus. We observe that most words ($84%$) have $5$ letters or fewer, while $99%$ of words in the corpus have fewer than $10$ letters. There are a tiny number of outliers, mainly onomatopoeia, which have $10$ or more letters. 
+We use the Providence corpus from CHILDES as data for English. In the plots below, each plot represents the information in each letter, divided by words of different lengths. Word lengths are given by number of letters. See below a histogram of the distribution of word lengths in the Providence corpus. We observe that most words ($84\%$) have $5$ letters or fewer, while $99\%$ of words in the corpus have fewer than $10$ letters. There are a tiny number of outliers, mainly onomatopoeia, which have $10$ or more letters. 
 
 ```{r get cumsums for letter and phone frequencies, include = F, eval = F}
 get_freq_sums <- function(select_language = "English", select_rep = "letter") {
@@ -124,7 +124,7 @@ plot_curves(select_gram = "Trigram")
 
 Briefly, what we're doing is splitting each word in the Providence corpus from CHILDES up into its constituent phones--the sounds that make up the word. We split up the words in the corpus by their length in number of phones--for example, the word "food" has three phones: one for the "f", one for the long "oo", and one for the "d". We would take all words like this that have three phones. For each phone position  within the words of that length, we calculate the average information in that position. 
 
-As seen in the histogram below, almost all words in the Providence corpus ($92%$) have four or fewer phones. $99.5%$ have seven or fewer phones.
+As seen in the histogram below, almost all words in the Providence corpus ($92\%$) have four or fewer phones. $99.5\%$ have seven or fewer phones.
 
 ```{r plot-english-phone-hist}
 plot_hists(select_rep = "phone")
@@ -213,7 +213,7 @@ For our final analysis, we're going to look at how the information within words 
 
 ## French letters
 
-First, we examine the word length frequencies by number of letters in the French Palasis corpus. In the Palasis corpus, $99%$ of words have $10$ letters or fewer. This French corpus has a higher share of words with six to ten letters than the English Providence corpus: $24%$ versus $16%$. However, almost all words in both corpora have $10$ or fewer letters. While there are relatively more medium length words in the French corpus compared to the English corpus, there are very few long words in either corpus. 
+First, we examine the word length frequencies by number of letters in the French Palasis corpus. In the Palasis corpus, $99\%$ of words have $10$ letters or fewer. This French corpus has a higher share of words with six to ten letters than the English Providence corpus: $24\%$ versus $16\%$. However, almost all words in both corpora have $10$ or fewer letters. While there are relatively more medium length words in the French corpus compared to the English corpus, there are very few long words in either corpus. 
 
 ```{r plot-french-hist}
 plot_hists(select_language = "French")
@@ -235,7 +235,7 @@ plot_curves(select_language = "French", select_gram = "Trigram")
 
 ## German letters
 
-In the German Wagner corpus, the distribution of word lengths in number of letters has a thicker tail: $99%$ of words have $13$ or fewer letters, compared to the Palasis and Providence corpora where over $99%$ of words had $10$ or fewer letters. However, $97.4%$ of German words have $10$ or fewer letters, so the corpus is similarly comprised of short and medium-length words.  
+In the German Wagner corpus, the distribution of word lengths in number of letters has a thicker tail: $99\%$ of words have $13$ or fewer letters, compared to the Palasis and Providence corpora where over $99\%$ of words had $10$ or fewer letters. However, $97.4\%$ of German words have $10$ or fewer letters, so the corpus is similarly comprised of short and medium-length words.  
 
 ```{r plot-german-hist}
 plot_hists(select_language = "German")

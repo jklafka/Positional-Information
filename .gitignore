@@ -45,3 +45,4 @@ switchboard/*.txt
 
 cogsci/position-info_cache/*
 *cache*
+*figure-html*
