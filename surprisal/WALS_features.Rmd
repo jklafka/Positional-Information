@@ -1,0 +1,131 @@
+---
+title: "Wikipedia WALS Feature Analysis"
+author: "Josef Klafka and Dan Yurovsky"
+date: "7/9/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(lingtypology)
+library(feather)
+library(here)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r }
+wkpd <- read.csv(here("Data/wikipedia_unigrams.csv"))
+LANGUAGES <- wkpd$language
+
+
+FEATURES <- c(1:144)
+for (i in c(1:length(FEATURES))) {
+  FEATURES[i] <- paste(FEATURES[i], "A", sep = "")
+} #get all word order WALS features in correct syntax
+
+wf <- wals.feature(FEATURES)
+```
+
+```{r see which WALS features are the most complete for our languages}
+df <- wf %>% 
+  filter(language %in% LANGUAGES) %>% 
+  filter(rowSums(is.na(.)) < 130) %>% 
+  select(`30A`:`121A`) %>% 
+  is.na() %>% 
+  colSums() %>% 
+  sort(decreasing = T)
+```
+
+```{r get common languages between the imputations and models}
+nom_categories <- wf %>%
+  filter(language %in% LANGUAGES) %>%
+  select(language, `30A`:`57A`) %>%
+  filter(rowSums(is.na(.)) < 12)
+
+nom_syntax <- wf %>%
+  filter(language %in% LANGUAGES) %>%
+  select(language, `58A`:`64A`) %>%
+  filter(rowSums(is.na(.)) < 5)
+
+verb_categories <- wf %>%
+  filter(language %in% LANGUAGES) %>%
+  select(language, `65A`:`80A`) %>%
+  filter(rowSums(is.na(.)) < 8)
+
+word_order <- wf %>%
+  filter(language %in% LANGUAGES) %>%
+  select(language, `81A`:`97A`) %>%
+  select(-`84A`)
+
+clauses <- wf %>%
+  filter(language %in% LANGUAGES) %>%
+  select(language, `98A`:`121A`) %>%
+  filter(rowSums(is.na(.)) < 12)
+
+common_df <- nom_categories %>% 
+  semi_join(nom_syntax) %>%
+  semi_join(verb_categories) %>%
+  semi_join(word_order) %>%
+  semi_join(clauses) 
+
+common_languages <- common_df %>%
+  pull(language)
+```
+
+```{r comparison: features to cosines}
+imputed_df <- common_df %>% 
+  gather(feature, value, -language) %>%
+  group_by(feature) %>%
+  mutate(value = factor(value)) %>%
+  select(language, feature, value) %>%
+  ungroup() %>% 
+  spread(feature, value) %>% 
+  sapply(as.factor) %>%
+  as.data.frame() %>%
+  column_to_rownames("language") %>%
+  MIMCA(ncp = 1)
+
+imputed_df <- as.data.frame(imputed_df[[1]][[99]]) 
+
+wo_sub <- imputed_df %>% 
+  rownames_to_column("language") %>%
+  group_by(language) %>%
+  slice(1) %>%
+  gather(feature, value, -language) %>%
+  group_by(feature) %>%
+  mutate(value = as.numeric(as.factor(value)))
+
+cosines <- wkpd %>%
+  filter(language %in% common_languages) %>%
+  column_to_rownames("language") %>%
+  t() %>%
+  cosine() %>%
+  as_data_frame(rownames = "language1") %>%
+  gather(language2, cosine, -language1)
+
+wf_pairwise <- expand.grid(language1 = wo_sub$language,
+                           language2 = wo_sub$language) %>%
+  left_join(wo_sub, by = c("language1" = "language")) %>%
+  rename(value1 = value) %>%
+  left_join(wo_sub, by = c("language2" = "language", "feature")) %>%
+  rename(value2 = value) %>%
+  mutate(same = value1 == value2) %>%
+  select(-value1, -value2) %>%
+  left_join(cosines, by = c("language1", "language2"))
+
+models <- wf_pairwise %>%
+  group_by(feature) %>%
+  nest() %>%
+  mutate(model = map(data, ~glm(same ~ cosine, 
+                                family = "binomial", data = .)))
+
+feature_names <- read_feather(here("Wikipedia/feature_names.feather"))
+
+model_df <- models %>%
+  mutate(coeffs = map(model, tidy)) %>%
+  select(-data, -model) %>%
+  unnest() %>%
+  filter(term == "cosine") %>%
+  arrange(desc(statistic)) %>%
+  left_join(feature_names)
+```

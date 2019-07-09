@@ -59,7 +59,7 @@ Always run this section. It takes time, but this gets all of the WALS features f
 
 ```{r get features}
 wkpd <- read.csv(here("Data/wikipedia_unigrams.csv"))
-LANGUAGES <- wkpd$Language
+LANGUAGES <- wkpd$language
 
 
 FEATURES <- c(1:144)
@@ -75,29 +75,23 @@ Run only _one_ of the following five sections, depending on which typological fe
 ```{r nominal categories}
 wo_wf <- wf %>%
   filter(language %in% LANGUAGES) %>%
-  select(language, `30A`:`57A`) #%>%
-wo_wf$non <- rowSums(is.na(wo_wf))
-wo_wf %<>%
-  filter(non < 12) %>%
-  select(-non)
+  select(language, `30A`:`57A`) %>%
+  filter(rowSums(is.na(.)) < 12)
+
 ```
 ```{r nominal syntax}
 wo_wf <- wf %>%
   filter(language %in% LANGUAGES) %>%
-  select(language, `58A`:`64A`) #%>%
-wo_wf$non <- rowSums(is.na(wo_wf))
-wo_wf %<>%
-  filter(non < 5) %>%
-  select(-non)
+  select(language, `58A`:`64A`) %>%
+  filter(rowSums(is.na(.)) < 5)
+
 ```
 ```{r verbal categories}
 wo_wf <- wf %>%
   filter(language %in% LANGUAGES) %>%
-  select(language, `65A`:`80A`) #%>%
-wo_wf$non <- rowSums(is.na(wo_wf))
-wo_wf %<>%
-  filter(non < 8) %>%
-  select(-non)
+  select(language, `65A`:`80A`) %>%
+  filter(rowSums(is.na(.)) < 8)
+
 ```
 ```{r word order}
 wo_wf <- wf %>%
@@ -108,11 +102,9 @@ wo_wf <- wf %>%
 ```{r clauses}
 wo_wf <- wf %>%
   filter(language %in% LANGUAGES) %>%
-  select(language, `98A`:`121A`) #%>%
-wo_wf$non <- rowSums(is.na(wo_wf))
-wo_wf %<>%
-  filter(non < 12) %>%
-  select(-non)
+  select(language, `98A`:`121A`) %>%
+  filter(rowSums(is.na(.)) < 12)
+
 ```
 
 Run this section for imputation and model fitting. The models will be written into a tiny dataframe: `model_df`. Each row of this dataframe has the id of the feature along with a short, informative name about the feature. Again, see (https://wals.info/feature) for in-depth information about each feature. The estimates, standard errors, statistics and p-values of the models are also contained in `model_df`. 
@@ -146,7 +138,7 @@ wo_sub <- imputed_wo %>%
   mutate(value = as.numeric(as.factor(value)))
 
 cosines <- wkpd %>%
-  column_to_rownames("Language") %>%
+  column_to_rownames("language") %>%
   t() %>%
   cosine() %>%
   as_data_frame(rownames = "language1") %>%
