@@ -50,17 +50,16 @@ wiki %>%
   ggdendrogram(rotate = FALSE, size = .1) + 
   ylim(0, .10)
 
-  plot(hang = -1, 
-       main = "Dendrogram of slope embeddings")
+  # plot(hang = -1, 
+  #      main = "Dendrogram of slope embeddings")
 
 ```
 
 Always run this section. It takes time, but this gets all of the WALS features for every language in WALS along with the unigram slope data for all of the Wikipedia languages we've run. 
 
-```{r get features}
+```{r get features, eval=F}
 wkpd <- read.csv(here("Data/wikipedia_unigrams.csv"))
 LANGUAGES <- wkpd$language
-
 
 FEATURES <- c(1:144)
 for (i in c(1:length(FEATURES))) {
@@ -68,7 +67,14 @@ for (i in c(1:length(FEATURES))) {
 } #get all word order WALS features in correct syntax
 
 wf <- wals.feature(FEATURES) 
+
+write_csv(wf, here("Data/wals.csv"))
 ```
+
+```{r load-wals, eval = T}
+wf <- read_csv(here("Data/wals.csv"))
+```
+
 
 Run only _one_ of the following five sections, depending on which typological features you are interested in. Look here (https://wals.info/feature) for more information about the features. 
 
