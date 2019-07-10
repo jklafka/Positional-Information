@@ -14,7 +14,7 @@ library(missMDA)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r }
+```{r read in data}
 wkpd <- read.csv(here("Data/wikipedia_unigrams.csv"))
 LANGUAGES <- wkpd$language
 
@@ -63,8 +63,7 @@ common_languages <- common_df %>%
 ```
 
 ```{r comparison: features to cosines}
-#imputed_df <- 
-  common_df %>% 
+imputed_df <- common_df %>% 
   gather(feature, value, -language) %>%
   group_by(feature) %>%
   mutate(value = factor(value)) %>%
@@ -73,7 +72,7 @@ common_languages <- common_df %>%
   spread(feature, value) %>% 
   sapply(as.factor) %>%
   as.data.frame() %>%
-  column_to_rownames("language") %>% pull(X98A) %>% length()
+  column_to_rownames("language") %>% dim()
   MIMCA(ncp = 1)
 
 imputed_df <- as.data.frame(imputed_df[[1]][[99]]) 
@@ -109,8 +108,6 @@ models <- wf_pairwise %>%
   nest() %>%
   mutate(model = map(data, ~glm(same ~ cosine, 
                                 family = "binomial", data = .)))
-
-feature_names <- read_feather(here("Wikipedia/feature_names.feather"))
 
 model_df <- models %>%
   mutate(coeffs = map(model, tidy)) %>%
