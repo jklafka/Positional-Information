@@ -55,60 +55,49 @@ wiki %>%
 
 ```
 
-Always run this section. It takes time, but this gets all of the WALS features for every language in WALS along with the unigram slope data for all of the Wikipedia languages we've run. 
+Always run this section. This gets all of the WALS features, for every language, along with the unigram slope data for all of the Wikipedia languages we've run. 
 
-```{r get features, eval=F}
+```{r get features, eval=T}
 wkpd <- read.csv(here("Data/wikipedia_unigrams.csv"))
 LANGUAGES <- wkpd$language
 
-FEATURES <- c(1:144)
-for (i in c(1:length(FEATURES))) {
-  FEATURES[i] <- paste(FEATURES[i], "A", sep = "")
-} #get all word order WALS features in correct syntax
-
-wf <- wals.feature(FEATURES) 
-
-write_csv(wf, here("Data/wals.csv"))
-```
-
-```{r load-wals, eval = T}
 wf <- read_csv(here("Data/wals.csv"))
-```
 
+```
 
 Run only _one_ of the following five sections, depending on which typological features you are interested in. Look here (https://wals.info/feature) for more information about the features. 
 
-```{r nominal categories}
+```{r nominal categories, eval=F}
 wo_wf <- wf %>%
   filter(language %in% LANGUAGES) %>%
-  select(language, `30A`:`57A`) %>%
+  select(language, X30A:X57A) %>%
   filter(rowSums(is.na(.)) < 12)
 
 ```
-```{r nominal syntax}
+```{r nominal syntax, eval=F}
 wo_wf <- wf %>%
   filter(language %in% LANGUAGES) %>%
-  select(language, `58A`:`64A`) %>%
+  select(language, X58A:X64A) %>%
   filter(rowSums(is.na(.)) < 5)
 
 ```
-```{r verbal categories}
+```{r verbal categories, eval=F}
 wo_wf <- wf %>%
   filter(language %in% LANGUAGES) %>%
-  select(language, `65A`:`80A`) %>%
+  select(language, X65A:X80A) %>%
   filter(rowSums(is.na(.)) < 8)
 
 ```
-```{r word order}
+```{r word order, eval=F}
 wo_wf <- wf %>%
   filter(language %in% LANGUAGES) %>%
-  select(language, `81A`:`97A`) %>%
+  select(language, X81A:X97A) %>%
   select(-`84A`)
 ```
-```{r clauses}
+```{r clauses, eval=F}
 wo_wf <- wf %>%
   filter(language %in% LANGUAGES) %>%
-  select(language, `98A`:`121A`) %>%
+  select(language, X98A:X121A) %>%
   filter(rowSums(is.na(.)) < 12)
 
 ```

@@ -10,6 +10,7 @@ library(tidyverse)
 library(lingtypology)
 library(feather)
 library(here)
+library(missMDA)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -17,63 +18,53 @@ knitr::opts_chunk$set(echo = TRUE)
 wkpd <- read.csv(here("Data/wikipedia_unigrams.csv"))
 LANGUAGES <- wkpd$language
 
-
-FEATURES <- c(1:144)
-for (i in c(1:length(FEATURES))) {
-  FEATURES[i] <- paste(FEATURES[i], "A", sep = "")
-} #get all word order WALS features in correct syntax
-
-wf <- wals.feature(FEATURES)
+wals <- read.csv(here("Data/wals.csv"))
+feature_names <- read_feather(here("Wikipedia/feature_names.feather"))
 ```
 
 ```{r see which WALS features are the most complete for our languages}
-df <- wf %>% 
+all_languages <- wals %>% 
   filter(language %in% LANGUAGES) %>% 
-  filter(rowSums(is.na(.)) < 130) %>% 
-  select(`30A`:`121A`) %>% 
-  is.na() %>% 
-  colSums() %>% 
-  sort(decreasing = T)
+  filter(rowSums(is.na(.)) < 130) %>%
+  group_by(language) %>%
+  slice(1) %>%
+  ungroup() 
 ```
 
 ```{r get common languages between the imputations and models}
-nom_categories <- wf %>%
-  filter(language %in% LANGUAGES) %>%
-  select(language, `30A`:`57A`) %>%
+nom_categories <- all_languages %>%
+  select(language, X30A:X57A) %>%
   filter(rowSums(is.na(.)) < 12)
 
-nom_syntax <- wf %>%
-  filter(language %in% LANGUAGES) %>%
-  select(language, `58A`:`64A`) %>%
+nom_syntax <- all_languages %>%
+  select(language, X58A:X64A) %>%
   filter(rowSums(is.na(.)) < 5)
 
-verb_categories <- wf %>%
-  filter(language %in% LANGUAGES) %>%
-  select(language, `65A`:`80A`) %>%
+verb_categories <- all_languages %>%
+  select(language, X65A:X80A) %>%
   filter(rowSums(is.na(.)) < 8)
 
-word_order <- wf %>%
-  filter(language %in% LANGUAGES) %>%
-  select(language, `81A`:`97A`) %>%
-  select(-`84A`)
+word_order <- all_languages %>%
+  select(language, X81A:X97A) %>%
+  select(-X84A)
 
-clauses <- wf %>%
-  filter(language %in% LANGUAGES) %>%
-  select(language, `98A`:`121A`) %>%
+clauses <- all_languages %>%
+  select(language, X98A:X121A) %>%
   filter(rowSums(is.na(.)) < 12)
 
 common_df <- nom_categories %>% 
-  semi_join(nom_syntax) %>%
-  semi_join(verb_categories) %>%
-  semi_join(word_order) %>%
-  semi_join(clauses) 
-
+  inner_join(nom_syntax) %>%
+  inner_join(verb_categories) %>%
+  inner_join(word_order) %>%
+  inner_join(clauses) 
+  
 common_languages <- common_df %>%
   pull(language)
 ```
 
 ```{r comparison: features to cosines}
-imputed_df <- common_df %>% 
+#imputed_df <- 
+  common_df %>% 
   gather(feature, value, -language) %>%
   group_by(feature) %>%
   mutate(value = factor(value)) %>%
@@ -82,7 +73,7 @@ imputed_df <- common_df %>%
   spread(feature, value) %>% 
   sapply(as.factor) %>%
   as.data.frame() %>%
-  column_to_rownames("language") %>%
+  column_to_rownames("language") %>% pull(X98A) %>% length()
   MIMCA(ncp = 1)
 
 imputed_df <- as.data.frame(imputed_df[[1]][[99]]) 
