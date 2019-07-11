@@ -61,8 +61,8 @@ Always run this section. This gets all of the WALS features, for every language,
 wkpd <- read.csv(here("Data/wikipedia_unigrams.csv"))
 LANGUAGES <- wkpd$language
 
-wf <- read_csv(here("Data/wals.csv"))
-
+wf <- read_csv(here("Data/wals.csv")) 
+feature_names <- read_feather(here("Wikipedia/feature_names.feather"))
 ```
 
 Run only _one_ of the following five sections, depending on which typological features you are interested in. Look here (https://wals.info/feature) for more information about the features. 
@@ -70,34 +70,33 @@ Run only _one_ of the following five sections, depending on which typological fe
 ```{r nominal categories, eval=F}
 wo_wf <- wf %>%
   filter(language %in% LANGUAGES) %>%
-  select(language, X30A:X57A) %>%
+  select(language, x30A:x57a) %>%
   filter(rowSums(is.na(.)) < 12)
 
 ```
 ```{r nominal syntax, eval=F}
 wo_wf <- wf %>%
   filter(language %in% LANGUAGES) %>%
-  select(language, X58A:X64A) %>%
+  select(language, x58a:x64a) %>%
   filter(rowSums(is.na(.)) < 5)
 
 ```
 ```{r verbal categories, eval=F}
 wo_wf <- wf %>%
   filter(language %in% LANGUAGES) %>%
-  select(language, X65A:X80A) %>%
+  select(language, x65a:x80a) %>%
   filter(rowSums(is.na(.)) < 8)
 
 ```
 ```{r word order, eval=F}
 wo_wf <- wf %>%
   filter(language %in% LANGUAGES) %>%
-  select(language, X81A:X97A) %>%
-  select(-`84A`)
+  select(language, x81Aa:x97a) 
 ```
 ```{r clauses, eval=F}
 wo_wf <- wf %>%
   filter(language %in% LANGUAGES) %>%
-  select(language, X98A:X121A) %>%
+  select(language, x98a:x121a) %>%
   filter(rowSums(is.na(.)) < 12)
 
 ```
@@ -154,8 +153,6 @@ models <- wf_pairwise %>%
   nest() %>%
   mutate(model = map(data, ~glm(same ~ cosine, 
                                 family = "binomial", data = .)))
-
-feature_names <- read_feather(here("Wikipedia/feature_names.feather"))
 
 model_df <- models %>%
   mutate(coeffs = map(model, tidy)) %>%

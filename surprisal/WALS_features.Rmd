@@ -33,23 +33,22 @@ all_languages <- wals %>%
 
 ```{r get common languages between the imputations and models}
 nom_categories <- all_languages %>%
-  select(language, X30A:X57A) %>%
+  select(language, x30a:x57a) %>%
   filter(rowSums(is.na(.)) < 12)
 
 nom_syntax <- all_languages %>%
-  select(language, X58A:X64A) %>%
+  select(language, x58a:x64a) %>%
   filter(rowSums(is.na(.)) < 5)
 
 verb_categories <- all_languages %>%
-  select(language, X65A:X80A) %>%
+  select(language, x65a:x80a) %>%
   filter(rowSums(is.na(.)) < 8)
 
 word_order <- all_languages %>%
-  select(language, X81A:X97A) %>%
-  select(-X84A)
+  select(language, x81a:x97a) 
 
 clauses <- all_languages %>%
-  select(language, X98A:X121A) %>%
+  select(language, x98a:x121a) %>%
   filter(rowSums(is.na(.)) < 12)
 
 common_df <- nom_categories %>% 
@@ -72,7 +71,7 @@ imputed_df <- common_df %>%
   spread(feature, value) %>% 
   sapply(as.factor) %>%
   as.data.frame() %>%
-  column_to_rownames("language") %>% dim()
+  column_to_rownames("language") %>% 
   MIMCA(ncp = 1)
 
 imputed_df <- as.data.frame(imputed_df[[1]][[99]]) 
