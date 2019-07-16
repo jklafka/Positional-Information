@@ -15,11 +15,11 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r read in data}
-wkpd <- read.csv(here("Data/wikipedia_unigrams.csv"))
-LANGUAGES <- wkpd$language
-
-wals <- read.csv(here("Data/wals.csv"))
+wals <- read_csv(here("Data/wals.csv"))
 feature_names <- read_feather(here("Wikipedia/feature_names.feather"))
+
+wiki <- read_csv(here("Data/relative_ngrams.csv"))
+LANGUAGES <- wiki %>% pull(language) %>% unique()
 ```
 
 ```{r see which WALS features are the most complete for our languages}
@@ -115,4 +115,20 @@ model_df <- models %>%
   filter(term == "cosine") %>%
   arrange(desc(statistic)) %>%
   left_join(feature_names)
+```
+
+## Errata
+
+```{r cleaning}
+wiki <- read_feather(here("Data/relative_ngrams.feather"))
+wiki %>% 
+  group_by(language) %>% 
+  mutate(order = 1:n()) %>% 
+  ungroup() %>% 
+  filter(order <= 15) %>% 
+  select(-order) %>%
+  select(language, gram, estimate, cut) %>% 
+  spread(cut, estimate) %>% 
+  rename(Slope1 =`1`, Slope2 =`2`, Slope3 =`3`, Slope4 =`4`, Slope5 =`5`) %>%
+  write_csv(here("Data/relative_ngrams.csv"))
 ```
