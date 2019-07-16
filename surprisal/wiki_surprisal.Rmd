@@ -41,11 +41,12 @@ theme_set(theme_classic(base_size = 16))
 The section below reads in the Wikipedia unigram surprisal data and creates a dendrogram of the slope embeddings. The dendrogram qualitatively resembles a tree of language families with some degree of accuracy. In the rest of this part of the project, we investigate what determines the placement of a language in this dendrogram. 
 
 ```{r make dendrogram}
-wiki <- read.csv(here("Data/wikipedia_unigrams.csv")) %>%
-  select(-X) %>% 
-  column_to_rownames("Language")
+wiki_unigrams <- read.csv(here("Data/relative_ngrams.csv")) %>%
+  filter(gram == "Unigram") %>%
+  sample_n(100) %>%
+  column_to_rownames("language")
 
-wiki %>% 
+wiki_unigrams %>% 
   dist() %>% 
   hclust() %>% 
   ggdendrogram(rotate = FALSE, size = .1) + 
@@ -56,11 +57,11 @@ wiki %>%
 
 ```
 
-Always run this section. It takes time, but this gets all of the WALS features for every language in WALS along with the unigram slope data for all of the Wikipedia languages we've run. 
+Always run this section. This gets all of the WALS features, for every language, along with the unigram slope data for all of the Wikipedia languages we've run. 
 
-```{r get features, eval = F}
-wkpd <- read_csv(here("Data/wikipedia_unigrams.csv"))
-LANGUAGES <- wkpd$Language
+```{r get features, eval=T}
+wkpd <- read.csv(here("Data/wikipedia_unigrams.csv"))
+LANGUAGES <- wkpd$language
 
 FEATURES <- c(1:144)
 for (i in c(1:length(FEATURES))) {
@@ -93,53 +94,43 @@ write_csv(wf, here("Data/wals.csv"))
 
 ```{r load-wals, eval = T}
 wf <- read_csv(here("Data/wals.csv"))
-```
 
+```
 
 Run only _one_ of the following five sections, depending on which typological features you are interested in. Look here (https://wals.info/feature) for more information about the features. 
 
-```{r nominal categories}
+```{r nominal categories, eval=F}
 wo_wf <- wf %>%
   filter(language %in% LANGUAGES) %>%
-  select(language, `30A`:`57A`) #%>%
-wo_wf$non <- rowSums(is.na(wo_wf))
-wo_wf %<>%
-  filter(non < 12) %>%
-  select(-non)
-```
+  select(language, x30A:x57a) %>%
+  filter(rowSums(is.na(.)) < 12)
 
-```{r nominal syntax}
-wo_wf <- wf %>%
-  filter(language %in% LANGUAGES) %>%
-  select(language, `58A`:`64A`) #%>%
-wo_wf$non <- rowSums(is.na(wo_wf))
-wo_wf %<>%
-  filter(non < 5) %>%
-  select(-non)
 ```
-```{r verbal categories}
+```{r nominal syntax, eval=F}
 wo_wf <- wf %>%
   filter(language %in% LANGUAGES) %>%
-  select(language, `65A`:`80A`) #%>%
-wo_wf$non <- rowSums(is.na(wo_wf))
-wo_wf %<>%
-  filter(non < 8) %>%
-  select(-non)
+  select(language, x58a:x64a) %>%
+  filter(rowSums(is.na(.)) < 5)
+
 ```
-```{r word order}
+```{r verbal categories, eval=F}
 wo_wf <- wf %>%
   filter(language %in% LANGUAGES) %>%
-  select(language, `81A`:`97A`) %>%
-  select(-`84A`)
+  select(language, x65a:x80a) %>%
+  filter(rowSums(is.na(.)) < 8)
+
 ```
-```{r clauses}
+```{r word order, eval=F}
 wo_wf <- wf %>%
   filter(language %in% LANGUAGES) %>%
-  select(language, `98A`:`121A`) #%>%
-wo_wf$non <- rowSums(is.na(wo_wf))
-wo_wf %<>%
-  filter(non < 12) %>%
-  select(-non)
+  select(language, x81Aa:x97a) 
+```
+```{r clauses, eval=F}
+wo_wf <- wf %>%
+  filter(language %in% LANGUAGES) %>%
+  select(language, x98a:x121a) %>%
+  filter(rowSums(is.na(.)) < 12)
+
 ```
 
 Run this section for imputation and model fitting. The models will be written into a tiny dataframe: `model_df`. Each row of this dataframe has the id of the feature along with a short, informative name about the feature. Again, see (https://wals.info/feature) for in-depth information about each feature. The estimates, standard errors, statistics and p-values of the models are also contained in `model_df`. 
@@ -173,7 +164,7 @@ wo_sub <- imputed_wo %>%
   mutate(value = as.numeric(as.factor(value)))
 
 cosines <- wkpd %>%
-  column_to_rownames("Language") %>%
+  column_to_rownames("language") %>%
   t() %>%
   cosine() %>%
   as_data_frame(rownames = "language1") %>%
@@ -194,8 +185,6 @@ models <- wf_pairwise %>%
   nest() %>%
   mutate(model = map(data, ~glm(same ~ cosine, 
                                 family = "binomial", data = .)))
-
-feature_names <- read_feather(here("Wikipedia/feature_names.feather"))
 
 model_df <- models %>%
   mutate(coeffs = map(model, tidy)) %>%
