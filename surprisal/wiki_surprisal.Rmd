@@ -67,15 +67,15 @@ codes <- read_csv(here("Wikipedia/isos.csv"))
 
 wals <- read_csv(here("Data/wals.csv"))
 
-wals_isos <- wals %>%
+wals %>%
   mutate(iso = iso.gltc(glottocode)) %>%
-  select(-glottocode)
-
-wals_isos %>% 
+  select(-glottocode) %>% 
   inner_join(codes, by = "iso") %>% 
   select(-language.x) %>%
-  rename(language = language.y) %>% 
-  inner_join(wiki %>% inner_join(codes, by = "language"), by = "iso")
+  rename(language = language.y) %>%
+  write_csv(here("Data/wals_isos.csv"))
+
+#  inner_join(wiki %>% inner_join(codes, by = "language"), by = "iso")
 ```
 
 ```{r load-wals, eval = T}

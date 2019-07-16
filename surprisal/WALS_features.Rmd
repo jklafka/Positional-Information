@@ -11,11 +11,12 @@ library(lingtypology)
 library(feather)
 library(here)
 library(missMDA)
+library(lsa)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r read in data}
-wals <- read_csv(here("Data/wals.csv"))
+wals <- read_csv(here("Data/wals_isos.csv"))
 feature_names <- read_feather(here("Wikipedia/feature_names.feather"))
 
 wiki <- read_csv(here("Data/relative_ngrams.csv"))
@@ -24,7 +25,6 @@ LANGUAGES <- wiki %>% pull(language) %>% unique()
 
 ```{r see which WALS features are the most complete for our languages}
 all_languages <- wals %>% 
-  filter(language %in% LANGUAGES) %>% 
   filter(rowSums(is.na(.)) < 130) %>%
   group_by(language) %>%
   slice(1) %>%
@@ -51,52 +51,40 @@ clauses <- all_languages %>%
   select(language, x98a:x121a) %>%
   filter(rowSums(is.na(.)) < 12)
 
-common_df <- nom_categories %>% 
+common_df <- nom_categories %>%
   inner_join(nom_syntax) %>%
   inner_join(verb_categories) %>%
   inner_join(word_order) %>%
-  inner_join(clauses) 
-  
+  inner_join(clauses)
+
 common_languages <- common_df %>%
   pull(language)
 ```
 
-```{r comparison: features to cosines}
-imputed_df <- common_df %>% 
-  gather(feature, value, -language) %>%
-  group_by(feature) %>%
-  mutate(value = factor(value)) %>%
-  select(language, feature, value) %>%
-  ungroup() %>% 
-  spread(feature, value) %>% 
-  sapply(as.factor) %>%
-  as.data.frame() %>%
-  column_to_rownames("language") %>% 
-  MIMCA(ncp = 1)
+```{r models}
+imputed_df <- read_csv(here("Data/imputed_wals.csv"))
 
-imputed_df <- as.data.frame(imputed_df[[1]][[99]]) 
-
-wo_sub <- imputed_df %>% 
-  rownames_to_column("language") %>%
+wf_sub <- imputed_df %>% 
   group_by(language) %>%
   slice(1) %>%
   gather(feature, value, -language) %>%
   group_by(feature) %>%
   mutate(value = as.numeric(as.factor(value)))
 
-cosines <- wkpd %>%
-  filter(language %in% common_languages) %>%
+cosines <- wiki %>%
+  filter(language %in% common_languages, gram == "Unigram") %>%
+  select(-gram) %>% 
   column_to_rownames("language") %>%
   t() %>%
   cosine() %>%
   as_data_frame(rownames = "language1") %>%
   gather(language2, cosine, -language1)
 
-wf_pairwise <- expand.grid(language1 = wo_sub$language,
-                           language2 = wo_sub$language) %>%
-  left_join(wo_sub, by = c("language1" = "language")) %>%
+wf_pairwise <- expand.grid(language1 = wf_sub$language,
+                           language2 = wf_sub$language) %>%
+  left_join(wf_sub, by = c("language1" = "language")) %>%
   rename(value1 = value) %>%
-  left_join(wo_sub, by = c("language2" = "language", "feature")) %>%
+  left_join(wf_sub, by = c("language2" = "language", "feature")) %>%
   rename(value2 = value) %>%
   mutate(same = value1 == value2) %>%
   select(-value1, -value2) %>%
@@ -115,6 +103,22 @@ model_df <- models %>%
   filter(term == "cosine") %>%
   arrange(desc(statistic)) %>%
   left_join(feature_names)
+```
+
+```{r imputation}
+imputed_df <- common_df %>% 
+  gather(feature, value, -language) %>%
+  group_by(feature) %>%
+  mutate(value = factor(value)) %>%
+  select(language, feature, value) %>%
+  ungroup() %>% 
+  spread(feature, value) %>% 
+  sapply(as.factor) %>%
+  as.data.frame() %>%
+  column_to_rownames("language") %>% 
+  MIMCA(ncp = 1)
+
+imputed_df <- as.data.frame(imputed_df[[1]][[99]]) 
 ```
 
 ## Errata
