@@ -40,11 +40,12 @@ theme_set(theme_classic(base_size = 16))
 The section below reads in the Wikipedia unigram surprisal data and creates a dendrogram of the slope embeddings. The dendrogram qualitatively resembles a tree of language families with some degree of accuracy. In the rest of this part of the project, we investigate what determines the placement of a language in this dendrogram. 
 
 ```{r make dendrogram}
-wiki <- read.csv(here("Data/wikipedia_unigrams.csv")) %>%
-  select(-X) %>% 
-  column_to_rownames("Language")
+wiki_unigrams <- read.csv(here("Data/relative_ngrams.csv")) %>%
+  filter(gram == "Unigram") %>%
+  sample_n(100) %>%
+  column_to_rownames("language")
 
-wiki %>% 
+wiki_unigrams %>% 
   dist() %>% 
   hclust() %>% 
   ggdendrogram(rotate = FALSE, size = .1) + 
