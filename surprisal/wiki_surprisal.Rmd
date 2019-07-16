@@ -28,6 +28,7 @@ library(FactoMineR)
 library(feather)
 library(janitor)
 library(ggdendro)
+library(jsonlite)
 
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -61,11 +62,29 @@ Always run this section. It takes time, but this gets all of the WALS features f
 wkpd <- read_csv(here("Data/wikipedia_unigrams.csv"))
 LANGUAGES <- wkpd$Language
 
-
 FEATURES <- c(1:144)
 for (i in c(1:length(FEATURES))) {
   FEATURES[i] <- paste(FEATURES[i], "A", sep = "")
 } #get all word order WALS features in correct syntax
+
+wals_isos <- wals %>%
+  mutate(iso = iso.gltc(glottocode)) %>%
+  select(-glottocode)
+
+wiki_isos <- read_csv(here("Wikipedia/wiki_isos.csv")) %>%
+  clean_names() %>%
+  select(x639_1, x639_3)
+
+wiki_langs <- fromJSON(here("/Wikipedia/language_dict.json")) %>%
+  as_tibble() %>%
+  gather(language, x639_1) %>%
+  left_join(wiki_isos)
+
+
+%>%
+  left_join(wals_isos) %>%
+  filter(is.na(wals.code)) %>%
+  View()
 
 wf <- wals.feature(FEATURES) 
 
