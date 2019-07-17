@@ -33,11 +33,11 @@ theme_set(theme_classic(base_size = 24))
 
 Get utterances
 ```{r get_utterances}
-childes <- read_feather(here("Data/childes_surprisals.feather")) %>%
+childes <- read_feather(here("Data/childes_words.feather")) %>%
   clean_names() %>%
   mutate(speaker_role = if_else(speaker_role == "Adult", "Parent", "Child"))
 
-switchboard <- read_feather(here("Data/switchboard_surprisals.feather")) %>%
+switchboard <- read_feather(here("Data/switchboard_words.feather")) %>%
   clean_names() %>%
   mutate(language = "English", speaker_role = "Adult") %>%
   select(-corpus)
@@ -69,19 +69,19 @@ label_data <- tibble(language = c("Spanish", "Spanish", "English"),
 
 
 
-pdf("surprisals.pdf", width = 10, height = 5.5)
+# pdf("surprisals.pdf", width = 10, height = 5.5)
 data %>%
-  filter(length == 8) %>%
+  filter(length == 8, language != "Mandarin") %>%
    ggplot(aes(x = word_order, y = s,
                         color = speaker_role,
                         label = speaker_role)) +
-  facet_grid(context ~ language, scales = "free") +
+  facet_grid(language~context, scales = "free") +
   geom_point(size = 1.5) +
   geom_line(size = 1.5) +
   scale_color_brewer(palette = "Set1") + 
   theme(legend.position = "none") +
   geom_text(data = label_data, size = 6) + 
   labs(x = "Word Position", y = "Average Information")
-dev.off()
+# dev.off()
 ```
 

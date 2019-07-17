@@ -12,6 +12,7 @@ library(feather)
 library(here)
 library(missMDA)
 library(lsa)
+library(reshape2)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -59,6 +60,44 @@ common_df <- nom_categories %>%
 
 common_languages <- common_df %>%
   pull(language)
+```
+
+```{r feature space}
+imputed_df <- read_csv(here("Data/imputed_wals.csv"))
+
+feature_space <- imputed_df %>% 
+  gather(feature, value, -language) %>% 
+  group_by(feature) %>% 
+  mutate(value = as.numeric(as.factor(value))) %>% 
+  spread(feature, value) %>%
+  column_to_rownames("language") %>%
+  dist(method = "manhattan") %>%
+  as.matrix() %>%
+  melt(value.name = "distance") %>%
+  as_tibble() %>%
+  rename(language1 = Var1, language2 = Var2) 
+
+feature_space %>%
+  count(distance) %>%
+  mutate(n = n/2) %>% 
+  ggplot(aes(x = distance, y = n)) + 
+    geom_col() + 
+    scale_y_continuous(breaks = 1:12)
+```
+
+```{r cosines}
+cosines <- wiki %>%
+  filter(language %in% common_languages, gram == "Unigram") %>%
+  select(-gram) %>% 
+  column_to_rownames("language") %>%
+  t() %>%
+  cosine() %>%
+  as_data_frame(rownames = "language1") %>%
+  gather(language2, cosine, -language1) %>%
+  mutate(cosine = 1 - abs(cosine)) 
+
+all_distances <- cosines %>%
+  left_join(feature_space)
 ```
 
 ```{r models}
