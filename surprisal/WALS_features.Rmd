@@ -73,31 +73,61 @@ feature_space <- imputed_df %>%
   column_to_rownames("language") %>%
   dist(method = "manhattan") %>%
   as.matrix() %>%
-  melt(value.name = "distance") %>%
+  melt(value.name = "feature") %>%
   as_tibble() %>%
   rename(language1 = Var1, language2 = Var2) 
-
-feature_space %>%
-  count(distance) %>%
-  mutate(n = n/2) %>% 
-  ggplot(aes(x = distance, y = n)) + 
-    geom_col() + 
-    scale_y_continuous(breaks = 1:12)
 ```
 
 ```{r cosines}
-cosines <- wiki %>%
+unigram_cosines <- wiki %>%
   filter(language %in% common_languages, gram == "Unigram") %>%
   select(-gram) %>% 
   column_to_rownames("language") %>%
   t() %>%
   cosine() %>%
   as_data_frame(rownames = "language1") %>%
-  gather(language2, cosine, -language1) %>%
-  mutate(cosine = 1 - abs(cosine)) 
+  gather(language2, unigram_cosine, -language1) %>%
+  mutate(unigram_cosine = 1 - abs(unigram_cosine)) 
 
-all_distances <- cosines %>%
-  left_join(feature_space)
+bigram_cosines <- wiki %>%
+  filter(language %in% common_languages, gram == "Bigram") %>%
+  select(-gram) %>% 
+  column_to_rownames("language") %>%
+  t() %>%
+  cosine() %>%
+  as_data_frame(rownames = "language1") %>%
+  gather(language2, bigram_cosine, -language1) %>%
+  mutate(bigram_cosine = 1 - abs(bigram_cosine)) 
+
+trigram_cosines <- wiki %>%
+  filter(language %in% common_languages, gram == "Trigram") %>%
+  select(-gram) %>% 
+  column_to_rownames("language") %>%
+  t() %>%
+  cosine() %>%
+  as_data_frame(rownames = "language1") %>%
+  gather(language2, trigram_cosine, -language1) %>%
+  mutate(trigram_cosine = 1 - abs(trigram_cosine)) 
+
+all_distances <- feature_space %>%
+  left_join(unigram_cosines) %>%
+  left_join(bigram_cosines) %>%
+  left_join(trigram_cosines)
+
+all_distances %>% 
+  ggplot(aes(x = feature)) +
+    geom_smooth(aes(y = unigram_cosine, color = "#0033CC"), 
+                method = 'lm', se = F) + 
+    geom_smooth(aes(y = bigram_cosine, color = "#6699FF"), 
+                method = 'lm', se = F) +
+    geom_smooth(aes(y = trigram_cosine, color = "#33CCFF"), 
+                method = 'lm', se = F) +
+    ylab("Cosine Space Distance") + 
+    xlab("Feature Space Distance") + 
+    scale_color_manual(scale_name = "gram", 
+                       values = c("#0033CC", "#6699FF", "#33CCFF"), 
+                       labels = c("Unigrams", "Bigrams", "Trigrams")) + 
+    ggtitle("Cosine space distance regressed on feature spaced distance")
 ```
 
 ```{r models}
