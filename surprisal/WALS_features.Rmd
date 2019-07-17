@@ -13,12 +13,15 @@ library(here)
 library(missMDA)
 library(lsa)
 library(reshape2)
+library(broom)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r read in data}
 wals <- read_csv(here("Data/wals_isos.csv"))
+
 feature_names <- read_feather(here("Wikipedia/feature_names.feather"))
+clean_names <- feature_names %>% mutate(feature = make_clean_names(feature))
 
 wiki <- read_csv(here("Data/relative_ngrams.csv"))
 LANGUAGES <- wiki %>% pull(language) %>% unique()
@@ -168,13 +171,14 @@ models <- wf_pairwise %>%
   mutate(model = map(data, ~glm(same ~ cosine, 
                                 family = "binomial", data = .)))
 
+
 model_df <- models %>%
   mutate(coeffs = map(model, tidy)) %>%
   select(-data, -model) %>%
   unnest() %>%
   filter(term == "cosine") %>%
   arrange(desc(statistic)) %>%
-  left_join(feature_names)
+  left_join(clean_names, by = "feature")
 ```
 
 ```{r imputation}
