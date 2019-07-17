@@ -122,9 +122,12 @@ all_distances %>%
                 method = 'lm', se = F) +
     geom_smooth(aes(y = trigram_cosine, color = "#33CCFF"), 
                 method = 'lm', se = F) +
+    geom_point(aes(y = unigram_cosine, color = "#0033CC")) + 
+    geom_point(aes(y = bigram_cosine, color = "#6699FF")) + 
+    geom_point(aes(y = trigram_cosine, color = "#33CCFF")) + 
     ylab("Cosine Space Distance") + 
     xlab("Feature Space Distance") + 
-    scale_color_manual(scale_name = "gram", 
+    scale_color_manual(name = "Gram", 
                        values = c("#0033CC", "#6699FF", "#33CCFF"), 
                        labels = c("Unigrams", "Bigrams", "Trigrams")) + 
     ggtitle("Cosine space distance regressed on feature spaced distance")
