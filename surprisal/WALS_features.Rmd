@@ -14,24 +14,30 @@ library(missMDA)
 library(lsa)
 library(reshape2)
 library(broom)
+library(janitor)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r read in data}
-wals <- read_csv(here("Data/wals_isos.csv"))
+# wals <- read_csv(here("Data/wals_isos.csv"))
+wals <- read_csv(here("Data/from_website.csv"))
 
 feature_names <- read_feather(here("Wikipedia/feature_names.feather"))
 clean_names <- feature_names %>% mutate(feature = make_clean_names(feature))
 
+codes <- read_csv(here("Wikipedia/isos.csv"))
 wiki <- read_csv(here("Data/relative_ngrams.csv"))
 LANGUAGES <- wiki %>% pull(language) %>% unique()
 ```
 
-```{r see which WALS features are the most complete for our languages}
+
+```{r get only languages with enough features}
 all_languages <- wals %>% 
-  filter(rowSums(is.na(.)) < 130) %>%
-  group_by(language) %>%
-  slice(1) %>%
+  mutate(missing = rowSums(is.na(.))) %>% 
+  group_by(language) %>% 
+  mutate(minimum = min(missing)) %>%
+  filter(missing == minimum) %>% 
+  select(-missing, minimum) %>%
   ungroup() 
 ```
 
@@ -61,8 +67,8 @@ common_df <- nom_categories %>%
   inner_join(word_order) %>%
   inner_join(clauses)
 
-common_languages <- common_df %>%
-  pull(language)
+# common_languages <- common_df %>%
+#   pull(language)
 ```
 
 ```{r feature space}
@@ -82,6 +88,9 @@ feature_space <- imputed_df %>%
 ```
 
 ```{r cosines}
+common_languages <- read_csv(here("Data/imputed_wals.csv")) %>% 
+  pull(language)
+
 unigram_cosines <- wiki %>%
   filter(language %in% common_languages, gram == "Unigram") %>%
   select(-gram) %>% 
@@ -118,22 +127,22 @@ all_distances <- feature_space %>%
   left_join(trigram_cosines)
 
 all_distances %>% 
+  select(-bigram_cosine) %>% 
   ggplot(aes(x = feature)) +
     geom_smooth(aes(y = unigram_cosine, color = "#0033CC"), 
                 method = 'lm', se = F) + 
-    geom_smooth(aes(y = bigram_cosine, color = "#6699FF"), 
-                method = 'lm', se = F) +
+    # geom_smooth(aes(y = bigram_cosine, color = "#6699FF"), 
+    #             method = 'lm', se = F) +
     geom_smooth(aes(y = trigram_cosine, color = "#33CCFF"), 
                 method = 'lm', se = F) +
     geom_point(aes(y = unigram_cosine, color = "#0033CC")) + 
-    geom_point(aes(y = bigram_cosine, color = "#6699FF")) + 
+    # geom_point(aes(y = bigram_cosine, color = "#6699FF")) + 
     geom_point(aes(y = trigram_cosine, color = "#33CCFF")) + 
-    ylab("Cosine Space Distance") + 
-    xlab("Feature Space Distance") + 
+    ylab("Information Curve Difference") + 
+    xlab("Difference in WALS Features") + 
     scale_color_manual(name = "Gram", 
-                       values = c("#0033CC", "#6699FF", "#33CCFF"), 
-                       labels = c("Unigrams", "Bigrams", "Trigrams")) + 
-    ggtitle("Cosine space distance regressed on feature spaced distance")
+                       values = c("#0033CC", "#33CCFF"), 
+                       labels = c("Unigrams", "Trigrams")) 
 ```
 
 ```{r models}
@@ -155,15 +164,34 @@ cosines <- wiki %>%
   as_data_frame(rownames = "language1") %>%
   gather(language2, cosine, -language1)
 
-wf_pairwise <- expand.grid(language1 = wf_sub$language,
-                           language2 = wf_sub$language) %>%
-  left_join(wf_sub, by = c("language1" = "language")) %>%
-  rename(value1 = value) %>%
-  left_join(wf_sub, by = c("language2" = "language", "feature")) %>%
-  rename(value2 = value) %>%
-  mutate(same = value1 == value2) %>%
-  select(-value1, -value2) %>%
-  left_join(cosines, by = c("language1", "language2"))
+sub_langs <- wf_sub %>%
+  pull(language) %>%
+  unique()
+
+wf_pairwise <- expand.grid(language1 = sub_langs,
+                           language2 = sub_langs) %>%
+  filter(language1 != language2)
+
+
+compute_sim <- function(language1, language2) {
+  
+  wf_sub %>%
+    filter(language == language1) %>%
+    rename(value1 = value) %>% 
+    left_join(wf_sub %>% filter(language == language2) %>% select(feature, value), 
+              by = "feature") %>%
+    mutate(same = value == value1) %>%
+    ungroup() %>%
+    group_by(language) %>%
+    summarise(feature = sum(same)) %>%
+    mutate(language2 = language2) %>%
+    rename(language1 = language)
+}
+
+
+feature_space <- map_dfr(1:nrow(wf_pairwise), ~compute_sim(wf_pairwise[.x,"language1"],
+                                          wf_pairwise[.x,"language2"]))
+
 
 models <- wf_pairwise %>%
   group_by(feature) %>%
@@ -199,7 +227,40 @@ imputed_df <- as.data.frame(imputed_df[[1]][[99]])
 
 ## Errata
 
-```{r cleaning}
+```{r get values from website}
+languages <- read_csv(here("wals_dataset/languages.csv"))
+
+values <- read_csv(here("wals_dataset/values.csv"))
+
+values %>% 
+  left_join(languages, by = c("Language_ID" = "ID")) %>% 
+  select(Language_ID, Parameter_ID, Value, Name, Glottocode, ISO639P3code) %>% 
+  rename(wals_code = Language_ID, feature = Parameter_ID, value = Value, 
+         language = Name, glottocode = Glottocode, iso = ISO639P3code) %>% 
+  spread(feature, value)
+
+wf %>% write_csv(here("Data/from_website.csv"))
+```
+
+```{r pairing up languages with wikipedia features}
+wals <- read_csv(here("Data/from_website.csv"))
+
+all_data <- wiki %>% 
+  left_join(codes, by = "language") %>% 
+  left_join(wals %>% select(-language), by = "iso") %>% 
+  mutate(n = rowSums(is.na(.))) %>% 
+  group_by(language) %>% 
+  filter(n == min(n)) %>% 
+  group_by(language, gram) %>%
+  slice(1) %>% 
+  ungroup() 
+
+all_data %>% 
+  write_csv(here("Data/wiki_wals.csv"))
+```
+
+
+```{r cleaning, eval = F}
 wiki <- read_feather(here("Data/relative_ngrams.feather"))
 wiki %>% 
   group_by(language) %>% 

@@ -43,7 +43,6 @@ The section below reads in the Wikipedia unigram surprisal data and creates a de
 ```{r make dendrogram}
 wiki_unigrams <- read.csv(here("Data/relative_ngrams.csv")) %>%
   filter(gram == "Unigram") %>%
-  sample_n(100) %>%
   column_to_rownames("language")
 
 wiki_unigrams %>% 
@@ -70,6 +69,8 @@ wals <- read_csv(here("Data/wals.csv"))
 wals %>%
   mutate(iso = iso.gltc(glottocode)) %>%
   select(-glottocode) %>% 
+  select(language, iso) %>% View()
+  
   inner_join(codes, by = "iso") %>% 
   select(-language.x) %>%
   rename(language = language.y) %>%
@@ -186,7 +187,7 @@ model_df <- models %>%
 wiki_isos <- read_csv(here("Wikipedia/wiki_isos.csv")) %>%
   clean_names() %>%
   select(iso_language_name, x639_1, x639_3) %>% 
-  mutate(x639_3 = str_extract(x639_3, "\\w+")) %>% 
+  # mutate(x639_3 = str_extract(x639_3, "\\w+")) %>% 
   rename(language = iso_language_name) %>% 
   filter(language %in% LANGUAGES)
 
@@ -194,9 +195,21 @@ wiki_langs <- fromJSON(here("Wikipedia/language_dict.json")) %>%
   as_tibble() %>%
   gather(language, x639_1) %>%
   filter(language %in% LANGUAGES) %>%
+  write_csv(here("wiki_to_iso.csv"))
+
+%>%
   left_join(wiki_isos) 
 
 %>%
   left_join(wals_isos) %>%
   filter(is.na(wals.code))
+```
+
+```{r plotting grams across languages, eval = F}
+# how much do the slopes differ from 0? 
+wiki %>% 
+  group_by(language, gram) %>% 
+  summarise(diff = sum(abs(Slope1:Slope5))) %>%
+  ggplot(aes(x = gram, y = diff)) + 
+  geom_point()
 ```

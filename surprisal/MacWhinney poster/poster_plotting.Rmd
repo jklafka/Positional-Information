@@ -75,7 +75,7 @@ data %>%
    ggplot(aes(x = word_order, y = s,
                         color = speaker_role,
                         label = speaker_role)) +
-  facet_grid(language~context, scales = "free") +
+  facet_grid(context~language, scales = "free") +
   geom_point(size = 1.5) +
   geom_line(size = 1.5) +
   scale_color_brewer(palette = "Set1") + 
@@ -85,3 +85,23 @@ data %>%
 # dev.off()
 ```
 
+```{r plotting features}
+models <- read_feather(here("Wikipedia/models.feather"))
+
+sf <- models %>% 
+  filter(p.value == 0, estimate > 0) %>% 
+  select(name) %>% 
+  rename("Some Important Features" = name) %>% 
+  slice(c(1, 10, 12, 15, 23, 29))
+
+sf$Examples <- c("Noun-relative clause; relative clause-noun", 
+                 "No cases; 6 cases", 
+                 "SOV; VSO", 
+                 "Only singular; singular and plural", 
+                 "Affix; distinct word", 
+                 "Prefixes; suffixes")
+
+sf %>% grid.table()
+
+
+```
