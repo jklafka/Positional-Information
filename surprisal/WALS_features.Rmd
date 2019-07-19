@@ -15,6 +15,7 @@ library(lsa)
 library(reshape2)
 library(broom)
 library(janitor)
+library(hexbin)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -30,7 +31,6 @@ wiki <- read_csv(here("Data/relative_ngrams.csv"))
 LANGUAGES <- wiki %>% pull(language) %>% unique()
 ```
 
-
 ```{r get only languages with enough features}
 all_languages <- wals %>% 
   mutate(missing = rowSums(is.na(.))) %>% 
@@ -41,114 +41,36 @@ all_languages <- wals %>%
   ungroup() 
 ```
 
-```{r get common languages between the imputations and models}
-nom_categories <- all_languages %>%
-  select(language, x30a:x57a) %>%
-  filter(rowSums(is.na(.)) < 12)
+```{r imputation}
+df <- read_csv(here("Data/wiki_wals.csv"))
 
-nom_syntax <- all_languages %>%
-  select(language, x58a:x64a) %>%
-  filter(rowSums(is.na(.)) < 5)
+wals <- df %>% 
+  select(language, ends_with('A')) %>%
+  group_by(language) %>%
+  slice(1) %>% 
+  ungroup()
 
-verb_categories <- all_languages %>%
-  select(language, x65a:x80a) %>%
-  filter(rowSums(is.na(.)) < 8)
+imputed_df <- wals %>% 
+  select(-`139A`, -`141A`, -`140A`) %>% # these features have no values
+  select(language, `121A`:`120A`) %>%
+  gather(feature, value, -language) %>%
+  group_by(feature) %>%
+  mutate(value = factor(value)) %>%
+  select(language, feature, value) %>%
+  ungroup() %>% 
+  spread(feature, value) %>% 
+  sapply(as.factor) %>%
+  as.data.frame() %>%
+  column_to_rownames("language") %>% 
+  MIMCA(ncp = 2, threshold = 1e-02)
 
-word_order <- all_languages %>%
-  select(language, x81a:x97a) 
-
-clauses <- all_languages %>%
-  select(language, x98a:x121a) %>%
-  filter(rowSums(is.na(.)) < 12)
-
-common_df <- nom_categories %>%
-  inner_join(nom_syntax) %>%
-  inner_join(verb_categories) %>%
-  inner_join(word_order) %>%
-  inner_join(clauses)
-
-# common_languages <- common_df %>%
-#   pull(language)
-```
-
-```{r feature space}
-imputed_df <- read_csv(here("Data/imputed_wals.csv"))
-
-feature_space <- imputed_df %>% 
-  gather(feature, value, -language) %>% 
-  group_by(feature) %>% 
-  mutate(value = as.numeric(as.factor(value))) %>% 
-  spread(feature, value) %>%
-  column_to_rownames("language") %>%
-  dist(method = "manhattan") %>%
-  as.matrix() %>%
-  melt(value.name = "feature") %>%
-  as_tibble() %>%
-  rename(language1 = Var1, language2 = Var2) 
-```
-
-```{r cosines}
-common_languages <- read_csv(here("Data/imputed_wals.csv")) %>% 
-  pull(language)
-
-unigram_cosines <- wiki %>%
-  filter(language %in% common_languages, gram == "Unigram") %>%
-  select(-gram) %>% 
-  column_to_rownames("language") %>%
-  t() %>%
-  cosine() %>%
-  as_data_frame(rownames = "language1") %>%
-  gather(language2, unigram_cosine, -language1) %>%
-  mutate(unigram_cosine = 1 - abs(unigram_cosine)) 
-
-bigram_cosines <- wiki %>%
-  filter(language %in% common_languages, gram == "Bigram") %>%
-  select(-gram) %>% 
-  column_to_rownames("language") %>%
-  t() %>%
-  cosine() %>%
-  as_data_frame(rownames = "language1") %>%
-  gather(language2, bigram_cosine, -language1) %>%
-  mutate(bigram_cosine = 1 - abs(bigram_cosine)) 
-
-trigram_cosines <- wiki %>%
-  filter(language %in% common_languages, gram == "Trigram") %>%
-  select(-gram) %>% 
-  column_to_rownames("language") %>%
-  t() %>%
-  cosine() %>%
-  as_data_frame(rownames = "language1") %>%
-  gather(language2, trigram_cosine, -language1) %>%
-  mutate(trigram_cosine = 1 - abs(trigram_cosine)) 
-
-all_distances <- feature_space %>%
-  left_join(unigram_cosines) %>%
-  left_join(bigram_cosines) %>%
-  left_join(trigram_cosines)
-
-all_distances %>% 
-  select(-bigram_cosine) %>% 
-  ggplot(aes(x = feature)) +
-    geom_smooth(aes(y = unigram_cosine, color = "#0033CC"), 
-                method = 'lm', se = F) + 
-    # geom_smooth(aes(y = bigram_cosine, color = "#6699FF"), 
-    #             method = 'lm', se = F) +
-    geom_smooth(aes(y = trigram_cosine, color = "#33CCFF"), 
-                method = 'lm', se = F) +
-    geom_point(aes(y = unigram_cosine, color = "#0033CC")) + 
-    # geom_point(aes(y = bigram_cosine, color = "#6699FF")) + 
-    geom_point(aes(y = trigram_cosine, color = "#33CCFF")) + 
-    ylab("Information Curve Difference") + 
-    xlab("Difference in WALS Features") + 
-    scale_color_manual(name = "Gram", 
-                       values = c("#0033CC", "#33CCFF"), 
-                       labels = c("Unigrams", "Trigrams")) 
+imputed_df110 <- as.data.frame(imputed_df[[1]][[99]]) 
 ```
 
 ```{r models}
-imputed_df <- read_csv(here("Data/imputed_wals.csv"))
+imputed_df <- read_csv(here("Data/imputed_all.csv"))
 
-wf_sub <- imputed_df %>% 
+wf_sub <- all_imputed %>% 
   group_by(language) %>%
   slice(1) %>%
   gather(feature, value, -language) %>%
@@ -209,20 +131,57 @@ model_df <- models %>%
   left_join(clean_names, by = "feature")
 ```
 
-```{r imputation}
-imputed_df <- common_df %>% 
-  gather(feature, value, -language) %>%
-  group_by(feature) %>%
-  mutate(value = factor(value)) %>%
-  select(language, feature, value) %>%
-  ungroup() %>% 
-  spread(feature, value) %>% 
-  sapply(as.factor) %>%
-  as.data.frame() %>%
-  column_to_rownames("language") %>% 
-  MIMCA(ncp = 1)
+```{r cosines}
+unigram_cosines <- wiki %>%
+  filter(language %in% sub_langs, gram == "Unigram") %>%
+  select(-gram) %>% 
+  column_to_rownames("language") %>%
+  t() %>%
+  cosine() %>%
+  as_data_frame(rownames = "language1") %>%
+  gather(language2, unigram_cosine, -language1) %>%
+  mutate(unigram_cosine = 1 - abs(unigram_cosine)) 
 
-imputed_df <- as.data.frame(imputed_df[[1]][[99]]) 
+# bigram_cosines <- wiki %>%
+#   filter(language %in% sub_langs, gram == "Bigram") %>%
+#   select(-gram) %>% 
+#   column_to_rownames("language") %>%
+#   t() %>%
+#   cosine() %>%
+#   as_data_frame(rownames = "language1") %>%
+#   gather(language2, bigram_cosine, -language1) %>%
+#   mutate(bigram_cosine = 1 - abs(bigram_cosine)) 
+
+trigram_cosines <- wiki %>%
+  filter(language %in% sub_langs, gram == "Trigram") %>%
+  select(-gram) %>% 
+  column_to_rownames("language") %>%
+  t() %>%
+  cosine() %>%
+  as_data_frame(rownames = "language1") %>%
+  gather(language2, trigram_cosine, -language1) %>%
+  mutate(trigram_cosine = 1 - abs(trigram_cosine)) 
+
+all_distances <- feature_space %>%
+  left_join(unigram_cosines) %>%
+  left_join(trigram_cosines)
+
+all_distances %>% 
+  ggplot(aes(x = feature)) +
+    geom_smooth(aes(y = unigram_cosine, color = "#0033CC"), 
+                method = 'lm', se = F) + 
+    # geom_smooth(aes(y = bigram_cosine, color = "#6699FF"), 
+    #             method = 'lm', se = F) +
+    geom_smooth(aes(y = trigram_cosine, color = "#33CCFF"), 
+                method = 'lm', se = F) +
+    geom_hex(aes(y = unigram_cosine, color = "#0033CC", alpha=.2)) + 
+    # geom_point(aes(y = bigram_cosine, color = "#6699FF")) + 
+    geom_hex(aes(y = trigram_cosine, color = "#33CCFF", alpha=.2)) + 
+    ylab("Information Curve Difference") + 
+    xlab("Difference in WALS Features") + 
+    scale_color_manual(name = "Gram", 
+                       values = c("#0033CC", "#33CCFF"), 
+                       labels = c("Unigrams", "Trigrams")) 
 ```
 
 ## Errata
@@ -272,4 +231,50 @@ wiki %>%
   spread(cut, estimate) %>% 
   rename(Slope1 =`1`, Slope2 =`2`, Slope3 =`3`, Slope4 =`4`, Slope5 =`5`) %>%
   write_csv(here("Data/relative_ngrams.csv"))
+```
+
+```{r feature space}
+imputed_df <- read_csv(here("Data/imputed_all.csv"))
+
+feature_space <- all_imputed %>% 
+  gather(feature, value, -language) %>% 
+  group_by(feature) %>% 
+  mutate(value = as.numeric(as.factor(value))) %>% 
+  spread(feature, value) %>%
+  column_to_rownames("language") %>%
+  dist(method = "manhattan") %>%
+  as.matrix() %>%
+  melt(value.name = "feature") %>%
+  as_tibble() %>%
+  rename(language1 = Var1, language2 = Var2) 
+```
+
+```{r get common languages between the imputations and models}
+nom_categories <- all_languages %>%
+  select(language, x30a:x57a) %>%
+  filter(rowSums(is.na(.)) < 12)
+
+nom_syntax <- all_languages %>%
+  select(language, x58a:x64a) %>%
+  filter(rowSums(is.na(.)) < 5)
+
+verb_categories <- all_languages %>%
+  select(language, x65a:x80a) %>%
+  filter(rowSums(is.na(.)) < 8)
+
+word_order <- all_languages %>%
+  select(language, x81a:x97a) 
+
+clauses <- all_languages %>%
+  select(language, x98a:x121a) %>%
+  filter(rowSums(is.na(.)) < 12)
+
+common_df <- nom_categories %>%
+  inner_join(nom_syntax) %>%
+  inner_join(verb_categories) %>%
+  inner_join(word_order) %>%
+  inner_join(clauses)
+
+# common_languages <- common_df %>%
+#   pull(language)
 ```
