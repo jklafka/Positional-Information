@@ -185,7 +185,9 @@ all_distances %>%
 ```
 
 ```{r correlations}
-correlation_data <- read_feather(here("Data/feature_cosine_spaces.feather"))
+correlation_data <- read_feather(here("Data/feature_cosine_spaces.feather")) %>% 
+  mutate(unigram_cosine = unigram_cosine * 180) %>% 
+  mutate(trigram_cosine = trigram_cosine * 180)
 
 tidy_corr_data <- correlation_data %>%
   gather(gram, angle, unigram_cosine, trigram_cosine) %>%
@@ -197,9 +199,12 @@ ggplot(tidy_corr_data, aes(x = feature, y = angle, fill = gram,
   geom_smooth(method = "lm") +
   geom_jitter(alpha = .05) +
   geom_dl(method = "smart.grid") + 
-  theme(legend.position = "none")
+  theme(legend.position = "none") + 
+  xlab("Number of WALS features in common") + 
+  ylab("Information curve distance")
 
-lmer(feature ~ distance * gram + (1|language1) + (1|language2),
+library(lme4)
+lmer(feature ~ angle * gram + (1|language1) + (1|language2),
      data = tidy_corr_data) %>%
   tidy()
   

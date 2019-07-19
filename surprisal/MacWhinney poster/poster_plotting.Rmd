@@ -24,6 +24,7 @@ library(here)
 library(ggthemes)
 library(feather)
 library(janitor)
+library(gridExtra)
 
 opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
                error = FALSE, cache = FALSE, tidy = FALSE)
@@ -94,10 +95,10 @@ sf <- models %>%
   rename("Some Important Features" = name) %>% 
   slice(c(1, 10, 12, 15, 23, 29))
 
-sf$Examples <- c("Noun-relative clause; relative clause-noun", 
+sf$Examples <- c("Noun-RC; RC-noun", 
                  "No cases; 6 cases", 
                  "SOV; VSO", 
-                 "Only singular; singular and plural", 
+                 "Only singular; sing. and plural", 
                  "Affix; distinct word", 
                  "Prefixes; suffixes")
 
@@ -105,3 +106,25 @@ sf %>% grid.table()
 
 
 ```
+
+```{r plotting trigram smoothing}
+wiki %>% 
+  mutate(Slope0 = runif(1, 0.9, 1.1)) %>% 
+  mutate(Slope1 = Slope1 + Slope0) %>% 
+  mutate(Slope2 = Slope2 + Slope1) %>% 
+  mutate(Slope3 = Slope3 + Slope2) %>% 
+  mutate(Slope4 = Slope4 + Slope3) %>% 
+  mutate(Slope5 = Slope5 + Slope4) %>% 
+  # rename(1 = Slope0, 2 = Slope1, 3 = Slope2, 4 = Slope3, 5 = Slope4, 6 = Slope5) %>% 
+  filter(gram == "Trigram") %>% 
+  select(-gram) %>% 
+  sample_n(6) %>% 
+  gather(position, information, -language) %>%
+  ggplot(aes(x = position, y = information, group = language, color = language))  
+    geom_point() + 
+    geom_line() + 
+    xlab("Position") + 
+    ylab("Average Information") + 
+    theme(axis.text.x = element_blank())
+```
+
