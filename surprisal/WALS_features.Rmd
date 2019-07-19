@@ -15,8 +15,10 @@ library(lsa)
 library(reshape2)
 library(broom)
 library(janitor)
-library(hexbin)
+library(directlabels)
 knitr::opts_chunk$set(echo = TRUE)
+
+theme_set(theme_classic(base_size = 18))
 ```
 
 ```{r read in data}
@@ -131,7 +133,7 @@ model_df <- models %>%
   left_join(clean_names, by = "feature")
 ```
 
-```{r cosines}
+```{r cosines, eval = F}
 unigram_cosines <- wiki %>%
   filter(language %in% sub_langs, gram == "Unigram") %>%
   select(-gram) %>% 
@@ -139,8 +141,7 @@ unigram_cosines <- wiki %>%
   t() %>%
   cosine() %>%
   as_data_frame(rownames = "language1") %>%
-  gather(language2, unigram_cosine, -language1) %>%
-  mutate(unigram_cosine = 1 - abs(unigram_cosine)) 
+  gather(language2, unigram_cosine, -language1) 
 
 # bigram_cosines <- wiki %>%
 #   filter(language %in% sub_langs, gram == "Bigram") %>%
@@ -159,8 +160,7 @@ trigram_cosines <- wiki %>%
   t() %>%
   cosine() %>%
   as_data_frame(rownames = "language1") %>%
-  gather(language2, trigram_cosine, -language1) %>%
-  mutate(trigram_cosine = 1 - abs(trigram_cosine)) 
+  gather(language2, trigram_cosine, -language1)
 
 all_distances <- feature_space %>%
   left_join(unigram_cosines) %>%
@@ -182,6 +182,29 @@ all_distances %>%
     scale_color_manual(name = "Gram", 
                        values = c("#0033CC", "#33CCFF"), 
                        labels = c("Unigrams", "Trigrams")) 
+```
+
+```{r correlations}
+correlation_data <- read_feather(here("Data/feature_cosine_spaces.feather"))
+
+tidy_corr_data <- correlation_data %>%
+  gather(gram, angle, unigram_cosine, trigram_cosine) %>%
+  mutate(gram = if_else(gram == "unigram_cosine", "unigram", "trigram"))
+
+ggplot(tidy_corr_data, aes(x = feature, y = angle, fill = gram,
+                           color = gram, group = gram,
+                           label = gram)) + 
+  geom_smooth(method = "lm") +
+  geom_jitter(alpha = .05) +
+  geom_dl(method = "smart.grid") + 
+  theme(legend.position = "none")
+
+lmer(feature ~ distance * gram + (1|language1) + (1|language2),
+     data = tidy_corr_data) %>%
+  tidy()
+  
+  
+
 ```
 
 ## Errata
