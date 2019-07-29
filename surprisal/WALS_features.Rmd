@@ -43,6 +43,87 @@ all_languages <- wals %>%
   ungroup() 
 ```
 
+```{r geographic area comparison}
+languages <- read_csv(here("Data/languages.csv")) %>%
+  select(Latitude, Longitude, ISO639P3code)
+
+wiki <- read_csv(here("Data/relative_ngrams.csv"))
+
+labs <- read_csv(here("Data/wiki_wals.csv")) %>% 
+  group_by(language) %>% 
+  slice(1) %>% 
+  ungroup() %>% 
+  select(language, iso)
+
+latlong <- labs %>% 
+  left_join(imputed_df) %>% 
+  left_join(languages, by = c("iso" = "ISO639P3code")) %>%
+  group_by(language) %>%
+  slice(1) %>% 
+  ungroup() %>%
+  select(language, Latitude, Longitude) %>%
+  filter(complete.cases(.))
+
+sub_langs <- latlong %>% 
+  pull(language)
+
+unigram_cosines <- wiki %>%
+  filter(language %in% sub_langs, gram == "Unigram") %>%
+  select(-gram) %>% 
+  column_to_rownames("language") %>%
+  t() %>%
+  cosine() %>%
+  as_data_frame(rownames = "language1") %>%
+  gather(language2, unigram_cosine, -language1) 
+
+wf_pairwise <- expand.grid(language1 = sub_langs,
+                           language2 = sub_langs) %>%
+  filter(language1 != language2)
+
+
+compute_sim <- function(language1, language2) {
+  
+  wf_sub %>%
+    filter(language == language1) %>%
+    rename(value1 = value) %>% 
+    left_join(wf_sub %>% filter(language == language2) %>% select(feature, value), 
+              by = "feature") %>%
+    mutate(same = value == value1) %>%
+    ungroup() %>%
+    group_by(language) %>%
+    summarise(feature = sum(same)) %>%
+    mutate(language2 = language2) %>%
+    rename(language1 = language)
+}
+
+wf_sub <- imputed_df %>% 
+  filter(language %in% sub_langs) %>%
+  group_by(language) %>%
+  slice(1) %>%
+  gather(feature, value, -language) %>%
+  group_by(feature) %>%
+  mutate(value = as.numeric(as.factor(value)))
+
+feature_space <- map_dfr(1:nrow(wf_pairwise), ~compute_sim(wf_pairwise[.x,"language1"],
+                                          wf_pairwise[.x,"language2"]))
+
+compute_geo_sim <- function(language1, language2) {
+  
+  latlong %>%
+    filter(language == language1) %>%
+    bind_cols(latlong %>% filter(language == language2)) %>%
+    mutate(geo = sqrt((Latitude1 - Latitude)^2 + (Latitude1 - Latitude)^2)) %>%
+    ungroup() %>%
+    rename(language2 = language1, language1 = language) %>% 
+    select(language1, language2, geo)
+}
+
+geo_space <- map_dfr(1:nrow(wf_pairwise), ~compute_geo_sim(wf_pairwise[.x,"language1"],
+                                          wf_pairwise[.x,"language2"]))
+
+
+```
+
 ```{r imputation}
 df <- read_csv(here("Data/wiki_wals.csv"))
 
@@ -65,14 +146,12 @@ imputed_df <- wals %>%
   as.data.frame() %>%
   column_to_rownames("language") %>% 
   MIMCA(ncp = 2, threshold = 1e-02)
-
-imputed_df110 <- as.data.frame(imputed_df[[1]][[99]]) 
 ```
 
 ```{r models}
 imputed_df <- read_csv(here("Data/imputed_all.csv"))
 
-wf_sub <- all_imputed %>% 
+wf_sub <- imputed_df %>% 
   group_by(language) %>%
   slice(1) %>%
   gather(feature, value, -language) %>%
