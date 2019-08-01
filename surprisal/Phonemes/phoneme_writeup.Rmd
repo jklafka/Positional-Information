@@ -44,8 +44,8 @@ How do speakers tend to spread information among the sounds in English words? A 
 Through a series of exploratory analyses we tackle this problem using four approaches:
 
 1. We compute the information of characters in English words from baserates of character production (unigram) and then conditioning on the prior charaters in each word (bigram and trigram). This analysis roughly captures the difficulty that a listener might have in predicting each character.
-2. We repeat this analysis at the level of phonemes rather than characters, arguably a better proxy for speakers' and listeners' representations of spoken English. 
-3. We compute hold-out entropy for individual phonemes in English words. This is roughly equivalent to asking "if you knew every other sound in a word, how much trouble would you have predicting what sounds appears in position $X$", where position $X$ is held out. 
+2. We repeat this analysis at the level of phones rather than characters, arguably a better proxy for speakers' and listeners' representations of spoken English. 
+3. We compute hold-out entropy for individual phones in English words. This is roughly equivalent to asking "if you knew every other sound in a word, how much trouble would you have predicting what sounds appears in position $X$", where position $X$ is held out. 
 4. We compare our English by-letter analysis to results for French and German, for which we  expect different information profiles. We expect that French words will have less information on average at the end of words compared to English, as the final letters in many French words are unpronounced. We expect German words will have more information on average in their final letters compared to English, as German nouns are case-marked with affixes. 
 
 Across all of our analyses, we find that the letters and sounds at the end of words in English have less information than the first letters and sounds in a word, and that the middle and final letters in English words are easily predictable from their preceding letters. We find that letters at the end of words in French and German also have little information compared to letters at the beginning of words in those languages, like in English. This is unexpected for German, and difficult to differentiate from English for French. 
@@ -260,7 +260,7 @@ plot_curves(select_language = "German", select_gram = "Trigram")
 
 # General Discussion
 
-Across all three languages we examined and both letters and phonemes in English, we found that the first two or three letters and sounds in a word contain relatively more information than any other letters or sounds in the word. The final letters and sounds tended to contain little information compared to the initial letters or sounds. The middle and final letters in words in all three languages were easily predictable from the two letters that came directly before them. Even for a language like German which marks case at the end of nouns, young listeners can identify and disambiguate the words using only the first few letters of those words.  
+Across all three languages we examined and both letters and phones in English, we found that the first two or three letters and sounds in a word contain relatively more information than any other letters or sounds in the word. The final letters and sounds tended to contain little information compared to the initial letters or sounds. The middle and final letters in words in all three languages were easily predictable from the two letters that came directly before them. Even for a language like German which marks case at the end of nouns, young listeners can identify and disambiguate the words using only the first few letters of those words.  
 
 # Additional material
 ## Appendix A: Methods
