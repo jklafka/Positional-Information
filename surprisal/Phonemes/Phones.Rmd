@@ -1,5 +1,5 @@
 ---
-title: "Information within words in English, French and German speech"
+title: "Information in sounds and letters in English, French and German speech"
 author: Josef Klafka and Dan Yurovsky 
 date: "`r Sys.Date()`"
 output: 
@@ -41,16 +41,16 @@ adult_phonemes <- read_feather(here("Data/adult_phonemes.feather"))
 
 How do speakers tend to spread information among the sounds in English words? A salient feature of African American Vernacular English is the reduction of final consonants and consonant clusters. Why doesn't this reduction create communication problems, namely identifying and disambiguating words? One possibility is that the information important for identifying a word is not always uniformly distributed across all of its characters or sounds, but instead usually concentrated at the beginning or middle of the word. For these words, reducing final sounds might reduce the articulatory complexity of words without much cost for the listener in processing these words and inferring their intended meaning. By the time a listener hears only the first sounds of a word, they may already have identified which word they hear. 
 
-Through a series of exploratory analyses we tackle this problem using four approaches:
+We tackle this problem using four exploratory analyses:
 
-1. We compute the information of characters in English words from baserates of character production (unigram) and then conditioning on the prior charaters in each word (bigram and trigram). This analysis roughly captures the difficulty that a listener might have in predicting each character.
+1. We compute the information of characters in English words from baserates of character production (unigram) and then conditioning on the prior characters in each word (bigram and trigram). This analysis roughly captures the difficulty that a listener might have in predicting each character.
 2. We repeat this analysis at the level of phones rather than characters, arguably a better proxy for speakers' and listeners' representations of spoken English. 
 3. We compute hold-out entropy for individual phones in English words. This is roughly equivalent to asking "if you knew every other sound in a word, how much trouble would you have predicting what sounds appears in position $X$", where position $X$ is held out. 
-4. We compare our English by-letter analysis to results for French and German, for which we  expect different information profiles. We expect that French words will have less information on average at the end of words compared to English, as the final letters in many French words are unpronounced. We expect German words will have more information on average in their final letters compared to English, as German nouns are case-marked with affixes. 
+4. We compare our English by-letter analysis to results for French and German, for which we  expect different information profiles. We expect that French words will have less information on average at the end of words compared to English, as French speakers do not pronounce the finals sounds in many words in their language. We expect German words will have more information on average in their final letters compared to English, as German nouns are case-marked with affixes. 
 
-Across all of our analyses, we find that the letters and sounds at the end of words in English have less information than the first letters and sounds in a word, and that the middle and final letters in English words are easily predictable from their preceding letters. We find that letters at the end of words in French and German also have little information compared to letters at the beginning of words in those languages, like in English. This is unexpected for German, though we do find that the ends of words in French contain less information than the ends of words in English, even without context. 
+Across all of our analyses, we find that the letters and sounds at the end of words in English have less information than the first letters and sounds in a word, and that the middle and final letters in English words are easily predictable from their preceding letters. We find that letters at the end of words in French and German also have little information compared to letters at the beginning of words in those languages, like in English. This is unexpected for German, though we do find that the ends of words in French contain less information than the ends of words in English, even looking solely at character baserates.  
 
-We use three corpora from the CHILDES-Talkbank system (MacWhinney, 2000) to investigate these questions for child language and child-directed speech. See the Appendix for more technical information about methods. 
+We use three corpora from the CHILDES-Talkbank system (MacWhinney, 2000). See the Appendix for more technical information about methods. 
 
 # English Letters
 
@@ -260,10 +260,10 @@ plot_curves(select_language = "German", select_gram = "Trigram")
 
 # General Discussion
 
-Across all three languages we examined and both letters and phones in English, we found that the first two or three letters and sounds in a word contain relatively more information than any other letters or sounds in the word. The final letters and sounds tended to contain little information compared to the initial letters or sounds. The middle and final letters in words in all three languages were easily predictable from the two letters that came directly before them. Even for a language like German which marks case at the end of nouns, young listeners can identify and disambiguate the words using only the first few letters of those words.  
+Across all three languages we examined and both letters and phones in English, we found that the first two or three letters and sounds in a word contain relatively more information than any other letters or sounds in the word. The final letters and sounds tended to contain little information compared to the initial letters or sounds. The middle and final letters in words in all three languages were easily predictable from the two letters that came directly before them. Even for a language like German which marks case at the end of nouns, listeners can identify and disambiguate the words using only the first few letters of those words.  
 
-# Additional material
-## Appendix A: Methods
+# Appendices
+## A: Methods
 The metric we use for information is based on the lexical surprisal metric from Levy (2008), with formula given below. The surprisal $s$ of the $i$th word $w_i$ in an utterance is given by 
 
 $$s(w_i) = -\log P(w_i|w_{i-1}w_{i-2}...)$$
