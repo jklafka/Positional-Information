@@ -2,13 +2,8 @@
 title: "Information in sounds and letters in English, French and German speech"
 author: Josef Klafka and Dan Yurovsky 
 date: "`r Sys.Date()`"
-output: 
-  html_document:
-    toc: false
-    number_sections: true
-    theme: lumen
-    toc_float: false
-    code_folding: hide
+output: pdf_document
+  
 editor_options: 
   chunk_output_type: console
 ---
@@ -32,7 +27,7 @@ knitr::opts_chunk$set(echo = TRUE, cache = T, warning = F,
 theme_set(theme_classic(base_size = 16))
 ```
 
-```{r read-data}
+```{r read-data, include=F}
 all_data <- read_feather(here("Data/all_data.feather"))
 adult_phonemes <- read_feather(here("Data/adult_phonemes.feather"))
 ```
@@ -54,7 +49,7 @@ We use three corpora from the CHILDES-Talkbank system (MacWhinney, 2000). See th
 
 # English Letters
 
-```{r plot-hist-helper}
+```{r plot-hist-helper, include=F}
 plot_hists <- function(select_language = "English", select_rep = "letter") {
 
     all_data %>%
@@ -89,7 +84,7 @@ plot_hists()
 
 We observed a distinctive shape for information at the level of individual letters in English. The first letter has relatively high information, the second letter has less information, the third letter has high information, and the final letter has less information (if the word has more than three letters). 
 
-```{r plot-curve-helper}
+```{r plot-curve-helper, include=F}
 plot_curves <- function(select_language = "English", select_rep = "letter", 
                         select_gram = "Unigram") {
   all_data %>%

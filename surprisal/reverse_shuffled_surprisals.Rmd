@@ -1,0 +1,127 @@
+---
+title: "Reverse and shuffled lexical surprisal"
+author: "Josef Klafka and Dan Yurovsky"
+date: "8/30/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(tidytext)
+library(here)
+library(feather)
+library(childesr)
+
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load corpora}
+prov_utterances <- get_utterances(corpus = "Providence")
+```
+
+```{r get reverse}
+adult_utterances <- prov_utterances %>%
+  filter(speaker_role != "Target_Child") %>% 
+  mutate(length = str_count(gloss, pattern = "[ +]+") + 1) %>%
+  mutate(utterance_id = 1:n()) %>%
+  unnest_tokens(word, gloss, token = stringr::str_split, pattern = "[ +]+") %>%
+  group_by(utterance_id) %>%
+  mutate(word_order = 1:n()) %>% 
+  arrange(desc(word_order)) %>% 
+  mutate(word_order = 1:n()) %>%
+  ungroup()
+```
+
+```{r get shuffled}
+adult_utterances <- prov_utterances %>%
+  filter(speaker_role != "Target_Child") %>% 
+  mutate(length = str_count(gloss, pattern = "[ +]+") + 1) %>%
+  mutate(utterance_id = 1:n()) %>%
+  unnest_tokens(word, gloss, token = stringr::str_split, pattern = "[ +]+") %>%
+  group_by(utterance_id) %>%
+  sample_frac(size = 1, replace = F) %>% 
+  mutate(word_order = 1:n()) %>%
+  ungroup() 
+```
+
+```{r}
+adult_unigrams <- adult_utterances %>%
+  group_by(word) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(p = n / sum(n))
+
+unigram_surprisals <- adult_utterances %>%
+  left_join(adult_unigrams) %>%
+  mutate(s = -log(p)) %>%
+  group_by(length, word_order) %>%
+  summarise(s = mean(s))
+
+adult_bigrams <- adult_utterances %>%
+  group_by(utterance_id) %>%
+  mutate(lag_word = lag(word)) %>%
+  group_by(lag_word, word) %>%
+  count() %>%
+  filter(!is.na(lag_word)) %>%
+  ungroup() %>%
+  left_join(adult_unigrams, by = c("lag_word" = "word")) %>%
+  mutate(cond_p = n.x/n.y) 
+
+bigram_surprisals_prep <- adult_utterances %>%
+  group_by(utterance_id) %>%
+  mutate(lag_word = lag(word)) %>%
+  left_join(select(adult_bigrams, -p)) %>%
+  left_join(adult_unigrams)
+
+bigram_surprisals <- bigram_surprisals_prep %>%
+  mutate(s = ifelse(is.na(lag_word), -log(p), -log(cond_p))) %>%
+  group_by(length, word_order) %>%
+  summarise(s = mean(s)) %>% 
+  filter(word_order <= length)
+
+adult_trigrams <- adult_utterances %>%
+  group_by(utterance_id) %>%
+  mutate(lag_word1 = lag(word)) %>%
+  mutate(lag_word2 = lag(lag_word1)) %>%
+  group_by(lag_word2, lag_word1, word) %>%
+  count() %>%
+  filter(!is.na(lag_word1), !is.na(lag_word2)) %>%
+  ungroup() %>%
+  left_join(adult_bigrams, by = c("lag_word2" = "lag_word", "lag_word1" = "word")) %>%
+  mutate(tri_cond_p = n / n.x) %>%
+  select(-n, -n.x, -n.y, -p, -cond_p)
+
+trigram_surprisals_prep <- adult_utterances %>%
+  group_by(utterance_id) %>%
+  mutate(lag_word1 = lag(word)) %>%
+  mutate(lag_word2 = lag(lag_word1)) %>%
+  left_join(adult_trigrams) %>% 
+  left_join(select(adult_bigrams, lag_word, word, cond_p), by = c("lag_word1" = "lag_word", "word" = "word")) %>% 
+  left_join(adult_unigrams)
+
+
+trigram_surprisals <- trigram_surprisals_prep %>%
+  mutate(s = ifelse(is.na(lag_word2), # check if it's not the first word
+                    ifelse(is.na(lag_word1), # check if not the second word
+                           -log(p), # trigram if third or beyond
+                           -log(cond_p)), # bigram if second word
+                    -log(tri_cond_p))) %>% # unigram if first word
+  group_by(length, word_order) %>%
+  summarise(s = mean(s)) %>% 
+  filter(word_order <= length)
+```
+
+```{r plotting}
+trigram_surprisals %>%  
+  filter(length %in% c(5, 7, 9)) %>%
+  ggplot(aes(x = word_order, y = s)) +
+    facet_wrap(~ length) + 
+    xlab("Word position") +
+    ylab("Mean surprisal") +
+    ggtitle("Shuffled trigram surprisals") + 
+    scale_x_continuous(breaks = 1:9) + 
+    geom_line(size = 1) +
+    theme_classic(base_size = 10) + 
+    theme(legend.position = "nones") 
+```
