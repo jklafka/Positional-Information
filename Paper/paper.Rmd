@@ -58,7 +58,8 @@ The surprisal of a word is also correlated with the processing cost of a word, w
 
 However, when reading or listening, people don’t just consider each word as an isolated linguistic signal. Instead, listeners use the words they have already heard to predict and decode the word they are currently processing. Following this incremental processing paradigm, we can also condition the surprisal of a word in its context. In the formula below, widenotes the word currently being read or heard, while wi-1denotes the first word before the current word, wi-2denotes the second word before the current word, and so on. 
 
-$$surprisal(w_i|w_{i-1}w_{i-2}...) = -log P(w_i|w_{i-1}w_{i-2}...) = -log P(w_i,w_{i-1}w_{i-2},...)P(w_{i-1}w_{i-2}...)$$
+$$surprisal(w_i|w_{i-1}w_{i-2}...) = -log P(w_i|w_{i-1}w_{i-2}...)$$
+$$= -log \frac{P(w_i,w_{i-1}w_{i-2},...)}{P(w_{i-1}w_{i-2}...)}$$
 
 When we use a word or two of context in our surprisal calculations, then the set of reasonable final items in our ngrams is greatly restricted. “Flower” may contain less information than “azalea” when we consider the words independently of their context, but with context this can be reversed. Flower appears in a variety of contexts, and so the information content of a word like “flower” in a particular context may be higher than “azalea”. If you only have azaleas in your garden, then hearing someone say “in that garden, look at the flowers” may be higher surprisal for you: you expect them to say “azalea”. This prediction does not need many words before to work out, for example in “I take my coffee with cream and sugar”. When you hear “cream and”, you automatically predict “sugar” or maybe “honey”, but there are few possible continuations with even those two words. Hearing “I” restricts the next word to a verb, or possibly an adverb, and since you have just heard the speaker refer to themselves in the first person singular, your set of possible completions is significantly restricted. 
 
@@ -98,11 +99,31 @@ We use the Providence corpus from CHILDES [@macwhinney2000childes; @evans2012ind
 
 We observe the same distinctive distribution of information for parents and children in the Providence corpus as we did for adults in the BNC and Switchboard. The distribution of information we found at the level of individual words in English, therefore, characterizes the English language as a whole and not only adult utterances, not only written utterances. 
 
-Plot of Providence unigram curves
+```{r, echo=F, fig.height =2, fig.cap="Providence frequency-based information curves"}
+childes_results %>% 
+  filter(Language == "English", context == 0, length %in% c(5, 7, 9)) %>%
+  ggplot(aes(x = word_order, y = s, color = speaker_role)) + 
+    geom_point() + 
+    facet_wrap(~length) + 
+    scale_x_continuous(breaks = 1:9) + 
+    geom_line() + 
+    xlab("Word position") + 
+    ylab("Mean information")
+```
 
 What about context in the Providence corpus? When incorporating one or two words of predictive context, we observe the same trend as in the Switchboard and BNC corpora. Beyond the first couple of words, once your interlocutor has enough context to predict with some accuracy what you will say next, then you decode information from their speech stream at a constant and optimal rate. This applies to parents and children speaking to one another, as well as adults speaking and writing to one another. 
 
-Plot of Providence bigram and trigram curves
+```{r, echo=F, fig.height =2, fig.cap="Providence context-based information curves"}
+childes_results %>% 
+  filter(Language == "English", context %in% c(1, 2), length %in% c(5, 7, 9)) %>%
+  ggplot(aes(x = word_order, y = s, color = speaker_role)) + 
+    geom_point() + 
+    facet_wrap(context~length) + 
+    scale_x_continuous(breaks = 1:9) + 
+    geom_line() + 
+    xlab("Word position") + 
+    ylab("Mean information")
+```
 
 # Child speech and CDS across languages
 
