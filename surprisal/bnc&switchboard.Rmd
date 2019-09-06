@@ -132,6 +132,15 @@ switch_trigram_surprisals <- trigram_surprisals_prep %>%
 
 ```
 
+```{r saving switchboard surprisals}
+switch_surprisals %>% 
+  mutate(context = 0) %>% 
+  bind_rows(switch_bigram_surprisals %>% mutate(context = 1), 
+            switch_trigram_surprisals %>% mutate(context = 2)) %>%
+  mutate(corpus = "Switchboard") %>% 
+  write_feather(here("Data/switchboard_words.feather"))
+```
+
 A pre-requisite for the next section is that you run the "process_bnc.Rmd" pipeline for preprocessing the British National Corpus (bnc). The files are too large to store in the GitHub repository. 
 
 ```{r bnc}
