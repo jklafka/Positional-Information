@@ -39,7 +39,10 @@ Get utterances
 ```{r get_utterances}
 prov_utterances <- get_utterances(corpus = "Providence") #stem or gloss
 zhou_utterances <- get_utterances(corpus = "ZhouDinner") #stem for pinyin
-okayama_utterances <- get_utterances(corpus = "Okayama")
+okayama_utterances <- get_utterances(corpus = "Okayama") # gloss
+shiro_utterances <- get_utterances(corpus = "Shiro") #gloss
+palasis_utteranecs <- get_utterances(corpus = "Palasis") #stem
+wagner_utterances <- get_utterances(corpus = "Wagner") #gloss
 ```
 
 ```{r unigrams}
@@ -113,55 +116,6 @@ child_surprisals %>%
    # geom_text(data = label_data)
 ```
 
-Down here is the old code. You can run it, but you have to change the corpus name and whether you're using stem or gloss by hand. 
-
-```{r hard-coded language unigrams}
-child_utterances <- prov_utterances %>%
-  filter(speaker_role == "Target_Child") %>% 
-  mutate(length = str_count(gloss, pattern = "[ +]+") + 1) %>%
-  mutate(utterance_id = 1:n()) %>%
-  unnest_tokens(word, gloss, token = stringr::str_split, pattern = "[ +]+") %>%
-  group_by(utterance_id) %>%
-  mutate(word_order = 1:n())
-
-child_unigrams <- child_utterances %>%
-  group_by(word) %>%
-  count() %>%
-  ungroup() %>%
-  mutate(p = n / sum(n))
-  
-child_surprisals <- child_utterances %>%
-  left_join(child_unigrams) %>%
-  mutate(s = -log(p)) %>%
-  group_by(length, word_order) %>%
-  summarise(mean = mean(s),
-            median = median(s),
-            se = sd(s)/sqrt(n()))
-
-adult_utterances <- prov_utterances %>%
-  filter(speaker_role != "Target_Child") %>% 
-  mutate(length = str_count(gloss, pattern = "[ +]+") + 1) %>%
-  mutate(utterance_id = 1:n()) %>%
-  unnest_tokens(word, gloss, token = stringr::str_split, pattern = "[ +]+") %>%
-  group_by(utterance_id) %>%
-  mutate(word_order = 1:n())
-
-adult_unigrams <- adult_utterances %>%
-  group_by(word) %>%
-  count() %>%
-  ungroup() %>%
-  mutate(p = n / sum(n))
-  
-adult_surprisals <- adult_utterances %>%
-  left_join(adult_unigrams) %>%
-  mutate(s = -log(p)) %>%
-  group_by(length, word_order) %>%
-  summarise(mean = mean(s),
-            se = sd(s)/sqrt(n()))
-
-
-```
-
 ```{r new bigrams}
 adult_bigrams_prep <- adult_utterances %>% 
   group_by(utterance_id) %>%
@@ -185,34 +139,72 @@ adult_bigrams <- adult_utterances %>%
   summarise(mean_s = mean(s)) 
 ```
 
+Down here is the old code. You can run it, but you have to change the corpus name and whether you're using stem or gloss by hand. 
+
+```{r hard-coded language unigrams}
+child_utterances <- palasis_utterances %>%
+  filter(speaker_role != "Target_Child") %>% 
+  mutate(length = str_count(stem, pattern = "[ +]+") + 1) %>%
+  mutate(utterance_id = 1:n()) %>%
+  unnest_tokens(word, stem, token = stringr::str_split, pattern = "[ +]+") %>%
+  group_by(utterance_id) %>%
+  mutate(word_order = 1:n())
+
+child_unigrams <- child_utterances %>%
+  group_by(word) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(p = n / sum(n))
+  
+child <- child_utterances %>%
+  left_join(child_unigrams) %>%
+  mutate(s = -log(p)) %>%
+  ungroup() %>%
+  select(length, word_order, s) %>%
+  nest(s) %>%
+  filter(length %in% c(5, 7, 9))
+
+child_surprisals <- map_dfr(1:nrow(child),
+        ~bind_cols(select(slice(child, .x), length, word_order),
+                               tidyboot_mean(data = unnest(slice(child, .x)),
+                                             column = s, nboot = 1000)))
+
+```
+
 ```{r bigrams}
-adult_bigrams <- adult_utterances %>%
+child_bigrams <- child_utterances %>%
   group_by(utterance_id) %>%
   mutate(lag_word = lag(word)) %>%
   group_by(lag_word, word) %>%
   count() %>%
   filter(!is.na(lag_word)) %>%
   ungroup() %>%
-  left_join(adult_unigrams, by = c("lag_word" = "word")) %>%
-  mutate(cond_p = n.x/n.y) 
+  left_join(child_unigrams, by = c("lag_word" = "word")) %>%
+  mutate(cond_p = n.x/n.y) %>%
+  select(-n.y, -p)
 
-
-bigram_surprisals_prep <- adult_utterances %>%
+bigram_surprisals_prep <- child_utterances %>%
   group_by(utterance_id) %>%
   mutate(lag_word = lag(word)) %>%
-  left_join(adult_bigrams) %>%
-  left_join(adult_unigrams)
+  left_join(child_bigrams, by = c("lag_word", "word")) %>%
+  left_join(child_unigrams, by = "word")
 
-bigram_surprisals <- bigram_surprisals_prep %>%
+child <- bigram_surprisals_prep %>%
   mutate(s = ifelse(is.na(lag_word), -log(p), -log(cond_p))) %>%
-  group_by(length, word_order) %>%
-  summarise(s = mean(s)) %>% 
-  filter(word_order <= length)
+  ungroup() %>%
+  select(length, word_order, s) %>%
+  nest(s) %>%
+  filter(length %in% c(5, 7, 9))
+
+child_bigram_surprisals <- map_dfr(1:nrow(child),
+        ~bind_cols(select(slice(child, .x), length, word_order),
+                               tidyboot_mean(data = unnest(slice(child, .x)),
+                                             column = s, nboot = 1000)))
 
 ```
 
 ```{r trigrams}
-adult_trigrams <- adult_utterances %>%
+child_trigrams <- child_utterances %>%
   group_by(utterance_id) %>%
   mutate(lag_word1 = lag(word)) %>%
   mutate(lag_word2 = lag(lag_word1)) %>%
@@ -220,27 +212,43 @@ adult_trigrams <- adult_utterances %>%
   count() %>%
   filter(!is.na(lag_word1), !is.na(lag_word2)) %>%
   ungroup() %>%
-  left_join(adult_bigrams, by = c("lag_word2" = "lag_word", "lag_word1" = "word")) %>%
+  left_join(child_bigrams, by = c("lag_word2" = "lag_word", "lag_word1" = "word")) %>%
   mutate(tri_cond_p = n / n.x) %>%
-  select(-n, -n.x, -n.y, -p, -cond_p)
+  select(-n, -n.x, -cond_p)
 
 
-trigram_surprisals_prep <- adult_utterances %>%
+trigram_surprisals_prep <- child_utterances %>%
   group_by(utterance_id) %>%
   mutate(lag_word1 = lag(word)) %>%
   mutate(lag_word2 = lag(lag_word1)) %>%
-  left_join(adult_trigrams) %>% 
-  left_join(select(adult_bigrams, lag_word, word, cond_p), by = c("lag_word1" = "lag_word", "word" = "word")) %>% 
-  left_join(adult_unigrams)
+  left_join(child_trigrams) %>% 
+  left_join(select(child_bigrams, lag_word, word, cond_p), by = c("lag_word1" = "lag_word", "word")) %>% 
+  left_join(child_unigrams, by = "word")
 
 
-trigram_surprisals <- trigram_surprisals_prep %>%
+child <- trigram_surprisals_prep %>%
   mutate(s = ifelse(is.na(lag_word2), # check if it's not the first word
                     ifelse(is.na(lag_word1), # check if not the second word
                            -log(p), # trigram if third or beyond
                            -log(cond_p)), # bigram if second word
                     -log(tri_cond_p))) %>% # unigram if first word
-  group_by(length, word_order) %>%
-  summarise(s = mean(s)) %>% 
-  filter(word_order <= length)
+  ungroup() %>%
+  select(length, word_order, s) %>%
+  nest(s) %>%
+  filter(length %in% c(5, 7, 9))
+
+child_trigram_surprisals <- map_dfr(1:nrow(child),
+        ~bind_cols(select(slice(child, .x), length, word_order),
+                               tidyboot_mean(data = unnest(slice(child, .x)),
+                                             column = s, nboot = 1000)))
+```
+
+```{r bootstrap data write out}
+surprisals <- surprisals %>% 
+  bind_rows(child_surprisals %>% mutate(context = 0) %>%
+  bind_rows(child_bigram_surprisals %>% mutate(context = 1)) %>% 
+  bind_rows(child_trigram_surprisals %>% mutate(context = 2)) %>% 
+  mutate(speaker = "Parent", language = "French"))
+surprisals %>% 
+  write_feather(here("Data/all_childes_bootstrap.feather"))
 ```

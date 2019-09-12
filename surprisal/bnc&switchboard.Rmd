@@ -53,19 +53,19 @@ switch_surprisals <- switchboard %>%
   group_by(length, word_order) %>%
   summarise(s = mean(s))
 
-# 
-# sw <- switchboard %>%
-#   left_join(switch_unigrams) %>%
-#   mutate(s = -log(p)) %>%
-#   ungroup() %>%
-#   select(length, word_order, s) %>%
-#   nest(s)
-# 
-# swc <- sw %>% filter(length %in% c(10, 20, 30))
-# switch_surprisals <- map_dfr(1:nrow(swc), 
-#         ~bind_cols(select(slice(swc, .x), length, word_order), 
-#                                tidyboot_mean(data = unnest(slice(swc, .x)), 
-#                                              column = s, nboot = 1000)))
+
+sw <- switchboard %>%
+  left_join(switch_unigrams) %>%
+  mutate(s = -log(p)) %>%
+  ungroup() %>%
+  select(length, word_order, s) %>%
+  nest(s) %>%
+  filter(length %in% c(7, 9, 11))
+
+switch_surprisals <- map_dfr(1:nrow(sw),
+        ~bind_cols(select(slice(sw, .x), length, word_order),
+                               tidyboot_mean(data = unnest(slice(sw, .x)),
+                                             column = s, nboot = 1000)))
 
 ```
 
@@ -86,15 +86,27 @@ switch_bigrams <- switchboard %>%
 bigram_surprisals_prep <- switchboard %>%
   group_by(utterance_id) %>%
   mutate(lag_word = lag(word)) %>%
-  left_join(switch_bigrams) %>%
-  left_join(switch_unigrams)
+  ungroup() %>%
+  left_join(switch_bigrams, by = c("word", "lag_word")) %>%
+  left_join(switch_unigrams, by = "word")
 
-
-switch_bigram_surprisals <- bigram_surprisals_prep %>%
+sbs <- bigram_surprisals_prep %>%
   mutate(s = ifelse(is.na(lag_word), -log(p), -log(cond_p))) %>%
-  group_by(length, word_order) %>%
-  summarise(s = mean(s)) %>% 
-  filter(word_order <= length)
+  ungroup() %>%
+  select(length, word_order, s) %>%
+  nest(s) %>%
+  filter(length %in% c(7, 9, 11))
+
+switch_bigram_surprisals <- map_dfr(1:nrow(sbs),
+        ~bind_cols(select(slice(sbs, .x), length, word_order),
+                               tidyboot_mean(data = unnest(slice(sbs, .x)),
+                                             column = s, nboot = 1000)))
+
+# switch_bigram_surprisals <- bigram_surprisals_prep %>%
+#   mutate(s = ifelse(is.na(lag_word), -log(p), -log(cond_p))) %>%
+#   group_by(length, word_order) %>%
+#   summarise(s = mean(s)) %>%
+#   filter(word_order <= length)
 
 ```
 
@@ -117,28 +129,41 @@ trigram_surprisals_prep <- switchboard %>%
   mutate(lag_word2 = lag(lag_word1)) %>%
   left_join(switch_trigrams) %>% 
   left_join(switch_bigrams, by = c("lag_word1" = "lag_word", "word" = "word")) %>% 
-  left_join(switch_unigrams, by = c("word" = "word"))
+  left_join(switch_unigrams, by = c("word"))
 
-
-switch_trigram_surprisals <- trigram_surprisals_prep %>%
+sts <- trigram_surprisals_prep %>%
   mutate(s = ifelse(is.na(lag_word2), # check if it's not the first word
                     ifelse(is.na(lag_word1), # check if not the second word
                            -log(p), # trigram if third or beyond
                            -log(cond_p)), # bigram if second word
                     -log(tri_cond_p))) %>% # unigram if first word
-  group_by(length, word_order) %>%
-  summarise(s = mean(s)) %>% 
-  filter(word_order <= length)
+  ungroup() %>%
+  select(length, word_order, s) %>%
+  nest(s) %>%
+  filter(length %in% c(7, 9, 11))
+
+switch_trigram_surprisals <- map_dfr(1:nrow(sts),
+        ~bind_cols(select(slice(sts, .x), length, word_order),
+                               tidyboot_mean(data = unnest(slice(sts, .x)),
+                                             column = s, nboot = 1000)))
+# switch_trigram_surprisals <- trigram_surprisals_prep %>%
+#   mutate(s = ifelse(is.na(lag_word2), # check if it's not the first word
+#                     ifelse(is.na(lag_word1), # check if not the second word
+#                            -log(p), # trigram if third or beyond
+#                            -log(cond_p)), # bigram if second word
+#                     -log(tri_cond_p))) %>% # unigram if first word
+#   group_by(length, word_order) %>%
+#   summarise(s = mean(s)) %>% 
+#   filter(word_order <= length)
 
 ```
 
 ```{r saving switchboard surprisals}
 switch_surprisals %>% 
-  mutate(context = 0) %>% 
-  bind_rows(switch_bigram_surprisals %>% mutate(context = 1), 
-            switch_trigram_surprisals %>% mutate(context = 2)) %>%
-  mutate(corpus = "Switchboard") %>% 
-  write_feather(here("Data/switchboard_words.feather"))
+  mutate(context = 0, corpus = "Switchboard") %>%
+  bind_rows(switch_bigram_surprisals %>% mutate(context = 1, corpus = "Switchboard")) %>% 
+  bind_rows(switch_trigram_surprisals %>% mutate(context = 2, corpus = "Switchboard")) %>% 
+  write_feather(here("Data/switch_bootstrap.feather"))
 ```
 
 A pre-requisite for the next section is that you run the "process_bnc.Rmd" pipeline for preprocessing the British National Corpus (bnc). The files are too large to store in the GitHub repository. 

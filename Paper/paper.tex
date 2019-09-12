@@ -77,7 +77,7 @@
   \postauthor{\par}
       \predate{\centering\large\emph}
   \postdate{\par}
-    \date{2019-09-11}
+    \date{2019-09-12}
 
 \usepackage{setspace}
 
@@ -139,9 +139,27 @@ However, this only characterizes written English sentences. If this information 
 
 For Switchboard we find the same information trajectory as we did for the BNC, and we find the same distribution of information regardless of utterance length. The longer the utterance, the more pronounced the information distribution shape becomes. A qualitative comparison of the two trajectories is below.
 
-We have found a unique average distribution of information that appears to characterize the English language as a whole, regardless of medium (spoken or written) or utterance length. This distribution indicates that in English, the words we speak or write at the beginnings of utterances has little information, while the words we speak or write at the ends of utterances has a lot of information. The words in the middle of utterances have a middling amount of information, without the increasing trend in information from word to word that we might expect from (Genzel \& Charniak, 2002).
+\begin{figure}
+\centering
+\includegraphics{paper_files/figure-latex/unnamed-chunk-1-1.pdf}
+\caption{\label{fig:unnamed-chunk-1}Switchboard frequency-based information curves}
+\end{figure}
+
+We have found a unique average distribution of information that appears to characterize the English language as a whole, regardless of medium (spoken or written) or utterance length. This distribution indicates that in English, the words we speak or write at the beginnings of utterances have little information, while the words we speak or write at the ends of utterances have a lot of information. The words in the middle of utterances have a middling amount of information, without the increasing trend in information from word to word that we might expect from (Genzel \& Charniak, 2002).
 
 What about context? So far we've only discussed the unigram (``contextless'') surprisal metric, considering words on their own without any explicit incorporation of prior context. As previously discussed, listeners decode information and process what they hear incrementally, using prior heard words to ease the comprehension process. We now include one word of context (bigrams) and then two words of context (trigrams). We observe a flattening effect of context across both modalities and all speaker populations. After the first word or two, where the listener does not have access to prior context, then they decode information at a flat and more or less uniform rate.
+
+\begin{figure}
+\centering
+\includegraphics{paper_files/figure-latex/unnamed-chunk-2-1.pdf}
+\caption{\label{fig:unnamed-chunk-2}Switchboard bigram context-based information curves}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics{paper_files/figure-latex/unnamed-chunk-3-1.pdf}
+\caption{\label{fig:unnamed-chunk-3}Switchboard trigram context-based information curves}
+\end{figure}
 
 Speakers produce information at a more or less constant rate, avoiding peaks or troughs in their information distribution, except at the beginnings of utterances, where listeners may not have any context to predict what the speaker is going to say. Speakers of English tend towards a characteristic and uneven distribution of word information based on frequencies within their utterances. Their interlocutors, however, once they have a word or two of context, decode information at a more or less constant and optimal rate.
 
@@ -156,22 +174,22 @@ We observe the same distinctive distribution of information for parents and chil
 
 \begin{figure}
 \centering
-\includegraphics{paper_files/figure-latex/unnamed-chunk-1-1.pdf}
-\caption{\label{fig:unnamed-chunk-1}Providence frequency-based information curves}
+\includegraphics{paper_files/figure-latex/unnamed-chunk-4-1.pdf}
+\caption{\label{fig:unnamed-chunk-4}Providence frequency-based information curves}
 \end{figure}
 
 What about context in the Providence corpus? When incorporating one or two words of predictive context, we observe the same trend as in the Switchboard and BNC corpora. Beyond the first couple of words, once your interlocutor has enough context to predict with some accuracy what you will say next, then you decode information from their speech stream at a constant and optimal rate. This applies to parents and children speaking to one another, as well as adults speaking and writing to one another.
 
 \begin{figure}
 \centering
-\includegraphics{paper_files/figure-latex/unnamed-chunk-2-1.pdf}
-\caption{\label{fig:unnamed-chunk-2}Providence bigram context-based information curves}
+\includegraphics{paper_files/figure-latex/unnamed-chunk-5-1.pdf}
+\caption{\label{fig:unnamed-chunk-5}Providence bigram context-based information curves}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphics{paper_files/figure-latex/unnamed-chunk-3-1.pdf}
-\caption{\label{fig:unnamed-chunk-3}Providence trigram context-based information curves}
+\includegraphics{paper_files/figure-latex/unnamed-chunk-6-1.pdf}
+\caption{\label{fig:unnamed-chunk-6}Providence trigram context-based information curves}
 \end{figure}
 
 \hypertarget{child-speech-and-cds-across-languages}{%
@@ -185,8 +203,8 @@ We observe a distinct and characteristic frequency-based information trajectory 
 
 \begin{figure}
 \centering
-\includegraphics{paper_files/figure-latex/unnamed-chunk-4-1.pdf}
-\caption{\label{fig:unnamed-chunk-4}CHILDES frequency-based information curves}
+\includegraphics{paper_files/figure-latex/unnamed-chunk-7-1.pdf}
+\caption{\label{fig:unnamed-chunk-7}CHILDES frequency-based information curves}
 \end{figure}
 
 English, Spanish, French and German feature similar information curves shapes, with slight variations. The German information curve features lower information for longer towards the beginnings of utterances, possibly due to the grammatical restriction that the second word in German utterances must be a verb (V2). Spanish features a larger spike in the amount of information in the final words of utterances. For Japanese and Mandarin, we observe completely different unigram information curve trajectories. The Japanese unigram information curve trajectory begins high and finishes low, the mirror image of the European language information curves. The Mandarin curve begins low and finishes low, but features high information in the middle of utterances. We hypothesize this may be due to both Japanese and Mandarin speakers typically ending their utterances with particles, which contain very little information on their own. The penultimate noun with the speakers pair the particles are where the information lies.
@@ -195,14 +213,14 @@ For the bigram and trigram information curves, we see the same contextual smooth
 
 \begin{figure}
 \centering
-\includegraphics{paper_files/figure-latex/unnamed-chunk-5-1.pdf}
-\caption{\label{fig:unnamed-chunk-5}CHILDES bigram context-based information curves}
+\includegraphics{paper_files/figure-latex/unnamed-chunk-8-1.pdf}
+\caption{\label{fig:unnamed-chunk-8}CHILDES bigram context-based information curves}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphics{paper_files/figure-latex/unnamed-chunk-6-1.pdf}
-\caption{\label{fig:unnamed-chunk-6}CHILDES trigram context-based information curves}
+\includegraphics{paper_files/figure-latex/unnamed-chunk-9-1.pdf}
+\caption{\label{fig:unnamed-chunk-9}CHILDES trigram context-based information curves}
 \end{figure}
 
 \hypertarget{language-structure-and-large-scale-data-analysis-methods-and-preprocessing}{%
@@ -227,34 +245,38 @@ However, the WALS features describe specific structural differences between lang
 
 We ran a hierarchical clustering algorithm on the unigram information curves using the hclust package from the R stats core library (Team \& others, 2013). We used the complete linkage algorithm for hierarchical clustering with distances between information curves in language computed using cosine distance between their embeddings in the slope space. The complete linkage algorithm at every step pairs each language or cluster of languages with its closest neighboring language or cluster. A sample from the dendrogram is shown below, and the full tree can be constructed using the code in our GitHub repository. The language family-like structure can be seen at first glance, although the dendrogram does not exactly replicate language genealogy for all 159 languages. This suggests using a first-pass quantitative method that the information curves do correspond in some measure to language families, but language families do not explain the entire story.
 
-\includegraphics{paper_files/figure-latex/unnamed-chunk-7-1.pdf}
+\includegraphics{paper_files/figure-latex/unnamed-chunk-10-1.pdf}
 
 A sample of the trigram information curves are plotted below, and all trigram information curves for the languages we used follow the same pattern. The first few words in utterances for each language are surprising, but with even a couple words of predictive context for each word, the amount of information in each word drops off and speakers produce information at a constant, optimal rate.
 
 \begin{figure}
 \centering
-\includegraphics{paper_files/figure-latex/unnamed-chunk-8-1.pdf}
-\caption{\label{fig:unnamed-chunk-8}Some trigram information curves from the Wikipedia data}
+\includegraphics{paper_files/figure-latex/unnamed-chunk-11-1.pdf}
+\caption{\label{fig:unnamed-chunk-11}Some trigram information curves from the Wikipedia data}
 \end{figure}
 
 First we examined the effects of individual typological features on the shapes of the unigram information curves. We ran logistic regressions using the lme4 package in R (Bates, Mächler, Bolker, \& Walker, 2014), checking whether the cosine distance between two languages' embeddings in the slope space played a role in determining if they had the same value for a given WALS feature. Individual WALS features do not necessarily have ordinal values. Some, such as the ``Number of Cases'' feature, are easy to quantify and order. Others are more difficult. For example, how does one order ``relative clauses appear after the nouns they modify'', ``relative clauses appear before the nouns they modify'' and ``free order of relative clauses and nouns''? We chose the identify relation to avoid deciding on the basis of individual features. We found that 100 out of the 120 features from WALS we examined was statistically significant (p \textless{} .001) in determining whether two languages had the same shape to their unigram information distributions. The results for some important features are below, and the rest of the results are in the Appendices.
 
-Some lr results go here.
+\begin{figure}
+\centering
+\includegraphics{paper_files/figure-latex/unnamed-chunk-12-1.pdf}
+\caption{\label{fig:unnamed-chunk-12}Some linear model results from Wikipedia and WALS features}
+\end{figure}
 
 We next compared how the cosine distance between two languages related to how many WALS features they had in common. There is a small correlation with a very small R\^{}2 value between WALS features similarity and cosine similarity between two languages, but a statistically significant slope (p \textless{} .001). Essentially, for every feature two languages have in common, they have one degree more cosine similarity in the slope space. As feature values tend to be highly correlated within categories (e.g.~the word order features are highly correlated), then this translates into language having much more similar information curves if they have more WALS features in common, an intuitive result.
 
 \begin{figure}
 \centering
-\includegraphics{paper_files/figure-latex/unnamed-chunk-9-1.pdf}
-\caption{\label{fig:unnamed-chunk-9}wals features vs cosine similarity}
+\includegraphics{paper_files/figure-latex/unnamed-chunk-13-1.pdf}
+\caption{\label{fig:unnamed-chunk-13}wals features vs cosine similarity}
 \end{figure}
 
 So the more similar two languages are in terms of typological features, the more similar their unigram information curves tend to be. For lexical features, we see a stronger correlation between the similarity of two languages in terms of their average LDN and the cosine distance between their information curves.
 
 \begin{figure}
 \centering
-\includegraphics{paper_files/figure-latex/unnamed-chunk-10-1.pdf}
-\caption{\label{fig:unnamed-chunk-10}ldn features vs cosine similarity}
+\includegraphics{paper_files/figure-latex/unnamed-chunk-14-1.pdf}
+\caption{\label{fig:unnamed-chunk-14}ldn features vs cosine similarity}
 \end{figure}
 
 The shape of a language's frequency-based information curve covaries with its typological and lexical similarity to other languages.

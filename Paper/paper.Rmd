@@ -23,15 +23,17 @@ library(ggdendro)
 library(here)
 library(feather)
 library(ggdendro)
+library(gridExtra)
 
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r load data, include = F}
-childes_results <- read_feather(here("../surprisal/Data/childes_words.feather"))
+childes_results <- read_feather(here("Data/all_childes_bootstrap.feather"))
 wiki_results <- read_feather(here("../surprisal/Data/all_spaces.feather"))
-switchboard <- read_feather(here("../surprisal/Data/switchboard_words.feather"))
+switch_results <- read_feather(here("Data/switch_bootstrap.feather"))
 wiki_curves <- read_csv(here("../surprisal/Data/relative_ngrams.csv"))
+wiki_lr <- read_feather(here("../surprisal/Wikipedia/models.feather"))
 ```
 
 # Abstract
@@ -83,13 +85,49 @@ However, this only characterizes written English sentences. If this information 
 
 For Switchboard we find the same information trajectory as we did for the BNC, and we find the same distribution of information regardless of utterance length. The longer the utterance, the more pronounced the information distribution shape becomes. A qualitative comparison of the two trajectories is below. 
 
-We have found a unique average distribution of information that appears to characterize the English language as a whole, regardless of medium (spoken or written) or utterance length. This distribution indicates that in English, the words we speak or write at the beginnings of utterances has little information, while the words we speak or write at the ends of utterances has a lot of information. The words in the middle of utterances have a middling amount of information, without the increasing trend in information from word to word that we might expect from [@genzel2002entropy]. 
+```{r, echo=F, fig.height=2, fig.cap="Switchboard frequency-based information curves"}
+switch_results %>% 
+  filter(context == 0) %>%
+  ggplot(aes(x = word_order, y = empirical_stat, ymin = ci_lower, ymax = ci_upper)) + 
+    geom_point() + 
+    geom_pointrange() + 
+    geom_line() +
+    facet_wrap(~length) + 
+    scale_x_continuous(breaks = 1:11) + 
+    xlab("Word position") + 
+    ylab("Mean information")
+```
+
+We have found a unique average distribution of information that appears to characterize the English language as a whole, regardless of medium (spoken or written) or utterance length. This distribution indicates that in English, the words we speak or write at the beginnings of utterances have little information, while the words we speak or write at the ends of utterances have a lot of information. The words in the middle of utterances have a middling amount of information, without the increasing trend in information from word to word that we might expect from [@genzel2002entropy]. 
 
 What about context? So far we’ve only discussed the unigram (“contextless”) surprisal metric, considering words on their own without any explicit incorporation of prior context. As previously discussed, listeners decode information and process what they hear incrementally, using prior heard words to ease the comprehension process. We now include one word of context (bigrams) and then two words of context (trigrams). We observe a flattening effect of context across both modalities and all speaker populations. After the first word or two, where the listener does not have access to prior context, then they decode information at a flat and more or less uniform rate. 
 
-```{r switchboard & bnc plot}
-
+```{r, echo=F,fig.height=2,fig.cap="Switchboard bigram context-based information curves"}
+switch_results %>% 
+  filter(context == 1) %>%
+  ggplot(aes(x = word_order, y = empirical_stat, ymin = ci_lower, ymax = ci_upper)) + 
+    geom_point() + 
+    geom_pointrange() + 
+    geom_line() +
+    facet_wrap(~length) + 
+    scale_x_continuous(breaks = 1:11) + 
+    xlab("Word position") + 
+    ylab("Mean information")
 ```
+
+```{r, echo=F,fig.height=2,fig.cap="Switchboard trigram context-based information curves"}
+switch_results %>% 
+  filter(context == 2) %>%
+  ggplot(aes(x = word_order, y = empirical_stat, ymin = ci_lower, ymax = ci_upper)) + 
+    geom_point() + 
+    geom_pointrange() + 
+    geom_line() +
+    facet_wrap(~length) + 
+    scale_x_continuous(breaks = 1:11) + 
+    xlab("Word position") + 
+    ylab("Mean information")
+```
+
 
 Speakers produce information at a more or less constant rate, avoiding peaks or troughs in their information distribution, except at the beginnings of utterances, where listeners may not have any context to predict what the speaker is going to say. Speakers of English tend towards a characteristic and uneven distribution of word information based on frequencies within their utterances. Their interlocutors, however, once they have a word or two of context, decode information at a more or less constant and optimal rate. 
 
@@ -103,12 +141,14 @@ We observe the same distinctive distribution of information for parents and chil
 
 ```{r, echo=F, fig.height =2, fig.cap="Providence frequency-based information curves"}
 childes_results %>% 
-  filter(Language == "English", context == 0, length %in% c(5, 7, 9)) %>%
-  ggplot(aes(x = word_order, y = s, color = speaker_role)) + 
+  filter(language == "English", context == 0) %>%
+  ggplot(aes(x = word_order, y = empirical_stat, ymin = ci_lower, ymax = ci_upper, 
+             color = speaker)) + 
     geom_point() + 
+    geom_pointrange() + 
+    geom_line() +
     facet_wrap(~length) + 
     scale_x_continuous(breaks = 1:9) + 
-    geom_line() + 
     xlab("Word position") + 
     ylab("Mean information")
 ```
@@ -117,24 +157,28 @@ What about context in the Providence corpus? When incorporating one or two words
 
 ```{r, echo=F, fig.height =2, fig.cap="Providence bigram context-based information curves"}
 childes_results %>% 
-  filter(Language == "English", context == 1, length %in% c(5, 7, 9)) %>%
-  ggplot(aes(x = word_order, y = s, color = speaker_role)) + 
+  filter(language == "English", context == 1) %>%
+  ggplot(aes(x = word_order, y = empirical_stat, ymin = ci_lower, ymax = ci_upper, 
+             color = speaker)) + 
     geom_point() + 
+    geom_pointrange() + 
+    geom_line() +
     facet_wrap(~length) + 
     scale_x_continuous(breaks = 1:9) + 
-    geom_line() + 
     xlab("Word position") + 
     ylab("Mean information")
 ```
 
 ```{r, echo=F, fig.height =2, fig.cap="Providence trigram context-based information curves"}
 childes_results %>% 
-  filter(Language == "English", context == 2, length %in% c(5, 7, 9)) %>%
-  ggplot(aes(x = word_order, y = s, color = speaker_role)) + 
+  filter(language == "English", context == 2) %>%
+  ggplot(aes(x = word_order, y = empirical_stat, ymin = ci_lower, ymax = ci_upper, 
+             color = speaker)) + 
     geom_point() + 
+    geom_pointrange() + 
+    geom_line() +
     facet_wrap(~length) + 
     scale_x_continuous(breaks = 1:9) + 
-    geom_line() + 
     xlab("Word position") + 
     ylab("Mean information")
 ```
@@ -150,11 +194,13 @@ We observe a distinct and characteristic frequency-based information trajectory 
 ```{r, echo=F, fig.height =3, fig.cap="CHILDES frequency-based information curves"}
 childes_results %>% 
   filter(context == 0, length == 7) %>%
-  ggplot(aes(x = word_order, y = s, color = speaker_role)) + 
+  ggplot(aes(x = word_order, y = empirical_stat, ymin = ci_lower, ymax = ci_upper, 
+             color = speaker)) + 
     geom_point() + 
-    facet_wrap(~Language) + 
-    scale_x_continuous(breaks = 1:9) + 
-    geom_line() + 
+    geom_pointrange() + 
+    geom_line() +
+    facet_wrap(~language) + 
+    scale_x_continuous(breaks = 1:7) + 
     xlab("Word position") + 
     ylab("Mean information")
 ```
@@ -166,11 +212,13 @@ For the bigram and trigram information curves, we see the same contextual smooth
 ```{r, echo=F, fig.height =3, fig.cap="CHILDES bigram context-based information curves"}
 childes_results %>% 
   filter(context == 1, length == 7) %>%
-  ggplot(aes(x = word_order, y = s, color = speaker_role)) + 
+  ggplot(aes(x = word_order, y = empirical_stat, ymin = ci_lower, ymax = ci_upper, 
+             color = speaker)) + 
     geom_point() + 
-    facet_wrap(~Language) + 
-    scale_x_continuous(breaks = 1:9) + 
-    geom_line() + 
+    geom_pointrange() + 
+    geom_line() +
+    facet_wrap(~language) + 
+    scale_x_continuous(breaks = 1:7) + 
     xlab("Word position") + 
     ylab("Mean information")
 ```
@@ -178,11 +226,13 @@ childes_results %>%
 ```{r, echo=F, fig.height =3, fig.cap="CHILDES trigram context-based information curves"}
 childes_results %>% 
   filter(context == 2, length == 7) %>%
-  ggplot(aes(x = word_order, y = s, color = speaker_role)) + 
+  ggplot(aes(x = word_order, y = empirical_stat, ymin = ci_lower, ymax = ci_upper, 
+             color = speaker)) + 
     geom_point() + 
-    facet_wrap(~Language) + 
-    scale_x_continuous(breaks = 1:9) + 
-    geom_line() + 
+    geom_pointrange() + 
+    geom_line() +
+    facet_wrap(~language) + 
+    scale_x_continuous(breaks = 1:7) + 
     xlab("Word position") + 
     ylab("Mean information")
 ```
@@ -242,7 +292,22 @@ wiki_curves %>%
 
 First we examined the effects of individual typological features on the shapes of the unigram information curves. We ran logistic regressions using the lme4 package in R [@bates2014fitting], checking whether the cosine distance between two languages’ embeddings in the slope space played a role in determining if they had the same value for a given WALS feature. Individual WALS features do not necessarily have ordinal values. Some, such as the “Number of Cases” feature, are easy to quantify and order. Others are more difficult. For example, how does one order “relative clauses appear after the nouns they modify”, “relative clauses appear before the nouns they modify” and “free order of relative clauses and nouns”? We chose the identify relation to avoid deciding on the basis of individual features. We found that 100 out of the 120 features from WALS we examined was statistically significant (p < .001) in determining whether two languages had the same shape to their unigram information distributions. The results for some important features are below, and the rest of the results are in the Appendices. 
 
-Some lr results go here. 
+```{r, echo=F, fig.cap="Some linear model results from Wikipedia and WALS features"}
+sf <- wiki_lr %>% 
+  filter(p.value == 0, estimate > 0) %>% 
+  select(name) %>% 
+  rename("Some Important Features" = name) %>% 
+  slice(c(1, 10, 12, 15, 23, 29))
+
+sf$Examples <- c("Noun-RC; RC-noun", 
+                 "No cases; 6 cases", 
+                 "SOV; VSO", 
+                 "Only singular; sing. and plural", 
+                 "Affix; distinct word", 
+                 "Prefixes; suffixes")
+
+sf %>% grid.table()
+```
 
 We next compared how the cosine distance between two languages related to how many WALS features they had in common. There is a small correlation with a very small R^2 value between WALS features similarity and cosine similarity between two languages, but a statistically significant slope (p < .001). Essentially, for every feature two languages have in common, they have one degree more cosine similarity in the slope space. As feature values tend to be highly correlated within categories (e.g. the word order features are highly correlated), then this translates into language having much more similar information curves if they have more WALS features in common, an intuitive result. 
 
