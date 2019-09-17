@@ -189,7 +189,7 @@ child_surprisals <- map_dfr(1:nrow(child),
 ```{r bigrams}
 vocab_size <- child_utterances %>%
   ungroup() %>%
-  distinct( word) %>% 
+  distinct(word) %>% 
   nrow()
 
 child_bigrams <- child_utterances %>%

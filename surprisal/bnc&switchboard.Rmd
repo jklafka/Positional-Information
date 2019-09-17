@@ -146,16 +146,6 @@ switch_trigram_surprisals <- map_dfr(1:nrow(sts),
         ~bind_cols(select(slice(sts, .x), length, word_order),
                                tidyboot_mean(data = unnest(slice(sts, .x)),
                                              column = s, nboot = 1000)))
-# switch_trigram_surprisals <- trigram_surprisals_prep %>%
-#   mutate(s = ifelse(is.na(lag_word2), # check if it's not the first word
-#                     ifelse(is.na(lag_word1), # check if not the second word
-#                            -log(p), # trigram if third or beyond
-#                            -log(cond_p)), # bigram if second word
-#                     -log(tri_cond_p))) %>% # unigram if first word
-#   group_by(length, word_order) %>%
-#   summarise(s = mean(s)) %>% 
-#   filter(word_order <= length)
-
 ```
 
 ```{r saving switchboard surprisals}
@@ -172,6 +162,17 @@ A pre-requisite for the next section is that you run the "process_bnc.Rmd" pipel
 bnc <- read_feather(here("../bnc/bnc10.feather")) %>%
   bind_rows(read_feather(here("../bnc/bnc20.feather"))) %>%
   bind_rows(read_feather(here("../bnc/bnc30.feather")))
+
+selected_bnc <- bnc %>% 
+  select(length, utterance_id) %>%
+  distinct() %>%
+  group_by(length) %>%
+  sample_n(8000) %>% # downsampling because otherwise there are at least 70000 utterances for each length
+  ungroup() %>%
+  select(utterance_id)
+
+bnc <- bnc %>%
+  semi_join(selected_bnc)
 ```
 
 ```{r bnc unigrams}
@@ -181,14 +182,6 @@ bnc_unigrams <- bnc %>%
   ungroup() %>%
   mutate(p = n / sum(n))
   
-bnc_surprisals <- bnc %>%
-  left_join(bnc_unigrams) %>%
-  mutate(s = -log(p)) %>%
-  group_by(length, word_order) %>%
-  summarise(s = mean(s))
-
-
-
 bnc_surprisals_prep <- bnc %>% 
   left_join(bnc_unigrams) %>%
   mutate(s = -log(p)) %>%
@@ -199,18 +192,7 @@ bnc_surprisals_prep <- bnc %>%
 bnc_surprisals <- map_dfr(1:nrow(bnc_surprisals_prep), 
         ~bind_cols(select(slice(bnc_surprisals_prep, .x), length, word_order), 
                                tidyboot_mean(data = unnest(slice(bnc_surprisals_prep, .x)), 
-                                             column = s, nboot = 100)))  
-
-
-# bnc_surprisals <- bnc %>%
-#   left_join(bnc_unigrams) %>%
-#   mutate(s = -log(p)) %>%
-#   select(length, word_order, s) %>%
-#   filter(length == 10) %>%
-#   group_by(length, word_order) %>%
-#   # summarise(s = mean(s)) 
-#   tidyboot_mean(s)
-
+                                             column = s, nboot = 1000)))  
 ```
 
 ```{r bnc bigrams}
@@ -221,24 +203,30 @@ bnc_bigrams <- bnc %>%
   count() %>%
   filter(!is.na(lag_word)) %>%
   ungroup() %>%
-  mutate(joint_p = n / sum(n)) %>%
-  select(-n) %>%
   left_join(bnc_unigrams, by = c("lag_word" = "word")) %>%
-  mutate(cond_p = joint_p / p) %>%
-  select(-n, -p)
+  mutate(cond_p = n.x / n.y) %>%
+  select(-n.y, -p) %>%
+  rename(n = n.x)
 
 
 bigram_surprisals_prep <- bnc %>%
   group_by(utterance_id) %>%
   mutate(lag_word = lag(word)) %>%
-  left_join(bnc_bigrams) %>%
-  left_join(bnc_unigrams)
+  ungroup() %>%
+  left_join(bnc_bigrams, by = c("word", "lag_word")) %>%
+  left_join(bnc_unigrams, by = "word")
 
-bnc_bigram_surprisals <- bigram_surprisals_prep %>%
+bbs <- bigram_surprisals_prep %>%
   mutate(s = ifelse(is.na(lag_word), -log(p), -log(cond_p))) %>%
-  group_by(length, word_order) %>%
-  summarise(s = mean(s)) %>% 
-  filter(word_order <= length)
+  ungroup() %>%
+  select(length, word_order, s) %>%
+  nest(s)
+
+bnc_bigram_surprisals <- map_dfr(1:nrow(bbs),
+        ~bind_cols(select(slice(bbs, .x), length, word_order),
+                               tidyboot_mean(data = unnest(slice(bbs, .x)),
+                                             column = s, nboot = 1000)))
+
 ```
 
 ```{r bnc trigrams}
@@ -250,39 +238,42 @@ bnc_trigrams <- bnc %>%
   count() %>%
   filter(!is.na(lag_word1), !is.na(lag_word2)) %>%
   ungroup() %>%
-  mutate(tri_joint_p = n / sum(n)) %>%
-  select(-n) %>%
   left_join(bnc_bigrams, by = c("lag_word2" = "lag_word", "lag_word1" = "word")) %>%
-  mutate(tri_cond_p = tri_joint_p / joint_p) %>%
-  select(-joint_p, -tri_joint_p, -cond_p) # %>% 
-
+  mutate(tri_cond_p = n.x / n.y) %>%
+  select(-n.x, -n.y, -cond_p) 
 
 trigram_surprisals_prep <- bnc %>%
   group_by(utterance_id) %>%
   mutate(lag_word1 = lag(word)) %>%
   mutate(lag_word2 = lag(lag_word1)) %>%
   left_join(bnc_trigrams) %>% 
-  left_join(select(bnc_bigrams, -joint_p), by = c("lag_word1" = "lag_word", "word" = "word")) %>% 
-  left_join(bnc_unigrams)
+  left_join(bnc_bigrams, by = c("lag_word1" = "lag_word", "word" = "word")) %>% 
+  left_join(bnc_unigrams, by = c("word"))
 
-
-bnc_trigram_surprisals <- trigram_surprisals_prep %>%
+bts <- trigram_surprisals_prep %>%
   mutate(s = ifelse(is.na(lag_word2), # check if it's not the first word
                     ifelse(is.na(lag_word1), # check if not the second word
                            -log(p), # trigram if third or beyond
                            -log(cond_p)), # bigram if second word
                     -log(tri_cond_p))) %>% # unigram if first word
-  group_by(length, word_order) %>%
-  summarise(s = mean(s)) %>% 
-  filter(word_order <= length)
+  ungroup() %>%
+  select(length, word_order, s) %>%
+  nest(s) 
 
-bnc_trigram_surprisals %>%
-  ggplot(aes(x = word_order, y = s)) + 
-  facet_wrap(~ length) + 
-  geom_point() + 
-  geom_smooth(se = F)
+bnc_trigram_surprisals <- map_dfr(1:nrow(bts),
+        ~bind_cols(select(slice(bts, .x), length, word_order),
+                               tidyboot_mean(data = unnest(slice(bts, .x)),
+                                             column = s, nboot = 1000)))
+
 ```
 
+```{r saving switchboard surprisals}
+bnc_surprisals %>% 
+  mutate(context = 0, corpus = "BNC") %>%
+  bind_rows(bnc_bigram_surprisals %>% mutate(context = 1, corpus = "BNC")) %>% 
+  bind_rows(bnc_trigram_surprisals %>% mutate(context = 2, corpus = "BNC")) %>% 
+  write_feather(here("Data/bnc_bootstrap.feather"))
+```
 
 ```{r plotting}
 bnc_plot <- ggplot(bnc_surprisals, aes(x = word_order, y = s)) +
