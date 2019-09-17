@@ -31,6 +31,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r load data, include = F}
 childes_results <- read_feather(here("Data/all_childes_bootstrap.feather"))
 wiki_results <- read_feather(here("../surprisal/Data/all_spaces.feather"))
+bnc_results <- read_feather(here("Data/bnc_bootstrap.feather"))
 switch_results <- read_feather(here("Data/switch_bootstrap.feather"))
 wiki_curves <- read_csv(here("../surprisal/Data/relative_ngrams.csv"))
 wiki_lr <- read_feather(here("../surprisal/Wikipedia/models.feather"))
@@ -38,21 +39,21 @@ wiki_lr <- read_feather(here("../surprisal/Wikipedia/models.feather"))
 
 # Abstract
 
-Language can be thought of as a code: speakers encode their thoughts into a sequence of linguistic signals, namely an utterance, which listeners then must decode in order to recover the intended message. How do speakers structure their utterances so that communication is successful? Using tools from information theory and sentence processing, we find that speakers must structure the information in their utterances according to the grammatical, morphological and lexical constraints of their language, which vary greatly from language to language. This information structure characterizes language from children’s first utterances to large-scale knowledge base entries. Once listeners have access to linguistic context within an utterance, then they can decode the rest of that utterance at a constant and optimal rate. 
+What role does communicative efficiency play in how we organize our utterances? In this paper, we present a novel method of examining how much information speakers in a given language communicate in each word in their utterances, surveying numerous diverse languages. We find that speakers produce frequent and informative words at regular parts of their utterances, depending on language they use, which is predictable in part from the features and genealogy of their language. This robust information distribution characterizes both spoken and written communication, and emerges in children's earliest utterances. However, in real-time communication, in-context word predictability allows listeners to process information at a constant, optimal rate, regardless of the information distribution in the language they understand.  
 
 # Introduction
 
-We use language to communicate information. Although we often need to say things we have never said before, we are easily and efficiently able to produce novel utterances with next to no prior planning. Our listeners incrementally process each word we say, and predict which words will come next within fractions of a second of hearing the beginning of the word (for evidence see e.g. Kutas & Federmeier, 2010). Encoding new and unpredictable information into our utterances surprises our listeners, and presents problems for communication. Listeners struggle to decode unpredictable words and may have difficulty decoding the following words as well. Efficient and effective communication relies on interlocutors being able to process novel information in without being surprised by new information in unpredictable words. On the other hand, to make best use of the capacity of the communication channel, speakers should encode as much information as possible into each word they say. 
+We use language to communicate information. Although we often need to say things we have never said before, we are easily and quickly able to produce novel utterances with next to no prior planning. Our listeners incrementally process each word we say in utterances they may have never heard before, and predict which words will come next within fractions of a second of hearing the beginning of the word (for evidence see e.g. @kutas2011thirty). Encoding new and unpredictable information into our utterances surprises our listeners, and presents problems for communication. Listeners may struggle to decode unpredictable words, which can cause difficulty decoding the following words as well. Efficient and effective communication relies on interlocutors being able to process novel information without being surprised by new information in unpredictable words. On the other hand, to make best use of the capacity of the communication channel, speakers should encode as much information as possible into each word they say. 
 
-Due to their differences in distributional frequency, words vary in how much information-theoretic content they contain [@shannon1948mathematical]. This information content plays an important role in determining the shape of words and speech. Frequency is a meaningful predictor of word length: the more common the word, the shorter the word tends to be as speakers minimize effort in the amount of information they encode in speech [@zipf1949human]. Over and above frequency, contextual information content predicts word length [@piantadosi2011word]. Speakers tend to smooth out their information to a more uniform rate within utterances that allows for easier decoding on the listener side [@jaeger2007speakers]. Across utterances, context allows speakers to produce more informative and surprising sentences later in communication. The later a sentence occurs in a paragraph, the the informative it is and the more unusual and surprising words it contains [@genzel2002entropy]. From the level of individual words to sentences in paragraphs, information content shapes and is shaped by the context it appears in. 
+Due to their differences in distributional frequency, words vary in how much information content they contain [@shannon1948mathematical]. Frequency is a meaningful predictor of word length: the more common the word, the shorter the word tends to be [@zipf1949human]. Over and above frequency, contextual information content predicts word length, due to speakers minimizing effort in the amount of information they encode in speech [@piantadosi2011word]. Speakers tend to smooth out their information to a more uniform rate within utterances that allows for easier decoding on the listener side [@jaeger2007speakers]. Across utterances, context allows speakers to produce more informative and surprising sentences later in communication. The later a sentence occurs in a paragraph, the the informative it is and the more unusual and surprising words it contains [@genzel2002entropy]. From the level of individual words to sentences in paragraphs, information content shapes and is shaped by the context it appears in. 
 
-Efficiency plays a big role in communication, from the way that languages evolve to the individual utterance choice timescale. @mahowald2013info. @gibson2017color. @piantadosi2011word. 
+The pressure for efficient communication influences language at all timescales, from online speech production to evolution. @mahowald2013info found that speakers tend to use shorter, more efficient word forms in predictive contexts, minimizing communicative cost without sacrificing intelligibility. Predictability and ambiguity shape the distribution of color terms in languages [@gibson2017color] as well as word lengths [@piantadosi2011word] across languages, and speakers are able to deterministically decode words despite ambiguity in word forms [@piantadosi2012communicative].
 
 How do frequency and predictive context determine how we distribution information at the level of utterances? We do not speak only in phrases or paragraphs, but conversationally we speak in utterances and in writing we produce sentences as a coherent unit of a complete thought. Languages possess very different grammatical and morphological structures--the same thought can be encoded in at least as many ways as there are different languages. The average rate of information speakers transfer in syllables differs from language to language [@aylett2004smooth]. How do the different structures seen in different languages, with different rates of information encoding, affect how speakers structure information in production? 
  
 @yu2016distribution proposed a novel method for quantifying the amount of information typically found at each part of English utterances. Treating each word position by itself, @yu2016distribution calculated the Shannon entropy (a measure of uncertainty) over the words of each position, producing an estimate for the amount of uncertainty reduced once the listener hears the words used in a given position, related to the Shannon concept of information as a reduction in uncertainty [@shannon1948mathematical]. They found a distinctive three-step shape to the distribution of information in English written sentences. 
 
-In this paper, we expand on this body of prior work in a number of novel ways. We replicate the results from @yu2016distribution with a different metric, one intimately tied to incremental word processing. We find the same distribution of information based on word frequency in English adult speech as in English adult writing, as well as in English child speech. We also apply a contextual version of the same metric, and find that in communication, listeners are able to decode information from the utterances they hear at a constant rate past the initial words. We expand the study of information density to the largest set of languages yet considered, and incorporate contextual and typological information. We find that each language has a characteristic, robust distribution of information predictable from its morphology, phonology and syntax, and tied to the language’s genealogy. Speakers of a language will tend to distribute information according to that language’s distribution of information in their utterances. As soon as a child can form multi-word utterances in a given language, they will produce utterances obeying the characteristic distribution of information in a given language. 
+In this paper, we expand on this body of prior work in a number of novel ways. We replicate the results from @yu2016distribution with a different metric, one intimately tied to incremental word processing. We find the same distribution of information based on word frequency in English adult speech as in English adult writing, as well as in English child speech. We also apply a contextual version of the same metric, and find that in communication, listeners are able to decode information from the utterances they hear at a constant rate past the initial words. We expand the study of information density to the largest set of languages yet considered, and incorporate contextual and typological information. We find that each language has a characteristic, robust frequency-based information distribution tied to the language's morphology, phonology and syntax. Speakers of a language will tend to distribute information according to that language’s distribution of information in their utterances. As soon as a child can form multi-word utterances in a given language, they will produce utterances obeying the characteristic distribution of information in a given language. 
 
 # Methods
 
@@ -71,6 +72,8 @@ When we use a word or two of context in our surprisal calculations, then the set
 
 To find the distribution of information within a corpus, we calculate the surprisal or contextual surprisal for each unique word or sequence of words within the corpus. We take all utterances of a given length, and for each word position in utterances of that length, we compute the average of the surprisals for all of the non-unique words that occur in that position, conditioned or not conditioned on context. By computing these averages for each word position in an utterance, we compute a low-dimensional approximation to the average distribution of information in the corpus. With the surprisal metric, we base the information contained in each word on how often the word is encountered in its context in the corpus. As long as the corpus is representative of the language or population we study, then the distribution of information is approximated for that language or population as a whole. 
 
+The flexibility of the surprisal metric we employ in this paper allows us to calculate the anticipated information for an individual utterance, as most work with the metric has done in the past. Averaging together the surprisal values for a word position within utterances is actually a step further than prior work, and indicates the tendencies speakers gravitate towards instead of examining individual stimuli in psycholinguistic experiments. 
+
 The frequency-based surprisal metric gives us an idea of when in their utterances speakers say frequent i.e. independently information-rich words. The context-based surprisal metric show us how speakers tend to distribute the information in utterances relative to real-time processing in communication. We expect a priori that our frequency-based surprisal curve will be flat. No one part of the sentence will on average have words that are more frequent than another across utterance lengths. Similarly, we expect that there will be a small smoothing effect for our contextual surprisal metric. 
 
 # Written and Spoken English have the same information distribution
@@ -79,15 +82,26 @@ We first turn to working with written English in the British National Corpus [BN
 
 We first replicate the @yu2016distribution result using the surprisal metric in place of the entropy metric. We use the frequency-based or “contextless” surprisal metric, which determines the average distribution of information based on word frequencies in a corpus. A priori we expect that the frequency-based metric will produce a flat distribution of information across word positions in the BNC. 
 
-See in the FIGURE below a qualitative comparison of the information trajectory they found and the information trajectory we found. It is easily observable that the two information trajectories are identical, and we have found the same distribution of information in the BNC as @yu2016distribution did. The first words in written English sentences tend to contain little information, while the final words tend to contain a great deal of information. 
+See in Figure \@ref(fig:bnc_unigrams) a qualitative comparison of the information trajectory they found and the information trajectory we found. It is easily observable that the two information trajectories are identical, and we have found the same distribution of information in the BNC as @yu2016distribution did. The first words in written English sentences tend to contain little information, while the final words tend to contain a great deal of information. 
 
-Comparison between the unigram entropy and surprisal BNC results plot
+```{r bnc_unigrams, echo = F, fig.height=2, fig.cap="BNC frequency-based information curves"}
+bnc_results %>% 
+  filter(context == 0) %>%
+  ggplot(aes(x = word_order, y = empirical_stat, ymin = ci_lower, ymax = ci_upper)) + 
+    geom_point() + 
+    geom_pointrange() + 
+    geom_line() +
+    facet_wrap(~length) + 
+    scale_x_continuous(breaks = c(1, seq(5, 30, 5))) + 
+    xlab("Word position") + 
+    ylab("Mean information")
+```
 
 However, this only characterizes written English sentences. If this information distribution is characteristic more generally of English, then we will find the same distribution for spoken English. We use the Switchboard corpus of spoken English telephone conversations between adults to compute the distribution of information across spoken utterances in English. The sentences in the BNC, compared to the conversations in Switchboard, feature much longer sentences with larger vocabularies and more complex sentence structures. We split the conversations in Switchboard not by sentences, as in the BNC, but by turns. 
 
 For Switchboard we find the same information trajectory as we did for the BNC, and we find the same distribution of information regardless of utterance length. The longer the utterance, the more pronounced the information distribution shape becomes. A qualitative comparison of the two trajectories is in Figure \@ref(fig:switchboard_unigrams).
 
-```{r switchboard_unigrams, echo=F, fig.height=2, fig.cap="Switchboard frequency-based information curves"}
+```{r switchboard_unigrams, echo=F, fig.height=4, fig.cap="Switchboard frequency-based information curves"}
 sw_plot <- switch_results %>% 
   filter(context == 0) %>%
   ggplot(aes(x = word_order, y = empirical_stat, ymin = ci_lower, ymax = ci_upper)) + 
@@ -106,7 +120,7 @@ bnc_plot <- bnc_results %>%
     geom_pointrange() + 
     geom_line() +
     facet_wrap(~length) + 
-    scale_x_continuous(breaks = 1:30) + 
+    scale_x_continuous(breaks = c(1, seq(5, 30, 5))) + 
     xlab("Word position") + 
     ylab("Mean information")
 
@@ -115,10 +129,10 @@ grid.arrange(bnc_plot, sw_plot, nrow = 2)
 
 We have found a unique average distribution of information that appears to characterize the English language as a whole, regardless of medium (spoken or written) or utterance length. This distribution indicates that in English, the words we speak or write at the beginnings of utterances have little information, while the words we speak or write at the ends of utterances have a lot of information. The words in the middle of utterances have a middling amount of information, without the increasing trend in information from word to word that we might expect from [@genzel2002entropy]. 
 
-What about context? So far we’ve only discussed the unigram (“contextless”) surprisal metric, considering words on their own without any explicit incorporation of prior context. As previously discussed, listeners decode information and process what they hear incrementally, using prior heard words to ease the comprehension process. We now include one word of context (bigrams) and then two words of context (trigrams). We observe a flattening effect of context across both modalities and all speaker populations. After the first word or two, where the listener does not have access to prior context, then they decode information at a flat and more or less uniform rate. The bigram and trigram information curves for Switchboard are in Figures \@ref(fig:switchboard_bigrams) and \@ref(fig:switchboard_trigrams).
+What about context? So far we’ve only discussed the frequency-based metric, considering words on their own without any explicit incorporation of prior context. As previously discussed, listeners decode information and process what they hear incrementally, using prior heard words to ease the comprehension process. We now include one word of context (bigrams) and then two words of context (trigrams) for each word in our measurements. We observe a flattening effect of context across both modalities and all speaker populations. After the first word or two, where the listener does not have access to prior context, then they decode information at a flat and more or less uniform rate. The contextual information curves for the BNC and Switchboard are in Figures \@ref(fig:switchboard_bigrams) and \@ref(fig:switchboard_trigrams).
 
-```{r switchboard_bigrams, echo=F,fig.height=2,fig.cap="Switchboard bigram context-based information curves"}
-switch_results %>% 
+```{r switchboard_bigrams, echo=F,fig.height=4,fig.cap="Switchboard bigram context-based information curves"}
+sw_plot <- switch_results %>% 
   filter(context == 1) %>%
   ggplot(aes(x = word_order, y = empirical_stat, ymin = ci_lower, ymax = ci_upper)) + 
     geom_point() + 
@@ -128,10 +142,23 @@ switch_results %>%
     scale_x_continuous(breaks = 1:11) + 
     xlab("Word position") + 
     ylab("Mean information")
+
+bnc_plot <- bnc_results %>% 
+  filter(context == 1) %>%
+  ggplot(aes(x = word_order, y = empirical_stat, ymin = ci_lower, ymax = ci_upper)) + 
+    geom_point() + 
+    geom_pointrange() + 
+    geom_line() +
+    facet_wrap(~length) + 
+    scale_x_continuous(breaks = c(1, seq(5, 30, 5))) + 
+    xlab("Word position") + 
+    ylab("Mean information")
+
+grid.arrange(bnc_plot, sw_plot, nrow = 2)
 ```
 
-```{r switchboard_trigrams, echo=F,fig.height=2,fig.cap="Switchboard trigram context-based information curves"}
-switch_results %>% 
+```{r switchboard_trigrams, echo=F,fig.height=4,fig.cap="Switchboard trigram context-based information curves"}
+sw_plot <- switch_results %>% 
   filter(context == 2) %>%
   ggplot(aes(x = word_order, y = empirical_stat, ymin = ci_lower, ymax = ci_upper)) + 
     geom_point() + 
@@ -141,6 +168,19 @@ switch_results %>%
     scale_x_continuous(breaks = 1:11) + 
     xlab("Word position") + 
     ylab("Mean information")
+
+bnc_plot <- bnc_results %>% 
+  filter(context == 2) %>%
+  ggplot(aes(x = word_order, y = empirical_stat, ymin = ci_lower, ymax = ci_upper)) + 
+    geom_point() + 
+    geom_pointrange() + 
+    geom_line() +
+    facet_wrap(~length) + 
+    scale_x_continuous(breaks = c(1, seq(5, 30, 5))) + 
+    xlab("Word position") + 
+    ylab("Mean information")
+
+grid.arrange(bnc_plot, sw_plot, nrow = 2)
 ```
 
 
@@ -154,7 +194,7 @@ We use the Providence corpus from CHILDES [@macwhinney2000childes; @evans2012ind
 
 We observe the same distinctive distribution of information for parents and children in the Providence corpus as we did for adults in the BNC and Switchboard. The distribution of information we found at the level of individual words in English, therefore, characterizes the English language as a whole and not only adult utterances, not only written utterances. See \@ref(fig:providence_unigrams). 
 
-```{r providence_unigrams, echo=F, fig.height =2, fig.cap="Providence frequency-based information curves"}
+```{r providence_unigrams, echo=F, fig.height =2, fig.cap="Providence frequency-based information curves. Lines around each point indicate 95% confidence intervals computed with non-parametric bootstrap"}
 childes_results %>% 
   filter(language == "English", context == 0) %>%
   ggplot(aes(x = word_order, y = empirical_stat, ymin = ci_lower, ymax = ci_upper, 
@@ -220,9 +260,9 @@ childes_results %>%
     ylab("Mean information")
 ```
 
-English, Spanish, French and German feature similar information curves shapes, with slight variations. The German information curve features lower information for longer towards the beginnings of utterances, possibly due to the grammatical restriction that the second word in German utterances must be a verb (V2). Spanish features a larger spike in the amount of information in the final words of utterances. For Japanese and Mandarin, we observe completely different unigram information curve trajectories. The Japanese unigram information curve trajectory begins high and finishes low, the mirror image of the European language information curves. The Mandarin curve begins low and finishes low, but features high information in the middle of utterances. We hypothesize this may be due to both Japanese and Mandarin speakers typically ending their utterances with particles, which contain very little information on their own. The penultimate noun with the speakers pair the particles are where the information lies.  
+English, Spanish, French and German feature similar information curves shapes, with slight variations. The German information curve features lower information for longer towards the beginnings of utterances, possibly due to the grammatical restriction that the second word in German utterances must be a verb (V2). Spanish features a larger spike in the amount of information in the final words of utterances. For Japanese and Mandarin, we observe completely different frequency-based information curve trajectories. The Japanese frequency-based information curve trajectory begins high and finishes low, the mirror image of the European language information curves. The Mandarin curve begins low and finishes low, but features high information in the middle of utterances. We hypothesize this may be due to both Japanese and Mandarin speakers typically ending their utterances with particles, which contain very little information on their own. The penultimate noun with the speakers pair the particles are where the information lies.  
 
-For the bigram and trigram information curves, we see the same contextual smoothing effect as for all the corpora we worked with in English. While the unigram information curves may depend based on the language, the contextual information curves show the same trajectory cross-linguistically. Using ngrams with n higher than 3 is difficult for parent-child speech corpora because the utterances are so short on average (less than 10 words). We hypothesize that the unigram information curves may vary based on the genealogy and typology of the languages in question, but this does not extend to the trigram information curves in particular. We shall show evidence that this is true in the rest of the paper. 
+For the bigram and trigram information curves, we see the same contextual smoothing effect as for all the corpora we worked with in English. While the frequency-based information curves may depend based on the language, the contextual information curves show the same trajectory cross-linguistically. Using more than two words of context is difficult for parent-child speech corpora because the utterances are so short on average (less than $10$ words). We hypothesize that the frequency-based information curves may vary based on the genealogy and typology of the languages in question, but this does not extend to the information curves with two words of context in particular. 
 
 ```{r, echo=F, fig.height =3, fig.cap="CHILDES bigram context-based information curves"}
 childes_results %>% 
@@ -254,23 +294,62 @@ childes_results %>%
 
 # Language structure and large-scale data analysis: methods and preprocessing
 
-To make a claim about language as a whole and languages on a larger scale, we needed to use larger corpora and a much larger number of languages. We pulled corpora for 159 diverse languages from Wikipedia, each of which had at least 10000 articles. We split each article up into sentences; the variance in sentence lengths for Wikipedia was significantly larger than for the CHILDES corpora we used in the previous section. Most sentences in Wikipedia contained between 10 and 30 words, unlike the CHILDES corpora which mainly contained utterances with under 10 words. We excluded the small fraction of utterances with more than 50 words as uncharacteristic of English speech. 
+To make a claim about language as a whole and languages on a larger scale, we needed to use larger corpora and a much larger number of languages. We pulled corpora for $159$ diverse languages from Wikipedia, each of which had at least $10000$ articles on the knowledge base. We split each article up into sentences; the variance in sentence lengths for Wikipedia was significantly larger than for the CHILDES corpora we used in the previous section. Most sentences in Wikipedia contained between $10$ and $30$ words, unlike the CHILDES corpora which mainly contained utterances with under 10 words. We excluded the small fraction of utterances with more than $50$ words since they were small in number and, from manual inspection, uncharacteristic of typical written sentences. 
 
-How to analyze more than 40 different surprisal curves for each language, adding up to several thousand surprisal curves total? We used two different strategies, which yielded identical results upon analysis. Each strategy gave us a five-dimensional vector space embedding for each language in a Wikipedia “slope space”. For the first strategy, we split each sentence length by number of words into fifths, and computed surprisal values for the closest word position to each quintile. We then computed the slopes between the surprisal values at neighboring quintiles, yielding five slope values for each curve. For the second strategy, we split each sentence length by number of words into sections based on those areas of the surprisal curves that had seemed most important before: between the first and second word; between the second and third word; between the third word and third-to-last word; between the third-to-last word and the second to last word; and between the second-to-last word and the last word. We then similarly computed surprisal values at each of these positions, and similarly computed slopes between the surprisal values at each position, giving us another five slope values for each language summarizing the surprisal curves. Illustrations of these two strategies are below. 
+How do we analyze more than $40$ different surprisal curves for each language, adding up to several thousand surprisal curves total? We used two different strategies, which yielded identical results upon analysis. Each strategy gave us a five-dimensional vector space embedding for each language in a Wikipedia “slope space”. For the first strategy, we split each sentence length by number of words into fifths, and computed surprisal values for the closest word position to each quintile. We then computed the slopes between the surprisal values at neighboring quintiles, yielding five slope values for each curve. For the second strategy, we split each sentence length by number of words into sections based on those areas of the surprisal curves that had seemed most important before: between the first and second word; between the second and third word; between the third word and third-to-last word; between the third-to-last word and the second to last word; and between the second-to-last word and the last word. We then similarly computed surprisal values at each of these positions, and similarly computed slopes between the surprisal values at each position, giving us another five slope values for each language summarizing the surprisal curves. Illustrations of these two strategies are in Figure \@ref(fig:treatments) 
 
-Illustration of the regions we target with each of the two slope treatments below. 
+```{r treatments, echo = F, fig.height =3, fig.cap="Illustration of slope treatments for Wikipedia information curves: relative on top and absolute on bottom"}
+## relative treatment: every fifth in a different group
+relative <- bnc_results %>% 
+  filter(context == 0, length == 20) 
+relative$group <- rep(1:5, each = 4)
+relative <- relative %>%
+  mutate(group = as.factor(group))
 
-We computed unigram, bigram and trigram values for each language. All of this data, along with the scripts used for the analysis, are available on GitHub. We ran this code on the RCC at the University of Chicago; it took X amount of time and used up Y amount of carbon to run. 
+# rel_plot <- relative %>%
+#   ggplot(aes(x = word_order, y = empirical_stat, ymin = ci_lower, ymax = ci_upper, color = group)) + 
+#     geom_point() + 
+#     geom_pointrange() + 
+#     geom_line() +
+#     scale_x_continuous(breaks = c(1, seq(5, 30, 5))) + 
+#     xlab("Word position") + 
+#     ylab("Mean information")
 
-To more rigorously described the differences between languages, we used data from the World Atlas of Language Structures [WALS; @wals]. WALS has data for 144 typological features in 2569 languages around the world. These features describe aspects of morphology, syntax, phonology, etymology and semantics--in short the features describe the structures in each language. As WALS is a compiled database from dozens of papers from different authors, most of the features and languages are fairly sparse. Even limiting ourselves to the 159 language corpora we pulled from Wikipedia and 122 features from WALS, there are nearly 20000 individual possible feature values, fewer than half of which were already inputted for those languages in the WALS database. 
+## absolute treatment: some qualitatively important sections
+absolute <- bnc_results %>% 
+  filter(context == 0, length == 20) 
+absolute$group <- c(1, 2, rep(3, 16), 4, 5) 
+absolute <- absolute %>%
+  mutate(group = as.factor(group))
 
-We used the Multiple Imputation Multiple Correspondence Analysis algorithm [MIMCA; @audigier2017mimca] to fill in the missing data using statistical imputation. MIMCA essentially uses mean imputation to begin with the missing values, then performs repeatedly performs principle components analysis on and reconstructs the contingency table formed from observations in categorical variables. By the end of this we had unigram, bigram and trigram surprisal curves for the 159 language corpora pulled from Wikipedia, along with 122 typological features for each language. 
+relative %>% 
+  mutate(treatment = "relative") %>% 
+  bind_rows(absolute %>% mutate(treatment = "absolute")) %>%
+  ggplot(aes(x = word_order, y = empirical_stat, 
+             ymin = ci_lower, ymax = ci_upper, color = group)) + 
+    geom_point() + 
+    geom_pointrange() + 
+    geom_line() +
+    facet_wrap(~treatment) + 
+    scale_x_continuous(breaks = c(1, seq(5, 30, 5))) + 
+    xlab("Word position") + 
+    ylab("Mean information")
 
-However, the WALS features describe specific structural differences between languages, while our surprisal metric is lexical. To target lexical differences between languages, we computed the average normalized Levenshtein distance [LDN; @holman2008advances] over the 40 item Swadesh list [@swadesh1955towards], retrieved from the ASJP database [@wichmann2016asjp]. The Swadesh list is designed to include near-universal words that target basic cognitive concepts, and are useful in determining the genealogical similarities and differences between languages. The results of classifying languages using the Swadesh list and LDN are correlated with those using WALS features, but the Swadesh list and LDN do not suffer from the same sparsity problem as WALS [@holman2008advances]. 
+# grid.arrange(rel_plot, abs_plot, nrow = 2)
+
+```
+
+We computed unigram, bigram and trigram values for each language, and grouped the contextual and frequency-based values for each treatment. 
+
+To more rigorously described the differences between languages, we used data from the World Atlas of Language Structures [WALS; @wals]. WALS has data for $144$ typological features in $2569$ languages around the world. These features describe aspects of morphology, syntax, phonology, etymology and semantics--in short the features describe the structures in each language. As WALS is a compiled database from dozens of papers from different authors, most of the features and languages are fairly sparse. Even limiting ourselves to the $159$ language corpora we pulled from Wikipedia and $122$ features from WALS, there are nearly $20000$ individual possible feature values, fewer than half of which were already inputted for those languages in the WALS database. 
+
+We used the Multiple Imputation Multiple Correspondence Analysis algorithm [MIMCA; @audigier2017mimca] to fill in the missing data using statistical imputation. MIMCA essentially uses mean imputation to begin with the missing values, then performs repeatedly performs principle components analysis on and reconstructs the contingency table formed from observations in categorical variables. By the end of this we had frequency-based and contextual information curves for the $159$ language corpora pulled from Wikipedia, along with $122$ typological features for each language. 
+
+However, the WALS features describe specific structural differences between languages, while our surprisal metric is lexical. To target lexical differences between languages, we computed the average normalized Levenshtein distance [LDN; @holman2008advances] over the $40$ item Swadesh list [@swadesh1955towards], retrieved from the ASJP database [@wichmann2016asjp]. The Swadesh list is designed to include near-universal words that target basic cognitive concepts, and are useful in determining the genealogical similarities and differences between languages. The results of classifying languages using the Swadesh list and LDN are correlated with those using WALS features, but the Swadesh list and LDN do not suffer from the same sparsity problem as WALS [@holman2008advances]. 
 
 # Language structures and large-scale data analysis: results
 
-We ran a hierarchical clustering algorithm on the unigram information curves using the hclust package from the R stats core library [@team2013r]. We used the complete linkage algorithm for hierarchical clustering with distances between information curves in language computed using cosine distance between their embeddings in the slope space. The complete linkage algorithm at every step pairs each language or cluster of languages with its closest neighboring language or cluster. A sample from the dendrogram is shown in Figure \@ref(fig:dendro), and the full tree can be constructed using the code in our GitHub repository. The language family-like structure can be seen at first glance, although the dendrogram does not exactly replicate language genealogy for all 159 languages. This suggests using a first-pass quantitative method that the information curves do correspond in some measure to language families, but language families do not explain the entire story. 
+We ran a hierarchical clustering algorithm on the unigram information curves using the hclust package from the R stats core library [@team2013r]. We used the complete linkage algorithm for hierarchical clustering with distances between information curves in language computed using cosine distance between their embeddings in the slope space. The complete linkage algorithm at every step pairs each language or cluster of languages with its closest neighboring language or cluster. A sample from the dendrogram is shown in Figure \@ref(fig:dendro), and the full tree can be constructed using the code in our GitHub repository. The language family-like structure can be seen at first glance, although the dendrogram does not exactly replicate language genealogy for all $159$ languages. This suggests using a first-pass quantitative method that the information curves do correspond in some measure to language families, but language families do not explain the entire story. 
 
 ```{r dendro, echo=F}
 wiki_curves %>%
@@ -283,7 +362,7 @@ wiki_curves %>%
   ggdendrogram(rotate=T, leaf_labels = F)
 ```
 
-A sample of the trigram information curves are plotted in Figure \@ref(fig:wiki_trigrams), and all trigram information curves for the languages we used follow the same pattern. The first few words in utterances for each language are surprising, but with even a couple words of predictive context for each word, the amount of information in each word drops off and speakers produce information at a constant, optimal rate. 
+A sample of the contextual information curves (two words of context) are plotted in Figure \@ref(fig:wiki_trigrams), and all trigram information curves for the languages we used follow the same pattern. The first few words in utterances for each language are surprising, but with even a couple words of predictive context for each word, the amount of information in each word drops off and speakers produce information at a constant, optimal rate. 
 
 ```{r wiki_trigrams, echo=F, fig.cap="Some trigram information curves from the Wikipedia data"}
 wiki_curves %>%
@@ -324,7 +403,7 @@ sf$Examples <- c("Noun-RC; RC-noun",
 sf %>% grid.table()
 ```
 
-We next compared how the cosine distance between two languages related to how many WALS features they had in common. $r^2$ value is $.005734$, which suggests that in aggregate there is not a correlation between how many WALS features languages have in common and the similarity of their frequency-based information curves. Figure \@ref(fig:cosine_wals) displays the results. 
+We next compared how the cosine distance between two languages related to how many WALS features they had in common. $r^2$ value is $.005734$, which suggests that in aggregate there is not a correlation between how many WALS features languages have in common and the similarity of their frequency-based information curves. Figure \@ref(fig:cosine_wals) displays the results. This result is surprising based on the significance of many WALS features in predicting the shapes of the frequency-based information curves, and we return to this result in the general discussion. 
 
 ```{r cosine_wals, echo = F, fig.cap="wals features vs cosine similarity"}
 r2 <- summary(lm(data = wiki_results, formula = unigram_cosine~feature))$r.squared %>%
@@ -339,7 +418,7 @@ wiki_results %>%
     #stat_poly_eq(formula = y~x, position = "dodge")
 ```
 
-So the more similar two languages are in terms of typological features, the more similar their unigram information curves tend to be. For lexical features, we see a stronger correlation between the similarity of two languages in terms of their average LDN and the cosine distance between their information curves. Figure \@ref(fig:cosine_ldn). 
+For lexical features, we see a stronger correlation between the similarity of two languages in terms of their average LDN and the cosine distance between their information curves. Figure \@ref(fig:cosine_ldn). We see a higher $r^2$ value here of $.026$, indicating that there is more correspondence between a language's lexical similarity to another language and their similarity in information curves. 
 
 ```{r cosine_ldn, echo = F, fig.cap="ldn features vs cosine similarity"}
 r2 <- summary(lm(data = wiki_results, formula = unigram_cosine~ldn))$r.squared %>%
@@ -354,10 +433,14 @@ wiki_results %>%
     #stat_poly_eq(formula = y~x, position = "dodge")
 ```
 
-The shape of a language’s frequency-based information curve covaries with its typological and lexical similarity to other languages. 
+From these typological investigations, we conclude that the shape of a language’s frequency-based information curve covaries with its typological and lexical similarity to other languages. 
 
-# General Discussion
+# Discussion
 
-By considering the distribution of information at the level of utterances and sentences, we join together the information-theoretic work focusing on sub-word units and words, and that focusing on paragraphs. In doing so, we show that frequency and context-based metrics complement one another in studying efficiency and information in language. We directly link linguistic efficiency in a language to the genealogy and properties of that language, while providing evidence for a novel, communicatively real linguistic universal. Also considering developmental angle, observing language-specific information distributions arising as soon as children begin speaking in multi-word utterances. 
+By considering the distribution of information at the level of utterances and sentences, we join together the information-theoretic work focusing on sub-word units and words, and that focusing on paragraphs. In doing so, we show that frequency and context-based metrics complement one another in studying efficiency and information in language. We directly link linguistic efficiency in a language to the genealogy and properties of that language, We provide evidence for a novel linguistic universal: low processing cost for listeners beyond the first words in utterances, driven by high average word predictability in conversation. Also considering the developmental angle, observing language-specific information distributions arising as soon as children begin speaking in multi-word utterances. 
+
+Throughout this work we have averaged the surprisal values at each position. Averaging removes variation, which in turn may obscure trends in the data. As discussed in the methods section, the surprisal metric has historically been used for calculating the information and processing cost for individual utterances, and our use of the metric here is actually a step forward rather than a step back. Future work can investigate variation in how speakers distribute information in individual utterances. 
+
+The WALS database we used to investigate typological variation in the information curves is overall sparse. We imputed well over $50\%$ of the WALS features for most of our $159$ languages, although all of the languages had at least $20$ features evaluated in WALS. A large part of this is due to WALS being a collection of a number of different studies, instead of a systematic effort to catalogue variation across the world's languages. Additionally, WALS features are meant to describe specific microvariations in languages, not to provide a comprehensive typological representation of each language compared to each other language. This may be why the Swadesh list provided a higher correlation for describing the differences in information curves: @swadesh1955towards intended the list to allow researchers to more comprehensively compared and constrast lexical differences between languages. For our Wikipedia analysis, we also reduce all of a language's variation down to a five-dimensional vector. These information curve representations show a surprising amount of variation despite the degree of compression. 
 
 # References
