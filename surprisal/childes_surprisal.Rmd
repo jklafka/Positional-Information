@@ -142,7 +142,7 @@ adult_bigrams <- adult_utterances %>%
 Down here is the old code. You can run it, but you have to change the corpus name and whether you're using stem or gloss by hand. 
 
 ```{r hard-coded language unigrams}
-child_utterances <- palasis_utterances %>%
+child_utterances <- prov_utterances %>%
   filter(speaker_role != "Target_Child") %>% 
   mutate(length = str_count(stem, pattern = "[ +]+") + 1) %>%
   mutate(utterance_id = 1:n()) %>%
@@ -154,24 +154,44 @@ child_unigrams <- child_utterances %>%
   group_by(word) %>%
   count() %>%
   ungroup() %>%
+  mutate(n = n + 1) %>%
   mutate(p = n / sum(n))
   
 child <- child_utterances %>%
-  left_join(child_unigrams) %>%
+  left_join(child_unigrams, by = "word") %>%
   mutate(s = -log(p)) %>%
   ungroup() %>%
   select(length, word_order, s) %>%
-  nest(s) %>%
-  filter(length %in% c(5, 7, 9))
+  filter(length %in% c(5, 7, 9)) %>%
+  group_by(length, word_order) %>%
+  nest()
+
+child %>%
+  mutate(surprisal = map(data, ~tidyboot_mean(.x, s, nboot = 10))) %>%
+  select(-data) %>%
+  unnest(cols = c(surprisal)) 
+
+
+
+
+  ggplot(aes(x = word_order, y = surprisal, color = as.factor(length))) + 
+  geom_point() +
+  geom_line()
+
 
 child_surprisals <- map_dfr(1:nrow(child),
         ~bind_cols(select(slice(child, .x), length, word_order),
                                tidyboot_mean(data = unnest(slice(child, .x)),
-                                             column = s, nboot = 1000)))
+                                             column = s, nboot = 100)))
 
 ```
 
 ```{r bigrams}
+vocab_size <- child_utterances %>%
+  ungroup() %>%
+  distinct( word) %>% 
+  nrow()
+
 child_bigrams <- child_utterances %>%
   group_by(utterance_id) %>%
   mutate(lag_word = lag(word)) %>%
@@ -180,21 +200,33 @@ child_bigrams <- child_utterances %>%
   filter(!is.na(lag_word)) %>%
   ungroup() %>%
   left_join(child_unigrams, by = c("lag_word" = "word")) %>%
-  mutate(cond_p = n.x/n.y) %>%
+  mutate(cond_p = (n.x + 0)  / (n.y + 0 * vocab_size)) %>%
   select(-n.y, -p)
 
 bigram_surprisals_prep <- child_utterances %>%
   group_by(utterance_id) %>%
   mutate(lag_word = lag(word)) %>%
-  left_join(child_bigrams, by = c("lag_word", "word")) %>%
-  left_join(child_unigrams, by = "word")
+  left_join(child_bigrams, by = c("lag_word", "word")) #%>%
+  #left_join(child_unigrams, by = "word")
 
 child <- bigram_surprisals_prep %>%
-  mutate(s = ifelse(is.na(lag_word), -log(p), -log(cond_p))) %>%
+  filter(!is.na(lag_word)) %>%
+  mutate(s = -log(cond_p)) %>%
+ # mutate(s = ifelse(is.na(lag_word), -log(p), -log(cond_p))) %>%
   ungroup() %>%
   select(length, word_order, s) %>%
-  nest(s) %>%
-  filter(length %in% c(5, 7, 9))
+  filter(length %in% c(5, 7, 9)) %>%
+  group_by(length, word_order) %>%
+  nest()
+
+child %>%
+  mutate(surprisal = map(data, ~tidyboot_mean(.x, s, nboot = 10))) %>%
+  select(-data) %>%
+  unnest(cols = surprisal) %>%
+  ggplot(aes(x = word_order, y = empirical_stat, color = as.factor(length))) + 
+  geom_point() +
+  geom_line()
+
 
 child_bigram_surprisals <- map_dfr(1:nrow(child),
         ~bind_cols(select(slice(child, .x), length, word_order),
